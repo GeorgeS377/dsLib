@@ -4,9 +4,11 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import fastifyCookie from '@fastify/cookie';
+import fastifyCsrf from '@fastify/csrf-protection';
 import fastifyFormbody from '@fastify/formbody';
 import fastifyHelmet from '@fastify/helmet';
 import fastifyRateLimit from '@fastify/rate-limit';
+import fastifySession from '@fastify/session';
 import fastifyStatic from '@fastify/static';
 import fastifyView from '@fastify/view';
 import ejs from 'ejs';
@@ -14,8 +16,10 @@ import Fastify from 'fastify';
 import { config as defaultConfig } from './config.js';
 import { getDatabase } from './db/index.js';
 import { LANG_COOKIE, SUPPORTED_LANGS, resolveLang, translatorFor } from './lib/i18n.js';
+import { SqliteSessionStore } from './lib/session-store.js';
 import healthRoutes from './routes/health.js';
 import publicRoutes from './routes/public/index.js';
+import staffRoutes from './routes/staff/index.js';
 
 const ONE_YEAR_SECONDS = 365 * 24 * 60 * 60;
 
@@ -24,14 +28,21 @@ const ONE_YEAR_SECONDS = 365 * 24 * 60 * 60;
  * @param {typeof defaultConfig} [options.config] Override configuration (tests).
  * @param {object} [options.logger] Fastify logger options, or false to silence.
  * @param {object} [options.db] An open database, so tests can supply their own.
+ * @param {(route: object) => void} [options.onRoute] Called for every route as
+ *   it is registered. Exists so test/access-control.test.js can enumerate the
+ *   real route table and prove no staff route is reachable unauthenticated,
+ *   rather than relying on a hand-maintained list that could fall behind.
  */
-export async function buildApp({ config = defaultConfig, logger, db } = {}) {
+export async function buildApp({ config = defaultConfig, logger, db, onRoute } = {}) {
   const app = Fastify({
     logger: logger ?? loggerOptions(config),
     trustProxy: config.trustProxy,
     // Do not echo a client-supplied request id back into logs unvalidated.
     requestIdHeader: config.trustProxy ? 'x-request-id' : false,
     bodyLimit: 256 * 1024,
+    // /staff/ and /staff should be the same page: a librarian typing a
+    // trailing slash should not get a 404.
+    ignoreTrailingSlash: true,
     // Reject requests whose URL carries unescaped characters rather than
     // guessing at intent.
     onProtoPoisoning: 'remove',
@@ -40,6 +51,9 @@ export async function buildApp({ config = defaultConfig, logger, db } = {}) {
 
   app.decorate('config', config);
   app.decorate('db', db ?? getDatabase());
+
+  // Registered before any route, so it sees all of them.
+  if (onRoute) app.addHook('onRoute', onRoute);
 
   // --- Security headers ---------------------------------------------------
   // No inline scripts or styles anywhere in this app, so the CSP can stay
@@ -79,6 +93,61 @@ export async function buildApp({ config = defaultConfig, logger, db } = {}) {
       secure: config.isProduction,
       path: '/',
     },
+  });
+
+  // --- Sessions -----------------------------------------------------------
+  // Server-side sessions in SQLite. This is what makes logout and expiry
+  // real: the row is deleted, so a copied cookie stops working immediately.
+  const sessionStore = new SqliteSessionStore(app.db);
+  app.decorate('sessionStore', sessionStore);
+  app.addHook('onClose', async () => sessionStore.stopCleanup());
+
+  await app.register(fastifySession, {
+    secret: config.sessionSecret,
+    store: sessionStore,
+    // A name that does not advertise the framework.
+    cookieName: 'dslib_session',
+    // Only issue a session cookie once there is something to remember, so
+    // anonymous catalogue visitors are not tracked at all.
+    saveUninitialized: false,
+    // Refresh the expiry on activity: the idle timeout is what signs an
+    // unattended desk out, and config caps the absolute lifetime separately.
+    rolling: true,
+    cookie: {
+      path: '/',
+      httpOnly: true,
+      sameSite: 'lax',
+      // 'auto' rather than a hard true, deliberately.
+      //
+      // @fastify/session refuses to send the cookie at all when secure is
+      // true and request.protocol is not https. Behind an Nginx proxy that
+      // terminates TLS, Fastify sees plain HTTP unless TRUST_PROXY=true — so
+      // a hard true would make login silently bounce in a redirect loop that
+      // is very hard to diagnose. With 'auto' the cookie gains the Secure
+      // flag exactly when the connection really is HTTPS (which, with
+      // trustProxy, means X-Forwarded-Proto: https), and keeps working
+      // otherwise. HSTS and the deployment docs enforce HTTPS itself.
+      secure: 'auto',
+      maxAge: config.sessionIdleMs,
+    },
+  });
+
+  if (config.isProduction && !config.trustProxy) {
+    app.log.warn(
+      'Running in production without TRUST_PROXY=true. If a reverse proxy ' +
+        'terminates HTTPS in front of this app, set TRUST_PROXY=true so that ' +
+        'session cookies are marked Secure and rate limiting sees real client IPs.',
+    );
+  }
+
+  // --- CSRF ---------------------------------------------------------------
+  // Tokens are bound to the session, so a token cannot be lifted from one
+  // user's page and replayed by another. app.csrfProtection is applied as a
+  // preHandler on every state-changing staff route.
+  await app.register(fastifyCsrf, {
+    sessionPlugin: '@fastify/session',
+    cookieOpts: { signed: true },
+    getToken: (request) => request.body?._csrf ?? request.headers['x-csrf-token'],
   });
 
   // --- Rate limiting ------------------------------------------------------
@@ -177,6 +246,7 @@ export async function buildApp({ config = defaultConfig, logger, db } = {}) {
 
   // --- Routes -------------------------------------------------------------
   await app.register(healthRoutes);
+  await app.register(staffRoutes);
   await app.register(publicRoutes);
 
   // --- Error handling -----------------------------------------------------

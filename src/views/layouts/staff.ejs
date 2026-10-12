@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="<%= lang %>">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title><%= typeof title !== 'undefined' && title ? title + ' · ' : '' %><%= t('staff.area') %></title>
+  <%# The staff area must never be indexed, even if it somehow becomes
+      reachable from outside. Authentication is the real control; this is
+      belt and braces. -%>
+  <meta name="robots" content="noindex, nofollow">
+  <link rel="stylesheet" href="/assets/css/app.css">
+  <link rel="icon" href="/assets/icon.svg" type="image/svg+xml">
+</head>
+<body>
+  <a class="skip-link" href="#main"><%= t('nav.skip') %></a>
+
+  <header class="staff-header">
+    <div class="container staff-header__inner">
+      <a class="staff-brand" href="/staff">
+        <span aria-hidden="true">🗂️</span>
+        <span><%= t('staff.area') %></span>
+      </a>
+
+      <nav class="staff-nav" aria-label="<%= t('nav.menu') %>">
+        <ul class="staff-nav__list">
+          <% [
+               { href: '/staff', key: 'staff.nav.dashboard', exact: true },
+               { href: '/staff/books', key: 'staff.nav.books' },
+               { href: '/staff/loans', key: 'staff.nav.loans' },
+               { href: '/staff/borrowers', key: 'staff.nav.borrowers' },
+               { href: '/staff/categories', key: 'staff.nav.categories' },
+               { href: '/staff/authors', key: 'staff.nav.authors' },
+             ].forEach(function (item) { %>
+            <% const active = item.exact
+                 ? currentPath === item.href || currentPath.startsWith(item.href + '?')
+                 : currentPath.startsWith(item.href); %>
+            <li>
+              <a href="<%= item.href %>"<% if (active) { %> aria-current="page"<% } %>>
+                <%= t(item.key) %>
+              </a>
+            </li>
+          <% }); %>
+          <% if (staffUser && staffUser.role === 'admin') { %>
+            <li>
+              <a href="/staff/users"<% if (currentPath.startsWith('/staff/users')) { %> aria-current="page"<% } %>>
+                <%= t('staff.nav.users') %>
+              </a>
+            </li>
+          <% } %>
+        </ul>
+      </nav>
+
+      <div class="staff-session">
+        <span class="lang-switch">
+          <% supportedLangs.forEach(function (code) { %>
+            <% if (code !== lang) { %>
+              <a class="lang-switch__link" href="<%= langUrl(code) %>" lang="<%= code %>"><%= code.toUpperCase() %></a>
+            <% } %>
+          <% }); %>
+        </span>
+
+        <% if (staffUser) { %>
+          <span class="staff-session__user">
+            <%= staffUser.display_name %><% if (staffUser.role === 'admin') { %> · <%= t('staff.role.admin') %><% } %>
+          </span>
+          <a href="/staff/account"><%= t('staff.nav.account') %></a>
+          <form class="inline-form" method="post" action="/staff/logout">
+            <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+            <button class="button button--quiet button--small" type="submit"><%= t('staff.logout') %></button>
+          </form>
+        <% } %>
+      </div>
+    </div>
+  </header>
+
+  <main id="main" class="site-main">
+    <div class="container">
+      <%- include('../partials/flash', { flash: flash, t: t }) %>
+    </div>
+    <%- body %>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container site-footer__inner">
+      <p class="small"><a href="/"><%= t('staff.viewPublicSite') %></a></p>
+      <p class="small faint"><%= libraryName %></p>
+    </div>
+  </footer>
+
+  <script src="/assets/js/app.js" defer></script>
+</body>
+</html>

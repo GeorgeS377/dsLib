@@ -1,0 +1,57 @@
+<div class="container">
+  <div class="login-shell card">
+    <h1 class="mt-0"><%= t('login.title') %></h1>
+    <p class="muted small"><%= t('login.lead') %></p>
+
+    <% if (expired) { %>
+      <p class="flash flash--info" role="status">
+        <span><%= t('login.expired') %></span>
+      </p>
+    <% } %>
+
+    <% if (error) { %>
+      <%# One message for every failure, so the page never confirms whether a
+          username exists. -%>
+      <p class="flash flash--error" role="alert">
+        <span><%= t(error) %></span>
+      </p>
+    <% } %>
+
+    <% if (noAccounts) { %>
+      <%# A fresh installation has no accounts and no default password, so
+          point the operator at the script that creates the first one. -%>
+      <div class="flash flash--warning" role="status">
+        <span>
+          <%= t('login.noAccounts') %>
+          <code>npm run create-admin</code>
+        </span>
+      </div>
+    <% } %>
+
+    <form method="post" action="/staff/login" autocomplete="on">
+      <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+      <% if (next) { %>
+        <input type="hidden" name="redirect" value="<%= next %>">
+      <% } %>
+
+      <div class="field">
+        <label class="field__label" for="username"><%= t('login.username') %></label>
+        <input type="text" id="username" name="username" value="<%= username %>"
+               autocomplete="username" autocapitalize="none" spellcheck="false"
+               required>
+      </div>
+
+      <div class="field">
+        <label class="field__label" for="password"><%= t('login.password') %></label>
+        <input type="password" id="password" name="password"
+               autocomplete="current-password" required>
+      </div>
+
+      <div class="field">
+        <button class="button button--block" type="submit"><%= t('login.submit') %></button>
+      </div>
+    </form>
+
+    <p class="small faint"><%= t('login.help') %></p>
+  </div>
+</div>

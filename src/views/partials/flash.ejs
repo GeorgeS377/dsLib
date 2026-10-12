@@ -1,0 +1,20 @@
+<%#
+  Flash messages carried over a redirect. Each one is a translation key plus
+  variables, so a message queued in one language renders in whichever language
+  the reader is using when it is shown.
+-%>
+<% if (flash && flash.length > 0) { %>
+  <ul class="flash-list">
+    <% flash.forEach(function (message) { %>
+      <li class="flash flash--<%= message.type %>"
+          role="<%= message.type === 'error' ? 'alert' : 'status' %>">
+        <span aria-hidden="true">
+          <%= message.type === 'success' ? '✓'
+            : message.type === 'error' ? '✕'
+            : message.type === 'warning' ? '!' : 'ℹ' %>
+        </span>
+        <span><%= t(message.key, message.vars || undefined) %></span>
+      </li>
+    <% }); %>
+  </ul>
+<% } %>

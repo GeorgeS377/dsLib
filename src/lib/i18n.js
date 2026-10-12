@@ -150,6 +150,65 @@ const el = {
   'authors.empty': 'Δεν έχουν καταχωριστεί συγγραφείς ακόμη.',
   'authors.findByName': 'Αναζήτηση συγγραφέα',
   'authors.booksBy': 'Βιβλία του/της {name}',
+
+  // --- Login ---
+  'login.title': 'Σύνδεση προσωπικού',
+  'login.lead': 'Η περιοχή αυτή προορίζεται για το προσωπικό της βιβλιοθήκης.',
+  'login.username': 'Όνομα χρήστη',
+  'login.password': 'Κωδικός πρόσβασης',
+  'login.submit': 'Σύνδεση',
+  'login.help': 'Αν ξεχάσατε τον κωδικό σας, απευθυνθείτε στον διαχειριστή της βιβλιοθήκης.',
+  'login.error.invalid': 'Λανθασμένο όνομα χρήστη ή κωδικός πρόσβασης.',
+  'login.error.locked':
+    'Ο λογαριασμός έχει κλειδωθεί προσωρινά μετά από πολλές αποτυχημένες προσπάθειες. Δοκιμάστε ξανά σε λίγο.',
+  'login.expired': 'Η συνεδρία σας έληξε. Συνδεθείτε ξανά.',
+  'login.noAccounts':
+    'Δεν υπάρχει ακόμη λογαριασμός προσωπικού. Δημιουργήστε τον πρώτο από τον διακομιστή με:',
+  'login.mustChangePassword': 'Πρέπει να ορίσετε νέο κωδικό πρόσβασης.',
+
+  // --- Staff shell ---
+  'staff.area': 'Διαχείριση βιβλιοθήκης',
+  'staff.logout': 'Αποσύνδεση',
+  'staff.viewPublicSite': 'Δημόσιος κατάλογος',
+  'staff.role.admin': 'Διαχειριστής',
+  'staff.role.librarian': 'Βιβλιοθηκονόμος',
+  'staff.forbidden.body': 'Η ενέργεια αυτή επιτρέπεται μόνο σε διαχειριστές.',
+  'staff.nav.dashboard': 'Επισκόπηση',
+  'staff.nav.books': 'Κατάλογος',
+  'staff.nav.loans': 'Δανεισμοί',
+  'staff.nav.borrowers': 'Αναγνώστες',
+  'staff.nav.categories': 'Κατηγορίες',
+  'staff.nav.authors': 'Συγγραφείς',
+  'staff.nav.users': 'Χρήστες',
+  'staff.nav.account': 'Ο λογαριασμός μου',
+
+  // --- Dashboard ---
+  'staff.dashboard.title': 'Επισκόπηση',
+  'staff.dashboard.recent': 'Πρόσφατες αλλαγές',
+  'staff.dashboard.overdue': 'Εκπρόθεσμοι δανεισμοί',
+  'staff.dashboard.empty': 'Ο κατάλογος είναι άδειος',
+  'staff.dashboard.emptyHint': 'Ξεκινήστε προσθέτοντας το πρώτο βιβλίο.',
+  'staff.dashboard.noCopies': 'Τίτλοι χωρίς αντίτυπα',
+  'staff.dashboard.noCopiesHint':
+    'Οι τίτλοι αυτοί δεν έχουν φυσικά αντίτυπα, οπότε εμφανίζονται ως μη διαθέσιμοι.',
+  'staff.stat.titles': 'Τίτλοι',
+  'staff.stat.copies': 'Αντίτυπα',
+  'staff.stat.available': 'Διαθέσιμα',
+  'staff.stat.onLoan': 'Σε δανεισμό',
+  'staff.stat.overdue': 'Εκπρόθεσμα',
+  'staff.stat.archived': 'Αρχειοθετημένοι τίτλοι',
+
+  // --- Shared staff labels ---
+  'staff.action.addBook': 'Νέο βιβλίο',
+  'staff.action.checkout': 'Δανεισμός',
+  'staff.action.checkin': 'Επιστροφή',
+  'staff.book.title': 'Τίτλος',
+  'staff.book.copies': 'Αντίτυπα',
+  'staff.book.updated': 'Ενημερώθηκε',
+  'staff.book.archived': 'Αρχειοθετημένο',
+  'staff.loan.book': 'Βιβλίο',
+  'staff.loan.borrower': 'Αναγνώστης',
+  'staff.loan.due': 'Λήξη',
 };
 
 const en = {
@@ -290,6 +349,64 @@ const en = {
   'authors.empty': 'No authors have been recorded yet.',
   'authors.findByName': 'Find an author',
   'authors.booksBy': 'Books by {name}',
+
+  // --- Login ---
+  'login.title': 'Staff sign in',
+  'login.lead': 'This area is for library staff.',
+  'login.username': 'Username',
+  'login.password': 'Password',
+  'login.submit': 'Sign in',
+  'login.help': 'If you have forgotten your password, ask the library administrator.',
+  'login.error.invalid': 'Incorrect username or password.',
+  'login.error.locked':
+    'This account is temporarily locked after several failed attempts. Please try again shortly.',
+  'login.expired': 'Your session has expired. Please sign in again.',
+  'login.noAccounts': 'No staff account exists yet. Create the first one on the server with:',
+  'login.mustChangePassword': 'You need to set a new password.',
+
+  // --- Staff shell ---
+  'staff.area': 'Library administration',
+  'staff.logout': 'Sign out',
+  'staff.viewPublicSite': 'Public catalogue',
+  'staff.role.admin': 'Administrator',
+  'staff.role.librarian': 'Librarian',
+  'staff.forbidden.body': 'This action is restricted to administrators.',
+  'staff.nav.dashboard': 'Overview',
+  'staff.nav.books': 'Catalogue',
+  'staff.nav.loans': 'Loans',
+  'staff.nav.borrowers': 'Borrowers',
+  'staff.nav.categories': 'Categories',
+  'staff.nav.authors': 'Authors',
+  'staff.nav.users': 'Users',
+  'staff.nav.account': 'My account',
+
+  // --- Dashboard ---
+  'staff.dashboard.title': 'Overview',
+  'staff.dashboard.recent': 'Recent changes',
+  'staff.dashboard.overdue': 'Overdue loans',
+  'staff.dashboard.empty': 'The catalogue is empty',
+  'staff.dashboard.emptyHint': 'Start by adding the first book.',
+  'staff.dashboard.noCopies': 'Titles without copies',
+  'staff.dashboard.noCopiesHint':
+    'These titles have no physical copies, so they show as unavailable.',
+  'staff.stat.titles': 'Titles',
+  'staff.stat.copies': 'Copies',
+  'staff.stat.available': 'Available',
+  'staff.stat.onLoan': 'On loan',
+  'staff.stat.overdue': 'Overdue',
+  'staff.stat.archived': 'Archived titles',
+
+  // --- Shared staff labels ---
+  'staff.action.addBook': 'New book',
+  'staff.action.checkout': 'Check out',
+  'staff.action.checkin': 'Check in',
+  'staff.book.title': 'Title',
+  'staff.book.copies': 'Copies',
+  'staff.book.updated': 'Updated',
+  'staff.book.archived': 'Archived',
+  'staff.loan.book': 'Book',
+  'staff.loan.borrower': 'Borrower',
+  'staff.loan.due': 'Due',
 };
 
 export const dictionaries = { el, en };

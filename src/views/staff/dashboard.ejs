@@ -1,0 +1,140 @@
+<div class="container stack-lg">
+
+  <div class="section-head">
+    <h1 class="mt-0"><%= t('staff.dashboard.title') %></h1>
+    <div class="button-row">
+      <a class="button" href="/staff/books/new"><%= t('staff.action.addBook') %></a>
+      <a class="button button--secondary" href="/staff/loans/checkout"><%= t('staff.action.checkout') %></a>
+      <a class="button button--secondary" href="/staff/loans/checkin"><%= t('staff.action.checkin') %></a>
+    </div>
+  </div>
+
+  <%# Headline figures. copies_available and copies_on_loan use the same
+      derivation as the public catalogue, so these never disagree with what a
+      visitor sees. -%>
+  <section>
+    <ul class="stat-grid" role="list">
+      <li class="stat">
+        <p class="stat__label"><%= t('staff.stat.titles') %></p>
+        <p class="stat__value"><%= stats.titles %></p>
+      </li>
+      <li class="stat">
+        <p class="stat__label"><%= t('staff.stat.copies') %></p>
+        <p class="stat__value"><%= stats.copies_total %></p>
+      </li>
+      <li class="stat">
+        <p class="stat__label"><%= t('staff.stat.available') %></p>
+        <p class="stat__value"><%= stats.copies_available %></p>
+      </li>
+      <li class="stat">
+        <p class="stat__label"><%= t('staff.stat.onLoan') %></p>
+        <p class="stat__value"><%= stats.copies_on_loan %></p>
+      </li>
+      <li class="stat <%= stats.overdue > 0 ? 'stat--alert' : '' %>">
+        <p class="stat__label"><%= t('staff.stat.overdue') %></p>
+        <p class="stat__value"><%= stats.overdue %></p>
+      </li>
+    </ul>
+  </section>
+
+  <% if (stats.archived_titles > 0 || stats.copies_lost > 0 || stats.copies_repair > 0) { %>
+    <p class="small muted">
+      <% if (stats.archived_titles > 0) { %>
+        <a href="/staff/books?archived=only"><%= t('staff.stat.archived') %>: <%= stats.archived_titles %></a> ·
+      <% } %>
+      <%= t('status.repair') %>: <%= stats.copies_repair %> ·
+      <%= t('status.lost') %>: <%= stats.copies_lost %> ·
+      <%= t('status.withdrawn') %>: <%= stats.copies_withdrawn %>
+    </p>
+  <% } %>
+
+  <%# Overdue list. Borrower names appear here because this page is behind
+      authentication — they must never reach a public template. -%>
+  <% if (overdue.length > 0) { %>
+    <section>
+      <div class="section-head">
+        <h2><%= t('staff.dashboard.overdue') %></h2>
+        <a class="section-head__link" href="/staff/loans?status=overdue"><%= t('staff.nav.loans') %> →</a>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th scope="col"><%= t('staff.loan.book') %></th>
+              <th scope="col"><%= t('staff.loan.borrower') %></th>
+              <th scope="col"><%= t('staff.loan.due') %></th>
+              <th scope="col"></th>
+            </tr>
+          </thead>
+          <tbody>
+            <% overdue.forEach(function (loan) { %>
+              <tr>
+                <td><a href="/staff/books/<%= loan.book_id %>"><%= loan.book_title %></a></td>
+                <td><%= loan.borrower_name %><% if (loan.borrower_class) { %> <span class="faint">(<%= loan.borrower_class %>)</span><% } %></td>
+                <td class="nowrap">
+                  <span class="badge badge--overdue"><%= loan.due_at.slice(0, 10) %></span>
+                </td>
+                <td><a class="small" href="/staff/loans/checkin?barcode=<%= encodeURIComponent(loan.barcode || '') %>"><%= t('staff.action.checkin') %></a></td>
+              </tr>
+            <% }); %>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  <% } %>
+
+  <section>
+    <div class="section-head">
+      <h2><%= t('staff.dashboard.recent') %></h2>
+      <a class="section-head__link" href="/staff/books"><%= t('staff.nav.books') %> →</a>
+    </div>
+
+    <% if (recent.length === 0) { %>
+      <div class="state state--empty">
+        <p class="state__icon" aria-hidden="true">📚</p>
+        <h3 class="state__title"><%= t('staff.dashboard.empty') %></h3>
+        <p class="state__body"><%= t('staff.dashboard.emptyHint') %></p>
+        <p><a class="button" href="/staff/books/new"><%= t('staff.action.addBook') %></a></p>
+      </div>
+    <% } else { %>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th scope="col"><%= t('staff.book.title') %></th>
+              <th scope="col" class="num"><%= t('staff.book.copies') %></th>
+              <th scope="col"><%= t('staff.book.updated') %></th>
+            </tr>
+          </thead>
+          <tbody>
+            <% recent.forEach(function (book) { %>
+              <tr>
+                <td>
+                  <a href="/staff/books/<%= book.id %>"><%= book.title %></a>
+                  <% if (book.archived_at) { %>
+                    <span class="badge badge--archived"><%= t('staff.book.archived') %></span>
+                  <% } %>
+                </td>
+                <td class="num"><%= book.copies_total %></td>
+                <td class="nowrap faint small"><%= book.updated_at.slice(0, 10) %></td>
+              </tr>
+            <% }); %>
+          </tbody>
+        </table>
+      </div>
+    <% } %>
+  </section>
+
+  <% if (needingCopies.length > 0) { %>
+    <section>
+      <h2><%= t('staff.dashboard.noCopies') %></h2>
+      <p class="muted small"><%= t('staff.dashboard.noCopiesHint') %></p>
+      <ul>
+        <% needingCopies.forEach(function (book) { %>
+          <li><a href="/staff/books/<%= book.id %>/copies"><%= book.title %></a></li>
+        <% }); %>
+      </ul>
+    </section>
+  <% } %>
+
+</div>
