@@ -1,0 +1,25 @@
+node_modules/
+
+# Runtime data: the SQLite database, its WAL sidecars, and uploaded covers.
+# Never commit these — they hold real catalogue and borrower data.
+data/
+
+# Secrets. Only .env.example belongs in the repository.
+.env
+.env.*
+!.env.example
+
+# Logs
+*.log
+logs/
+
+# Editor / OS noise
+.DS_Store
+.idea/
+.vscode/
+*.swp
+
+# Test and backup scratch
+coverage/
+*.bak
+backups/

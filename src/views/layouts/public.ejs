@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="<%= lang %>">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title><%= typeof title !== 'undefined' && title ? title + ' · ' + libraryName : libraryName %></title>
+  <meta name="description" content="<%= typeof metaDescription !== 'undefined' ? metaDescription : t('footer.catalogue') %>">
+  <link rel="stylesheet" href="/assets/css/app.css">
+  <link rel="icon" href="/assets/icon.svg" type="image/svg+xml">
+</head>
+<body>
+  <a class="skip-link" href="#main"><%= t('nav.skip') %></a>
+
+  <header class="site-header">
+    <div class="container site-header__inner">
+      <a class="site-brand" href="/">
+        <span class="site-brand__mark" aria-hidden="true">📚</span>
+        <span class="site-brand__name"><%= libraryName %></span>
+      </a>
+
+      <nav class="site-nav" aria-label="<%= t('nav.menu') %>">
+        <ul class="site-nav__list">
+          <li><a href="/" <%= currentPath === '/' ? 'aria-current="page"' : '' %>><%= t('nav.home') %></a></li>
+          <li><a href="/books" <%= currentPath.startsWith('/books') ? 'aria-current="page"' : '' %>><%= t('nav.books') %></a></li>
+          <li><a href="/categories" <%= currentPath.startsWith('/categories') ? 'aria-current="page"' : '' %>><%= t('nav.categories') %></a></li>
+          <li><a href="/authors" <%= currentPath.startsWith('/authors') ? 'aria-current="page"' : '' %>><%= t('nav.authors') %></a></li>
+        </ul>
+      </nav>
+
+      <div class="lang-switch" role="group" aria-label="<%= t('lang.label') %>">
+        <% supportedLangs.forEach(function (code) { %>
+          <% if (code === lang) { %>
+            <span class="lang-switch__current" aria-current="true"><%= t('lang.' + code) %></span>
+          <% } else { %>
+            <a class="lang-switch__link" href="<%= langUrl(code) %>" lang="<%= code %>"><%= t('lang.' + code) %></a>
+          <% } %>
+        <% }); %>
+      </div>
+    </div>
+  </header>
+
+  <main id="main" class="site-main">
+    <%- body %>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container site-footer__inner">
+      <p><%= libraryName %> · <%= t('footer.catalogue') %></p>
+      <p><a href="/staff"><%= t('nav.staff') %></a></p>
+    </div>
+  </footer>
+</body>
+</html>

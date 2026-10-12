@@ -1,0 +1,12 @@
+<div class="container">
+  <div class="state state--error" role="alert">
+    <p class="state__icon" aria-hidden="true">
+      <%= status === 404 ? '🔍' : status === 403 ? '🔒' : status === 429 ? '⏳' : '⚠️' %>
+    </p>
+    <h1 class="state__title"><%= t('error.' + status + '.title') %></h1>
+    <p class="state__body"><%= t('error.' + status + '.body') %></p>
+    <% if (status === 404 || status === 500) { %>
+      <p><a class="button" href="/"><%= t('error.' + status + '.action') %></a></p>
+    <% } %>
+  </div>
+</div>
