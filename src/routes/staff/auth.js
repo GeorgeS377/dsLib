@@ -32,6 +32,9 @@ export default async function authRoutes(app) {
         csrfToken: reply.generateCsrf(),
         next: safeRedirect(request.query?.next) ?? '',
         expired: request.query?.expired === '1',
+        // Set after a password change, which revokes every session for the
+        // account including this one.
+        changed: request.query?.changed === '1',
         error: null,
         username: '',
         // Tells a fresh installation to run the create-admin script, instead
@@ -72,6 +75,7 @@ export default async function authRoutes(app) {
             csrfToken: reply.generateCsrf(),
             next: next ?? '',
             expired: false,
+            changed: false,
             error: reason === 'locked' ? 'login.error.locked' : 'login.error.invalid',
             username,
             noAccounts: countStaff(db) === 0,

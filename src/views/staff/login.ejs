@@ -9,6 +9,12 @@
       </p>
     <% } %>
 
+    <% if (changed) { %>
+      <p class="flash flash--success" role="status">
+        <span><%= t('staff.account.changed') %></span>
+      </p>
+    <% } %>
+
     <% if (error) { %>
       <%# One message for every failure, so the page never confirms whether a
           username exists. -%>

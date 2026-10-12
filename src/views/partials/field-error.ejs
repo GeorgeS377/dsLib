@@ -1,15 +1,20 @@
 <%#
-  One field-level error message. Error codes come from the validation layer
-  and are translated here, so no message text is built in JavaScript.
-  Expects `code`.
+  One field-level error message.
+
+  Error codes come from the validation layer (zod messages, or the reason
+  strings the query modules return) and are translated here, so no message
+  text is built in JavaScript.
+
+  A code with its own `error.field.<code>` entry gets that specific message;
+  anything else falls back to a generic one. Existence is checked rather than
+  matched against a list in this file — such a list fell behind as new codes
+  were added, and the affected fields quietly showed "invalid value" instead
+  of the real reason.
+
+  Expects `code` and `hasT`.
 -%>
 <% if (code) { %>
   <span class="field__error">
-    <%
-      const known = ['required', 'invalid_isbn', 'duplicate_isbn', 'duplicate_barcode',
-                     'duplicate', 'invalid_date', 'too_big', 'too_small'];
-      const key = known.includes(code) ? code : 'generic';
-    %>
-    <%= t('error.field.' + key) %>
+    <%= hasT('error.field.' + code) ? t('error.field.' + code) : t('error.field.generic') %>
   </span>
 <% } %>

@@ -1,0 +1,67 @@
+<div class="container stack-lg">
+
+  <h1 class="mt-0"><%= t('staff.account.title') %></h1>
+
+  <dl class="meta-list">
+    <dt><%= t('staff.account.username') %></dt>
+    <dd class="mono"><%= staffUser.username %></dd>
+    <dt><%= t('staff.field.title') %></dt>
+    <dd><%= staffUser.display_name %></dd>
+    <dt><%= t('staff.account.role') %></dt>
+    <dd><%= t('staff.role.' + staffUser.role) %></dd>
+    <% if (staffUser.last_login_at) { %>
+      <dt><%= t('staff.account.lastLogin') %></dt>
+      <dd class="faint"><%= staffUser.last_login_at.slice(0, 16).replace('T', ' ') %></dd>
+    <% } %>
+  </dl>
+
+  <section class="card">
+    <h2 class="mt-0"><%= t('staff.account.changePassword') %></h2>
+
+    <% if (Object.keys(errors).length > 0) { %>
+      <div class="error-summary" role="alert">
+        <strong><%= t('error.summary.title') %></strong>
+      </div>
+    <% } %>
+
+    <form method="post" action="/staff/account/password" autocomplete="on">
+      <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+
+      <%# The current password is required: a hijacked session must not be able
+          to lock the real owner out by changing it. -%>
+      <div class="field">
+        <label class="field__label" for="current_password">
+          <%= t('staff.account.currentPassword') %>
+        </label>
+        <input type="password" id="current_password" name="current_password"
+               autocomplete="current-password" required
+               <%- errors.current_password ? 'aria-invalid="true"' : '' %>>
+        <%- include('../partials/field-error', { hasT: hasT, code: errors.current_password, t: t }) %>
+      </div>
+
+      <div class="field">
+        <label class="field__label" for="password"><%= t('staff.account.newPassword') %></label>
+        <span class="field__hint">
+          <%= t('staff.account.passwordHint', { min: minPasswordLength }) %>
+        </span>
+        <input type="password" id="password" name="password" autocomplete="new-password"
+               minlength="<%= minPasswordLength %>" required
+               <%- errors.password ? 'aria-invalid="true"' : '' %>>
+        <%- include('../partials/field-error', { hasT: hasT, code: errors.password, t: t }) %>
+      </div>
+
+      <div class="field">
+        <label class="field__label" for="password_confirm">
+          <%= t('staff.account.confirmPassword') %>
+        </label>
+        <input type="password" id="password_confirm" name="password_confirm"
+               autocomplete="new-password" minlength="<%= minPasswordLength %>" required
+               <%- errors.password_confirm ? 'aria-invalid="true"' : '' %>>
+        <%- include('../partials/field-error', { hasT: hasT, code: errors.password_confirm, t: t }) %>
+      </div>
+
+      <button class="button" type="submit"><%= t('staff.account.changePassword') %></button>
+    </form>
+  </section>
+
+</div>

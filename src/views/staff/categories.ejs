@@ -48,7 +48,7 @@
 
     <% if (errors.name) { %>
       <div class="error-summary" role="alert">
-        <%- include('../partials/field-error', { code: errors.name, t: t }) %>
+        <%- include('../partials/field-error', { hasT: hasT, code: errors.name, t: t }) %>
         <% if (typeof existing !== 'undefined' && existing) { %>
           <p><%= t('staff.categories.existing', { name: existing.name }) %></p>
         <% } %>

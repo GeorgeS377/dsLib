@@ -16,7 +16,13 @@ import ejs from 'ejs';
 import Fastify from 'fastify';
 import { config as defaultConfig } from './config.js';
 import { getDatabase } from './db/index.js';
-import { LANG_COOKIE, SUPPORTED_LANGS, resolveLang, translatorFor } from './lib/i18n.js';
+import {
+  LANG_COOKIE,
+  SUPPORTED_LANGS,
+  hasTranslation,
+  resolveLang,
+  translatorFor,
+} from './lib/i18n.js';
 import { SqliteSessionStore } from './lib/session-store.js';
 import healthRoutes from './routes/health.js';
 import publicRoutes from './routes/public/index.js';
@@ -251,6 +257,9 @@ export async function buildApp({ config = defaultConfig, logger, db, onRoute } =
   app.addHook('preHandler', async (request, reply) => {
     reply.locals = {
       t: translatorFor(request.lang),
+      // Lets a template ask whether a specific message exists before falling
+      // back to a generic one — see views/partials/field-error.ejs.
+      hasT: hasTranslation,
       lang: request.lang,
       supportedLangs: SUPPORTED_LANGS,
       libraryName: config.libraryName,

@@ -1,0 +1,125 @@
+<div class="container stack-lg">
+
+  <div class="section-head">
+    <h1 class="mt-0"><%= borrower.display_name %></h1>
+    <a class="button button--quiet" href="/staff/borrowers">← <%= t('staff.borrowers.title') %></a>
+  </div>
+
+  <% if (borrower.is_anonymized) { %>
+    <div class="flash flash--info" role="status">
+      <span><%= t('staff.borrowers.isAnonymized') %></span>
+    </div>
+  <% } %>
+
+  <dl class="meta-list">
+    <dt><%= t('staff.borrowers.class') %></dt>
+    <dd><%= borrower.school_class || '—' %></dd>
+    <dt><%= t('staff.borrowers.openLoans') %></dt>
+    <dd><%= borrower.open_loans %></dd>
+    <dt><%= t('staff.borrowers.totalLoans') %></dt>
+    <dd><%= borrower.total_loans %></dd>
+  </dl>
+
+  <% if (!borrower.is_anonymized) { %>
+    <section class="card">
+      <h2 class="mt-0"><%= t('common.edit') %></h2>
+
+      <form method="post" action="/staff/borrowers/<%= borrower.id %>">
+        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+
+        <div class="field">
+          <label class="field__label" for="display_name"><%= t('staff.borrowers.name') %></label>
+          <input type="text" id="display_name" name="display_name"
+                 value="<%= values.display_name %>" required maxlength="200"
+                 <%- errors.display_name ? 'aria-invalid="true"' : '' %>>
+          <%- include('../partials/field-error', { hasT: hasT, code: errors.display_name, t: t }) %>
+        </div>
+
+        <div class="field">
+          <label class="field__label" for="school_class"><%= t('staff.borrowers.class') %>
+            <span class="field__optional"><%= t('common.optional') %></span>
+          </label>
+          <input type="text" id="school_class" name="school_class"
+                 value="<%= values.school_class %>" maxlength="60" list="class-options">
+          <datalist id="class-options">
+            <% classes.forEach(function (name) { %>
+              <option value="<%= name %>"></option>
+            <% }); %>
+          </datalist>
+        </div>
+
+        <%# Deliberately no further fields. See the privacy note in
+            migrations/002_circulation.sql. -%>
+        <p class="field__hint"><%= t('staff.borrowers.privacyNote') %></p>
+
+        <button class="button" type="submit"><%= t('common.save') %></button>
+      </form>
+    </section>
+  <% } %>
+
+  <section>
+    <h2><%= t('staff.borrowers.history') %></h2>
+
+    <% if (loans.total === 0) { %>
+      <p class="muted"><%= t('staff.borrowers.noHistory') %></p>
+    <% } else { %>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th scope="col"><%= t('staff.loan.book') %></th>
+              <th scope="col"><%= t('staff.loans.loaned') %></th>
+              <th scope="col"><%= t('staff.loan.due') %></th>
+              <th scope="col"><%= t('staff.loans.returnedAt') %></th>
+            </tr>
+          </thead>
+          <tbody>
+            <% loans.rows.forEach(function (loan) { %>
+              <tr>
+                <td><a href="/staff/books/<%= loan.book_id %>"><%= loan.book_title %></a></td>
+                <td class="nowrap faint small"><%= loan.loaned_at.slice(0, 10) %></td>
+                <td class="nowrap">
+                  <% if (!loan.returned_at && loan.is_overdue) { %>
+                    <span class="badge badge--overdue"><%= loan.due_at.slice(0, 10) %></span>
+                  <% } else { %>
+                    <span class="faint small"><%= loan.due_at.slice(0, 10) %></span>
+                  <% } %>
+                </td>
+                <td class="nowrap">
+                  <% if (loan.returned_at) { %>
+                    <span class="faint small"><%= loan.returned_at.slice(0, 10) %></span>
+                  <% } else { %>
+                    <span class="badge badge--loaned"><%= t('status.on_loan') %></span>
+                  <% } %>
+                </td>
+              </tr>
+            <% }); %>
+          </tbody>
+        </table>
+      </div>
+    <% } %>
+  </section>
+
+  <%# Removal. Anonymization is offered first: it is the option that works for
+      a borrower who has used the library, and it keeps the figures correct. -%>
+  <% if (!borrower.is_anonymized) { %>
+    <section class="card">
+      <h2 class="mt-0"><%= t('staff.borrowers.anonymize') %></h2>
+      <p class="muted small">
+        <%= t('staff.borrowers.anonymizeExplain', {
+              placeholder: anonymizedName, count: borrower.total_loans }) %>
+      </p>
+      <div class="button-row">
+        <a class="button button--secondary" href="/staff/borrowers/<%= borrower.id %>/anonymize">
+          <%= t('staff.borrowers.anonymize') %>
+        </a>
+        <% if (borrower.total_loans === 0) { %>
+          <a class="button button--danger" href="/staff/borrowers/<%= borrower.id %>/delete">
+            <%= t('common.delete') %>
+          </a>
+        <% } %>
+      </div>
+    </section>
+  <% } %>
+
+</div>

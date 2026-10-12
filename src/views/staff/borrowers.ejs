@@ -1,0 +1,105 @@
+<div class="container stack-lg">
+
+  <h1 class="mt-0"><%= t('staff.borrowers.title') %></h1>
+
+  <%# State the data boundary on the page itself, so the rule is visible to
+      whoever is using the system rather than buried in a spec. -%>
+  <p class="flash flash--info" role="note">
+    <span><%= t('staff.borrowers.privacyNote') %></span>
+  </p>
+
+  <form class="search-form" method="get" action="/staff/borrowers" role="search">
+    <label class="visually-hidden" for="q"><%= t('staff.borrowers.search') %></label>
+    <input class="search-form__input" type="search" id="q" name="q" value="<%= q || '' %>"
+           placeholder="<%= t('staff.borrowers.search') %>" autocomplete="off">
+    <button class="button button--secondary" type="submit"><%= t('common.search') %></button>
+  </form>
+
+  <% if (results.total === 0) { %>
+    <div class="state state--empty">
+      <p class="state__icon" aria-hidden="true">👤</p>
+      <h2 class="state__title">
+        <%= q ? t('search.empty.title') : t('staff.borrowers.empty') %>
+      </h2>
+      <p class="state__body"><%= t('staff.borrowers.emptyHint') %></p>
+    </div>
+  <% } else { %>
+    <p class="muted small" role="status">
+      <%= t('search.showing', { from: range.from, to: range.to, total: range.total }) %>
+    </p>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th scope="col"><%= t('staff.borrowers.name') %></th>
+            <th scope="col"><%= t('staff.borrowers.class') %></th>
+            <th scope="col" class="num"><%= t('staff.borrowers.openLoans') %></th>
+            <th scope="col" class="num"><%= t('staff.borrowers.totalLoans') %></th>
+          </tr>
+        </thead>
+        <tbody>
+          <% results.rows.forEach(function (person) { %>
+            <tr>
+              <td>
+                <a href="/staff/borrowers/<%= person.id %>"><%= person.display_name %></a>
+                <% if (person.is_anonymized) { %>
+                  <span class="badge badge--archived"><%= t('staff.borrowers.anonymize') %></span>
+                <% } %>
+              </td>
+              <td class="muted"><%= person.school_class || '—' %></td>
+              <td class="num">
+                <% if (person.overdue_loans > 0) { %>
+                  <span class="badge badge--overdue"><%= person.open_loans %></span>
+                <% } else { %>
+                  <%= person.open_loans %>
+                <% } %>
+              </td>
+              <td class="num faint"><%= person.total_loans %></td>
+            </tr>
+          <% }); %>
+        </tbody>
+      </table>
+    </div>
+
+    <%- include('../partials/pagination', {
+          results: results, pages: pages, pageUrl: pageUrl, t: t }) %>
+  <% } %>
+
+  <section class="card">
+    <h2 class="mt-0"><%= t('staff.borrowers.add') %></h2>
+
+    <% if (Object.keys(errors).length > 0) { %>
+      <div class="error-summary" role="alert">
+        <%- include('../partials/field-error', { hasT: hasT, code: errors.display_name, t: t }) %>
+      </div>
+    <% } %>
+
+    <form method="post" action="/staff/borrowers">
+      <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+
+      <div class="field">
+        <label class="field__label" for="display_name"><%= t('staff.borrowers.name') %></label>
+        <input type="text" id="display_name" name="display_name" value="<%= values.display_name %>"
+               required maxlength="200" autocomplete="off"
+               <%- errors.display_name ? 'aria-invalid="true"' : '' %>>
+      </div>
+
+      <div class="field">
+        <label class="field__label" for="school_class"><%= t('staff.borrowers.class') %>
+          <span class="field__optional"><%= t('common.optional') %></span>
+        </label>
+        <input type="text" id="school_class" name="school_class" value="<%= values.school_class %>"
+               maxlength="60" list="class-options" autocomplete="off">
+        <datalist id="class-options">
+          <% classes.forEach(function (name) { %>
+            <option value="<%= name %>"></option>
+          <% }); %>
+        </datalist>
+      </div>
+
+      <button class="button" type="submit"><%= t('staff.borrowers.add') %></button>
+    </form>
+  </section>
+
+</div>

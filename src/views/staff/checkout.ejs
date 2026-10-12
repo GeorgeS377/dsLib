@@ -1,0 +1,141 @@
+<%#
+  Check out a copy. Two steps on one page: find the copy by barcode, then
+  pick or add a borrower.
+
+  Designed for a desk with a barcode scanner, which simply types the barcode
+  and presses Enter — so the barcode field submits a GET that reloads this
+  page with the copy identified.
+-%>
+<div class="container stack-lg">
+
+  <div class="section-head">
+    <h1 class="mt-0"><%= t('staff.loans.checkout') %></h1>
+    <div class="button-row">
+      <a class="button button--secondary" href="/staff/loans/checkin"><%= t('staff.loans.checkin') %></a>
+      <a class="button button--quiet" href="/staff/loans"><%= t('staff.loans.title') %></a>
+    </div>
+  </div>
+
+  <%# Step 1: identify the copy. A GET form, so a scanner's Enter keypress
+      works with no JavaScript at all. -%>
+  <section class="card">
+    <form method="get" action="/staff/loans/checkout">
+      <div class="field">
+        <label class="field__label" for="scan"><%= t('staff.loans.scanBarcode') %></label>
+        <span class="field__hint"><%= t('staff.loans.scanHint') %></span>
+        <input type="text" id="scan" name="barcode" value="<%= barcode %>"
+               autocomplete="off" autocapitalize="none" spellcheck="false"
+               <%- copy ? '' : 'autofocus' %>
+               <%- errors.barcode ? 'aria-invalid="true"' : '' %>>
+        <%- include('../partials/field-error', { hasT: hasT, code: errors.barcode === 'copy_not_found' ? null : errors.barcode, t: t }) %>
+        <% if (errors.barcode) { %>
+          <span class="field__error"><%= t('staff.loans.error.' + errors.barcode) %></span>
+        <% } %>
+      </div>
+      <button class="button button--secondary" type="submit"><%= t('staff.loans.findCopy') %></button>
+    </form>
+  </section>
+
+  <% if (copy) { %>
+    <section class="card">
+      <h2 class="mt-0"><%= t('staff.loans.copyFound') %></h2>
+      <dl class="meta-list">
+        <dt><%= t('staff.book.title') %></dt>
+        <dd><a href="/staff/books/<%= copy.book_id %>"><%= copy.book_title %></a></dd>
+        <dt><%= t('staff.field.barcode') %></dt>
+        <dd class="mono"><%= copy.barcode || '—' %></dd>
+        <dt><%= t('staff.field.shelf') %></dt>
+        <dd><%= copy.shelf_location || '—' %></dd>
+        <dt><%= t('staff.field.status') %></dt>
+        <dd>
+          <% if (openLoan) { %>
+            <span class="badge badge--loaned"><%= t('status.on_loan') %></span>
+          <% } else if (copy.is_available) { %>
+            <span class="badge badge--available"><%= t('status.available') %></span>
+          <% } else { %>
+            <span class="badge badge--<%= copy.status %>"><%= t('status.' + copy.status) %></span>
+          <% } %>
+        </dd>
+      </dl>
+
+      <% if (openLoan) { %>
+        <%# Already out. Offer the return rather than a checkout that would
+            be refused. -%>
+        <div class="flash flash--warning mt-4" role="status">
+          <span>
+            <%= t('staff.loans.error.already_on_loan') %>
+            <%= openLoan.borrower_name %><% if (openLoan.school_class) { %> (<%= openLoan.school_class %>)<% } %>,
+            <%= t('staff.loan.due') %> <%= openLoan.due_at.slice(0, 10) %>
+          </span>
+        </div>
+        <form method="post" action="/staff/loans/checkin">
+          <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+          <input type="hidden" name="loan_id" value="<%= openLoan.id %>">
+          <button class="button" type="submit"><%= t('staff.loans.checkin') %></button>
+        </form>
+      <% } else if (!copy.is_available) { %>
+        <div class="flash flash--error mt-4" role="alert">
+          <span><%= t('staff.loans.error.copy_not_available') %></span>
+        </div>
+      <% } else { %>
+        <%# Step 2: the borrower. Either an existing record or a new one with
+            just a name and a class. -%>
+        <form method="post" action="/staff/loans/checkout" class="mt-6">
+          <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+          <input type="hidden" name="copy_id" value="<%= copy.id %>">
+          <input type="hidden" name="barcode" value="<%= copy.barcode || '' %>">
+
+          <fieldset class="fieldset">
+            <legend class="fieldset__legend"><%= t('staff.loans.borrowerNew') %></legend>
+            <p class="field__hint"><%= t('staff.loans.borrowerNewHint') %></p>
+
+            <div class="field">
+              <label class="field__label" for="new_borrower_name"><%= t('staff.borrowers.name') %></label>
+              <input type="text" id="new_borrower_name" name="new_borrower_name"
+                     value="<%= values.new_borrower_name %>" maxlength="200" autocomplete="off"
+                     <%- errors.new_borrower_name || errors.borrower_id ? 'aria-invalid="true"' : '' %>>
+              <%- include('../partials/field-error', { hasT: hasT, code: errors.new_borrower_name, t: t }) %>
+              <% if (errors.borrower_id) { %>
+                <span class="field__error"><%= t('staff.loans.error.' + errors.borrower_id) %></span>
+              <% } %>
+            </div>
+
+            <div class="field">
+              <label class="field__label" for="new_borrower_class"><%= t('staff.borrowers.class') %>
+                <span class="field__optional"><%= t('common.optional') %></span>
+              </label>
+              <input type="text" id="new_borrower_class" name="new_borrower_class"
+                     value="<%= values.new_borrower_class %>" maxlength="60" autocomplete="off">
+            </div>
+
+            <% if (suggestions.length > 0) { %>
+              <%# Near-matches, so a librarian does not create a second record
+                  for a student who is already known. -%>
+              <p class="field__hint"><%= t('staff.loans.borrowerExisting') %>:</p>
+              <ul class="chip-list">
+                <% suggestions.forEach(function (person) { %>
+                  <li>
+                    <label class="chip">
+                      <input type="radio" name="borrower_id" value="<%= person.id %>">
+                      <%= person.display_name %><% if (person.school_class) { %> (<%= person.school_class %>)<% } %>
+                    </label>
+                  </li>
+                <% }); %>
+              </ul>
+            <% } %>
+          </fieldset>
+
+          <div class="field">
+            <label class="field__label" for="due_date"><%= t('staff.loans.dueDate') %></label>
+            <span class="field__hint"><%= t('staff.loans.dueDateHint', { days: defaultLoanDays }) %></span>
+            <input type="date" id="due_date" name="due_date" value="<%= values.due_date %>">
+            <%- include('../partials/field-error', { hasT: hasT, code: errors.due_date, t: t }) %>
+          </div>
+
+          <button class="button" type="submit"><%= t('staff.loans.checkout') %></button>
+        </form>
+      <% } %>
+    </section>
+  <% } %>
+
+</div>

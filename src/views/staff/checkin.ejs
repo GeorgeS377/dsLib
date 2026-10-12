@@ -1,0 +1,54 @@
+<%#
+  Check a book back in. One field: scan the barcode, press Enter, done.
+  A POST, because recording a return changes state.
+-%>
+<div class="container stack-lg">
+
+  <div class="section-head">
+    <h1 class="mt-0"><%= t('staff.loans.checkin') %></h1>
+    <div class="button-row">
+      <a class="button button--secondary" href="/staff/loans/checkout"><%= t('staff.loans.checkout') %></a>
+      <a class="button button--quiet" href="/staff/loans"><%= t('staff.loans.title') %></a>
+    </div>
+  </div>
+
+  <section class="card">
+    <form method="post" action="/staff/loans/checkin">
+      <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+      <div class="field">
+        <label class="field__label" for="barcode"><%= t('staff.loans.scanBarcode') %></label>
+        <span class="field__hint"><%= t('staff.loans.scanHint') %></span>
+        <input type="text" id="barcode" name="barcode" value="<%= barcode %>"
+               autocomplete="off" autocapitalize="none" spellcheck="false" autofocus required>
+      </div>
+      <button class="button" type="submit"><%= t('staff.loans.checkin') %></button>
+    </form>
+  </section>
+
+  <% if (recent.length > 0) { %>
+    <section>
+      <h2><%= t('staff.loans.recentReturns') %></h2>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th scope="col"><%= t('staff.loan.book') %></th>
+              <th scope="col"><%= t('staff.loan.borrower') %></th>
+              <th scope="col"><%= t('staff.loans.returnedAt') %></th>
+            </tr>
+          </thead>
+          <tbody>
+            <% recent.forEach(function (loan) { %>
+              <tr>
+                <td><a href="/staff/books/<%= loan.book_id %>"><%= loan.book_title %></a></td>
+                <td><%= loan.borrower_name %></td>
+                <td class="nowrap faint small"><%= loan.returned_at.slice(0, 10) %></td>
+              </tr>
+            <% }); %>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  <% } %>
+
+</div>

@@ -108,7 +108,7 @@
 
       <% if (errors.barcode) { %>
         <div class="error-summary" role="alert">
-          <%- include('../partials/field-error', { code: errors.barcode, t: t }) %>
+          <%- include('../partials/field-error', { hasT: hasT, code: errors.barcode, t: t }) %>
         </div>
       <% } %>
 

@@ -1,0 +1,172 @@
+<%#
+  Staff account administration. Admin only — the route scope enforces it; this
+  template is never reached by a librarian.
+-%>
+<div class="container stack-lg">
+
+  <h1 class="mt-0"><%= t('staff.users.title') %></h1>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th scope="col"><%= t('staff.account.username') %></th>
+          <th scope="col"><%= t('staff.field.title') %></th>
+          <th scope="col"><%= t('staff.account.role') %></th>
+          <th scope="col"><%= t('staff.field.status') %></th>
+          <th scope="col"><%= t('staff.account.lastLogin') %></th>
+          <th scope="col"></th>
+        </tr>
+      </thead>
+      <tbody>
+        <% users.forEach(function (user) { %>
+          <tr>
+            <td class="mono"><a href="/staff/users/<%= user.id %>"><%= user.username %></a></td>
+            <td><%= user.display_name %></td>
+            <td><%= t('staff.role.' + user.role) %></td>
+            <td class="nowrap">
+              <% if (user.is_active) { %>
+                <span class="badge badge--available"><%= t('staff.users.active') %></span>
+              <% } else { %>
+                <span class="badge badge--unavailable"><%= t('staff.users.inactive') %></span>
+              <% } %>
+              <% if (user.must_change_password) { %>
+                <span class="badge badge--neutral"><%= t('staff.users.mustChange') %></span>
+              <% } %>
+            </td>
+            <td class="nowrap faint small">
+              <%= user.last_login_at ? user.last_login_at.slice(0, 10) : '—' %>
+            </td>
+            <td class="nowrap small">
+              <a href="/staff/users/<%= user.id %>"><%= t('common.edit') %></a>
+              <% if (user.id !== staffUser.id) { %>
+                ·
+                <form class="inline-form" method="post" action="/staff/users/<%= user.id %>/delete"
+                      data-confirm="<%= t('common.delete') %>: <%= user.username %>?">
+                  <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                  <button class="button button--quiet button--small" type="submit">
+                    <%= t('common.delete') %>
+                  </button>
+                </form>
+              <% } %>
+            </td>
+          </tr>
+        <% }); %>
+      </tbody>
+    </table>
+  </div>
+
+  <section class="card">
+    <h2 class="mt-0">
+      <%= editing ? t('common.edit') + ': ' + editing.username : t('staff.users.add') %>
+    </h2>
+
+    <% if (Object.keys(errors).length > 0) { %>
+      <div class="error-summary" role="alert">
+        <strong><%= t('error.summary.title') %></strong>
+        <ul>
+          <% Object.entries(errors).forEach(function ([field, code]) { %>
+            <li><%= field %>: <%= t('error.field.' + code) !== 'error.field.' + code ? t('error.field.' + code) : t('error.field.generic') %></li>
+          <% }); %>
+        </ul>
+      </div>
+    <% } %>
+
+    <form method="post" action="<%= editing ? '/staff/users/' + editing.id : '/staff/users' %>">
+      <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+
+      <div class="field">
+        <label class="field__label" for="username"><%= t('staff.account.username') %></label>
+        <% if (editing) { %>
+          <%# A username is an identity, not a label: changing it would detach
+              the account from its audit trail. -%>
+          <input type="text" id="username" name="username" value="<%= values.username %>"
+                 readonly>
+        <% } else { %>
+          <input type="text" id="username" name="username" value="<%= values.username %>"
+                 required minlength="3" maxlength="60" pattern="[A-Za-z0-9._\-]+"
+                 autocapitalize="none" spellcheck="false" autocomplete="off"
+                 <%- errors.username ? 'aria-invalid="true"' : '' %>>
+          <%- include('../partials/field-error', { hasT: hasT, code: errors.username, t: t }) %>
+        <% } %>
+      </div>
+
+      <div class="field">
+        <label class="field__label" for="display_name"><%= t('staff.field.title') %></label>
+        <input type="text" id="display_name" name="display_name" value="<%= values.display_name %>"
+               required maxlength="200">
+      </div>
+
+      <div class="field">
+        <label class="field__label" for="email">Email
+          <span class="field__optional"><%= t('common.optional') %></span>
+        </label>
+        <input type="email" id="email" name="email" value="<%= values.email %>" maxlength="200"
+               autocomplete="off">
+      </div>
+
+      <div class="field">
+        <label class="field__label" for="role"><%= t('staff.account.role') %></label>
+        <select id="role" name="role">
+          <% ['librarian', 'admin'].forEach(function (role) { %>
+            <option value="<%= role %>" <%= values.role === role ? 'selected' : '' %>>
+              <%= t('staff.role.' + role) %>
+            </option>
+          <% }); %>
+        </select>
+      </div>
+
+      <% if (editing) { %>
+        <div class="field">
+          <div class="checkbox-row">
+            <input type="checkbox" id="is_active" name="is_active" value="1"
+                   <%= values.is_active ? 'checked' : '' %>>
+            <label for="is_active"><%= t('staff.users.active') %></label>
+          </div>
+        </div>
+      <% } else { %>
+        <div class="field">
+          <label class="field__label" for="password"><%= t('staff.account.newPassword') %></label>
+          <span class="field__hint">
+            <%= t('staff.account.passwordHint', { min: minPasswordLength }) %>
+            <%= t('staff.users.newUserNote') %>
+          </span>
+          <input type="password" id="password" name="password" autocomplete="new-password"
+                 minlength="<%= minPasswordLength %>" required
+                 <%- errors.password ? 'aria-invalid="true"' : '' %>>
+          <%- include('../partials/field-error', { hasT: hasT, code: errors.password, t: t }) %>
+        </div>
+      <% } %>
+
+      <div class="button-row">
+        <button class="button" type="submit"><%= t('common.save') %></button>
+        <% if (editing) { %>
+          <a class="button button--quiet" href="/staff/users"><%= t('common.cancel') %></a>
+        <% } %>
+      </div>
+    </form>
+  </section>
+
+  <% if (editing) { %>
+    <section class="card">
+      <h2 class="mt-0"><%= t('staff.users.resetPassword') %></h2>
+      <p class="muted small"><%= t('staff.users.newUserNote') %></p>
+
+      <form method="post" action="/staff/users/<%= editing.id %>/password">
+        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+        <div class="field">
+          <label class="field__label" for="reset_password"><%= t('staff.account.newPassword') %></label>
+          <span class="field__hint">
+            <%= t('staff.account.passwordHint', { min: minPasswordLength }) %>
+          </span>
+          <input type="password" id="reset_password" name="password" autocomplete="new-password"
+                 minlength="<%= minPasswordLength %>" required>
+        </div>
+        <button class="button button--secondary" type="submit">
+          <%= t('staff.users.resetPassword') %>
+        </button>
+      </form>
+    </section>
+  <% } %>
+
+</div>

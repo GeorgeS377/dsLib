@@ -1,0 +1,34 @@
+<div class="container">
+  <div class="card login-shell">
+    <h1 class="mt-0"><%= t('staff.borrowers.deleteConfirm', { name: borrower.display_name }) %></h1>
+
+    <% if (canDelete) { %>
+      <p class="muted"><%= t('staff.borrowers.deleteExplain') %></p>
+
+      <div class="button-row mt-6">
+        <form method="post" action="/staff/borrowers/<%= borrower.id %>/delete">
+          <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+          <button class="button button--danger" type="submit"><%= t('common.delete') %></button>
+        </form>
+        <a class="button button--quiet" href="/staff/borrowers/<%= borrower.id %>">
+          <%= t('common.cancel') %>
+        </a>
+      </div>
+    <% } else { %>
+      <%# With loan history, deletion would orphan the records. Anonymization
+          removes the identifying data and keeps the history. -%>
+      <div class="flash flash--error" role="alert">
+        <span><%= t('staff.borrowers.deleteBlocked.has_loans') %></span>
+      </div>
+
+      <div class="button-row mt-6">
+        <a class="button" href="/staff/borrowers/<%= borrower.id %>/anonymize">
+          <%= t('staff.borrowers.anonymize') %>
+        </a>
+        <a class="button button--quiet" href="/staff/borrowers/<%= borrower.id %>">
+          <%= t('common.cancel') %>
+        </a>
+      </div>
+    <% } %>
+  </div>
+</div>

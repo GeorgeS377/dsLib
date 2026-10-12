@@ -1,0 +1,38 @@
+<div class="container">
+  <div class="card login-shell">
+    <h1 class="mt-0"><%= t('staff.borrowers.anonymizeConfirm', { name: borrower.display_name }) %></h1>
+
+    <p class="muted">
+      <%= t('staff.borrowers.anonymizeExplain', {
+            placeholder: anonymizedName, count: loanCount }) %>
+    </p>
+
+    <% if (borrower.open_loans > 0) { %>
+      <%# Cannot anonymize while books are still out: the library would lose
+          track of who to ask for them back. -%>
+      <div class="flash flash--error" role="alert">
+        <span><%= t('staff.borrowers.error.open_loans') %></span>
+      </div>
+      <div class="button-row mt-6">
+        <a class="button" href="/staff/loans?borrower=<%= borrower.id %>&status=open">
+          <%= t('staff.loans.title') %>
+        </a>
+        <a class="button button--quiet" href="/staff/borrowers/<%= borrower.id %>">
+          <%= t('common.cancel') %>
+        </a>
+      </div>
+    <% } else { %>
+      <div class="button-row mt-6">
+        <form method="post" action="/staff/borrowers/<%= borrower.id %>/anonymize">
+          <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+          <button class="button button--danger" type="submit">
+            <%= t('staff.borrowers.anonymize') %>
+          </button>
+        </form>
+        <a class="button button--quiet" href="/staff/borrowers/<%= borrower.id %>">
+          <%= t('common.cancel') %>
+        </a>
+      </div>
+    <% } %>
+  </div>
+</div>

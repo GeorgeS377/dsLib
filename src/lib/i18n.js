@@ -343,6 +343,123 @@ const el = {
   'staff.authors.merged': 'Ο «{from}» συγχωνεύτηκε στον «{to}».',
   'staff.authors.mergeFailed': 'Η συγχώνευση δεν ήταν δυνατή.',
   'staff.authors.bookCount': 'Τίτλοι',
+
+  // --- Circulation ---
+  'staff.loans.title': 'Δανεισμοί',
+  'staff.loans.checkout': 'Δανεισμός βιβλίου',
+  'staff.loans.checkin': 'Επιστροφή βιβλίου',
+  'staff.loans.status.open': 'Σε εξέλιξη',
+  'staff.loans.status.overdue': 'Εκπρόθεσμοι',
+  'staff.loans.status.returned': 'Επιστραμμένα',
+  'staff.loans.status.all': 'Όλα',
+  'staff.loans.empty': 'Δεν υπάρχουν δανεισμοί',
+  'staff.loans.emptyOpen': 'Κανένα βιβλίο δεν είναι σε δανεισμό.',
+  'staff.loans.loaned': 'Ημ. δανεισμού',
+  'staff.loans.returnedAt': 'Ημ. επιστροφής',
+  'staff.loans.renew': 'Παράταση',
+  'staff.loans.renewed': 'Η λήξη μετατέθηκε στις {date}.',
+  'staff.loans.checkedOut': 'Το «{title}» δανείστηκε στον/στην {borrower} έως {date}.',
+  'staff.loans.returned': 'Το «{title}» επιστράφηκε.',
+  'staff.loans.returnedLate': 'Το «{title}» επιστράφηκε εκπρόθεσμα.',
+  'staff.loans.scanBarcode': 'Barcode αντιτύπου',
+  'staff.loans.scanHint': 'Σαρώστε ή πληκτρολογήστε το barcode και πατήστε Enter.',
+  'staff.loans.findCopy': 'Εύρεση αντιτύπου',
+  'staff.loans.copyFound': 'Αντίτυπο',
+  'staff.loans.dueDate': 'Ημερομηνία λήξης',
+  'staff.loans.dueDateHint': 'Προεπιλογή: {days} ημέρες.',
+  'staff.loans.borrowerExisting': 'Υπάρχων αναγνώστης',
+  'staff.loans.borrowerNew': 'Νέος αναγνώστης',
+  'staff.loans.borrowerNewHint':
+    'Καταχωρίζονται μόνο όνομα και τμήμα — τίποτε άλλο.',
+  'staff.loans.chooseBorrower': 'Επιλέξτε αναγνώστη',
+  'staff.loans.recentReturns': 'Πρόσφατες επιστροφές',
+  'staff.loans.error.copy_not_found': 'Δεν βρέθηκε αντίτυπο με αυτό το barcode.',
+  'staff.loans.error.copy_not_available': 'Το αντίτυπο δεν είναι διαθέσιμο για δανεισμό.',
+  'staff.loans.error.already_on_loan': 'Το αντίτυπο είναι ήδη σε δανεισμό.',
+  'staff.loans.error.borrower_not_found': 'Ο αναγνώστης δεν βρέθηκε.',
+  'staff.loans.error.borrower_anonymized': 'Η εγγραφή του αναγνώστη έχει ανωνυμοποιηθεί.',
+  'staff.loans.error.borrower_required': 'Επιλέξτε ή καταχωρίστε αναγνώστη.',
+  'staff.loans.error.due_date_in_past': 'Η ημερομηνία λήξης είναι στο παρελθόν.',
+  'staff.loans.error.barcode_required': 'Δώστε ένα barcode.',
+  'staff.loans.error.not_on_loan': 'Το αντίτυπο δεν είναι σε δανεισμό.',
+  'staff.loans.error.loan_not_found': 'Ο δανεισμός δεν βρέθηκε.',
+  'staff.loans.error.already_returned': 'Ο δανεισμός έχει ήδη κλείσει.',
+
+  // --- Borrowers ---
+  'staff.borrowers.title': 'Αναγνώστες',
+  'staff.borrowers.add': 'Νέος αναγνώστης',
+  'staff.borrowers.search': 'Αναζήτηση αναγνώστη',
+  'staff.borrowers.name': 'Όνομα',
+  'staff.borrowers.class': 'Τμήμα',
+  'staff.borrowers.openLoans': 'Σε δανεισμό',
+  'staff.borrowers.totalLoans': 'Σύνολο δανεισμών',
+  'staff.borrowers.created': 'Ο αναγνώστης καταχωρίστηκε.',
+  'staff.borrowers.saved': 'Τα στοιχεία αποθηκεύτηκαν.',
+  'staff.borrowers.deleted': 'Η εγγραφή διαγράφηκε.',
+  'staff.borrowers.empty': 'Δεν έχουν καταχωριστεί αναγνώστες.',
+  'staff.borrowers.emptyHint': 'Οι αναγνώστες καταχωρίζονται κατά τον δανεισμό.',
+  'staff.borrowers.history': 'Ιστορικό δανεισμών',
+  'staff.borrowers.noHistory': 'Δεν υπάρχει ιστορικό δανεισμών.',
+  'staff.borrowers.privacyNote':
+    'Για κάθε αναγνώστη τηρούνται μόνο όνομα και τμήμα. Δεν καταχωρίζονται διευθύνσεις, τηλέφωνα, email ή αριθμοί μητρώου.',
+  'staff.borrowers.isAnonymized': 'Η εγγραφή αυτή έχει ανωνυμοποιηθεί.',
+  'staff.borrowers.anonymize': 'Ανωνυμοποίηση',
+  'staff.borrowers.anonymizeTitle': 'Ανωνυμοποίηση αναγνώστη',
+  'staff.borrowers.anonymizeConfirm': 'Ανωνυμοποίηση της εγγραφής «{name}»;',
+  'staff.borrowers.anonymizeExplain':
+    'Το όνομα και το τμήμα αντικαθίστανται με «{placeholder}». Οι {count} δανεισμοί διατηρούνται ως ανώνυμες εγγραφές, ώστε οι αριθμοί να παραμείνουν σωστοί. Η ενέργεια δεν αναιρείται.',
+  'staff.borrowers.anonymized': 'Η εγγραφή ανωνυμοποιήθηκε.',
+  'staff.borrowers.deleteTitle': 'Διαγραφή αναγνώστη',
+  'staff.borrowers.deleteConfirm': 'Διαγραφή της εγγραφής «{name}»;',
+  'staff.borrowers.deleteExplain': 'Η εγγραφή δεν έχει δανεισμούς και διαγράφεται οριστικά.',
+  'staff.borrowers.deleteBlocked.has_loans':
+    'Ο αναγνώστης έχει ιστορικό δανεισμών. Χρησιμοποιήστε ανωνυμοποίηση.',
+  'staff.borrowers.error.open_loans':
+    'Ο αναγνώστης έχει βιβλία σε δανεισμό. Καταχωρίστε πρώτα τις επιστροφές.',
+  'staff.borrowers.error.anonymized': 'Η εγγραφή έχει ανωνυμοποιηθεί και δεν επεξεργάζεται.',
+  'staff.borrowers.error.not_found': 'Ο αναγνώστης δεν βρέθηκε.',
+  'staff.borrowers.error.empty_name': 'Το όνομα είναι υποχρεωτικό.',
+
+  // --- Account and staff users ---
+  'staff.account.title': 'Ο λογαριασμός μου',
+  'staff.account.changePassword': 'Αλλαγή κωδικού πρόσβασης',
+  'staff.account.currentPassword': 'Τρέχων κωδικός',
+  'staff.account.newPassword': 'Νέος κωδικός',
+  'staff.account.confirmPassword': 'Επιβεβαίωση νέου κωδικού',
+  'staff.account.passwordHint': 'Τουλάχιστον {min} χαρακτήρες. Μια φράση είναι ασφαλέστερη.',
+  'staff.account.changed': 'Ο κωδικός άλλαξε. Συνδεθείτε ξανά.',
+  'staff.account.username': 'Όνομα χρήστη',
+  'staff.account.role': 'Ρόλος',
+  'staff.account.lastLogin': 'Τελευταία σύνδεση',
+  'error.field.incorrect': 'Ο τρέχων κωδικός δεν είναι σωστός.',
+  'error.field.mismatch': 'Οι δύο καταχωρίσεις δεν ταιριάζουν.',
+  'error.field.too_short': 'Πολύ σύντομος κωδικός.',
+  'error.field.too_common': 'Ο κωδικός μαντεύεται εύκολα. Επιλέξτε άλλον.',
+  'error.field.too_long': 'Πολύ μεγάλη τιμή.',
+  'error.field.invalid_username':
+    'Μόνο λατινικοί χαρακτήρες, ψηφία και . _ - επιτρέπονται στο όνομα χρήστη.',
+  'error.field.duplicate_username': 'Το όνομα χρήστη χρησιμοποιείται ήδη.',
+
+  'staff.users.title': 'Χρήστες προσωπικού',
+  'staff.users.add': 'Νέος χρήστης',
+  'staff.users.created': 'Ο χρήστης «{username}» δημιουργήθηκε.',
+  'staff.users.saved': 'Ο χρήστης «{username}» αποθηκεύτηκε.',
+  'staff.users.deleted': 'Ο χρήστης «{username}» διαγράφηκε.',
+  'staff.users.passwordReset': 'Ο κωδικός του «{username}» άλλαξε.',
+  'staff.users.resetPassword': 'Ορισμός νέου κωδικού',
+  'staff.users.active': 'Ενεργός',
+  'staff.users.inactive': 'Ανενεργός',
+  'staff.users.mustChange': 'Απαιτείται αλλαγή κωδικού',
+  'staff.users.newUserNote':
+    'Ο νέος χρήστης θα πρέπει να αλλάξει τον κωδικό στην πρώτη σύνδεση.',
+  'staff.users.error.last_admin':
+    'Πρέπει να παραμείνει τουλάχιστον ένας ενεργός διαχειριστής.',
+  'staff.users.error.self': 'Δεν μπορείτε να διαγράψετε τον λογαριασμό σας.',
+  'staff.users.error.not_found': 'Ο χρήστης δεν βρέθηκε.',
+  'staff.users.error.duplicate_username': 'Το όνομα χρήστη χρησιμοποιείται ήδη.',
+  'staff.users.error.password_too_short': 'Ο κωδικός είναι πολύ σύντομος.',
+  'staff.users.error.password_too_common': 'Ο κωδικός μαντεύεται εύκολα.',
+  'staff.users.error.password_too_long': 'Ο κωδικός είναι πολύ μεγάλος.',
 };
 
 const en = {
@@ -672,6 +789,120 @@ const en = {
   'staff.authors.merged': '“{from}” was merged into “{to}”.',
   'staff.authors.mergeFailed': 'The merge could not be completed.',
   'staff.authors.bookCount': 'Titles',
+
+  // --- Circulation ---
+  'staff.loans.title': 'Loans',
+  'staff.loans.checkout': 'Check out a book',
+  'staff.loans.checkin': 'Check in a book',
+  'staff.loans.status.open': 'Out now',
+  'staff.loans.status.overdue': 'Overdue',
+  'staff.loans.status.returned': 'Returned',
+  'staff.loans.status.all': 'All',
+  'staff.loans.empty': 'No loans',
+  'staff.loans.emptyOpen': 'No books are currently on loan.',
+  'staff.loans.loaned': 'Loaned',
+  'staff.loans.returnedAt': 'Returned',
+  'staff.loans.renew': 'Extend',
+  'staff.loans.renewed': 'Due date moved to {date}.',
+  'staff.loans.checkedOut': '“{title}” checked out to {borrower} until {date}.',
+  'staff.loans.returned': '“{title}” has been returned.',
+  'staff.loans.returnedLate': '“{title}” was returned late.',
+  'staff.loans.scanBarcode': 'Copy barcode',
+  'staff.loans.scanHint': 'Scan or type the barcode and press Enter.',
+  'staff.loans.findCopy': 'Find copy',
+  'staff.loans.copyFound': 'Copy',
+  'staff.loans.dueDate': 'Due date',
+  'staff.loans.dueDateHint': 'Default: {days} days.',
+  'staff.loans.borrowerExisting': 'Existing borrower',
+  'staff.loans.borrowerNew': 'New borrower',
+  'staff.loans.borrowerNewHint': 'Only a name and a class are recorded — nothing else.',
+  'staff.loans.chooseBorrower': 'Choose a borrower',
+  'staff.loans.recentReturns': 'Recent returns',
+  'staff.loans.error.copy_not_found': 'No copy was found with that barcode.',
+  'staff.loans.error.copy_not_available': 'That copy is not available to lend.',
+  'staff.loans.error.already_on_loan': 'That copy is already on loan.',
+  'staff.loans.error.borrower_not_found': 'Borrower not found.',
+  'staff.loans.error.borrower_anonymized': 'That borrower record has been anonymized.',
+  'staff.loans.error.borrower_required': 'Choose or add a borrower.',
+  'staff.loans.error.due_date_in_past': 'That due date is in the past.',
+  'staff.loans.error.barcode_required': 'Enter a barcode.',
+  'staff.loans.error.not_on_loan': 'That copy is not on loan.',
+  'staff.loans.error.loan_not_found': 'Loan not found.',
+  'staff.loans.error.already_returned': 'That loan is already closed.',
+
+  // --- Borrowers ---
+  'staff.borrowers.title': 'Borrowers',
+  'staff.borrowers.add': 'New borrower',
+  'staff.borrowers.search': 'Search borrowers',
+  'staff.borrowers.name': 'Name',
+  'staff.borrowers.class': 'Class',
+  'staff.borrowers.openLoans': 'Out now',
+  'staff.borrowers.totalLoans': 'Total loans',
+  'staff.borrowers.created': 'Borrower added.',
+  'staff.borrowers.saved': 'Details saved.',
+  'staff.borrowers.deleted': 'Record deleted.',
+  'staff.borrowers.empty': 'No borrowers have been recorded.',
+  'staff.borrowers.emptyHint': 'Borrowers are added when a book is checked out.',
+  'staff.borrowers.history': 'Loan history',
+  'staff.borrowers.noHistory': 'No loan history.',
+  'staff.borrowers.privacyNote':
+    'Only a name and a class are kept for each borrower. No addresses, phone numbers, email addresses or registry numbers are recorded.',
+  'staff.borrowers.isAnonymized': 'This record has been anonymized.',
+  'staff.borrowers.anonymize': 'Anonymize',
+  'staff.borrowers.anonymizeTitle': 'Anonymize borrower',
+  'staff.borrowers.anonymizeConfirm': 'Anonymize the record for “{name}”?',
+  'staff.borrowers.anonymizeExplain':
+    'The name and class are replaced with “{placeholder}”. The {count} loans are kept as anonymous records so the figures stay correct. This cannot be undone.',
+  'staff.borrowers.anonymized': 'The record has been anonymized.',
+  'staff.borrowers.deleteTitle': 'Delete borrower',
+  'staff.borrowers.deleteConfirm': 'Delete the record for “{name}”?',
+  'staff.borrowers.deleteExplain': 'This record has no loans and will be deleted outright.',
+  'staff.borrowers.deleteBlocked.has_loans':
+    'This borrower has loan history. Use anonymization instead.',
+  'staff.borrowers.error.open_loans':
+    'This borrower still has books out. Record the returns first.',
+  'staff.borrowers.error.anonymized': 'This record has been anonymized and cannot be edited.',
+  'staff.borrowers.error.not_found': 'Borrower not found.',
+  'staff.borrowers.error.empty_name': 'A name is required.',
+
+  // --- Account and staff users ---
+  'staff.account.title': 'My account',
+  'staff.account.changePassword': 'Change password',
+  'staff.account.currentPassword': 'Current password',
+  'staff.account.newPassword': 'New password',
+  'staff.account.confirmPassword': 'Confirm new password',
+  'staff.account.passwordHint': 'At least {min} characters. A phrase is safer than a word.',
+  'staff.account.changed': 'Password changed. Please sign in again.',
+  'staff.account.username': 'Username',
+  'staff.account.role': 'Role',
+  'staff.account.lastLogin': 'Last sign-in',
+  'error.field.incorrect': 'That is not the current password.',
+  'error.field.mismatch': 'The two entries do not match.',
+  'error.field.too_short': 'That password is too short.',
+  'error.field.too_common': 'That password is too easily guessed. Choose another.',
+  'error.field.too_long': 'That value is too long.',
+  'error.field.invalid_username':
+    'A username may contain only Latin letters, digits and . _ -',
+  'error.field.duplicate_username': 'That username is already taken.',
+
+  'staff.users.title': 'Staff users',
+  'staff.users.add': 'New user',
+  'staff.users.created': 'User “{username}” created.',
+  'staff.users.saved': 'User “{username}” saved.',
+  'staff.users.deleted': 'User “{username}” deleted.',
+  'staff.users.passwordReset': 'Password for “{username}” changed.',
+  'staff.users.resetPassword': 'Set a new password',
+  'staff.users.active': 'Active',
+  'staff.users.inactive': 'Inactive',
+  'staff.users.mustChange': 'Must change password',
+  'staff.users.newUserNote': 'The new user will have to change this password at first sign-in.',
+  'staff.users.error.last_admin': 'At least one active administrator must remain.',
+  'staff.users.error.self': 'You cannot delete your own account.',
+  'staff.users.error.not_found': 'User not found.',
+  'staff.users.error.duplicate_username': 'That username is already taken.',
+  'staff.users.error.password_too_short': 'That password is too short.',
+  'staff.users.error.password_too_common': 'That password is too easily guessed.',
+  'staff.users.error.password_too_long': 'That password is too long.',
 };
 
 export const dictionaries = { el, en };
@@ -706,6 +937,21 @@ export function translatorFor(lang) {
   const t = (key, vars) => translate(lang, key, vars);
   t.lang = lang;
   return t;
+}
+
+/**
+ * Whether a key exists in any dictionary.
+ *
+ * Used by the field-error partial to decide whether a validation code has a
+ * specific message or should fall back to a generic one. Checking existence
+ * beats maintaining a hand-written list of known codes in the template — that
+ * list fell behind the moment new codes were added, and the affected fields
+ * silently rendered "invalid value" instead of the real reason.
+ *
+ * @param {string} key
+ */
+export function hasTranslation(key) {
+  return Object.hasOwn(dictionaries.el, key) || Object.hasOwn(dictionaries.en, key);
 }
 
 export function isSupportedLang(value) {

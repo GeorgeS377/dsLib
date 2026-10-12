@@ -1,0 +1,109 @@
+<div class="container stack-lg">
+
+  <div class="section-head">
+    <h1 class="mt-0"><%= t('staff.loans.title') %></h1>
+    <div class="button-row">
+      <a class="button" href="/staff/loans/checkout"><%= t('staff.loans.checkout') %></a>
+      <a class="button button--secondary" href="/staff/loans/checkin"><%= t('staff.loans.checkin') %></a>
+    </div>
+  </div>
+
+  <nav class="button-row" aria-label="<%= t('common.filters') %>">
+    <% statuses.forEach(function (option) { %>
+      <a class="button button--small <%= status === option ? 'button--secondary' : 'button--quiet' %>"
+         href="<%= statusUrl(option) %>"
+         <% if (status === option) { %>aria-current="page"<% } %>>
+        <%= t('staff.loans.status.' + option) %>
+      </a>
+    <% }); %>
+  </nav>
+
+  <% if (borrower) { %>
+    <p class="muted">
+      <%= t('staff.loan.borrower') %>:
+      <a href="/staff/borrowers/<%= borrower.id %>"><%= borrower.display_name %></a>
+      · <a href="/staff/loans?status=<%= status %>"><%= t('common.clear') %></a>
+    </p>
+  <% } %>
+
+  <% if (results.total === 0) { %>
+    <div class="state state--empty">
+      <p class="state__icon" aria-hidden="true">📕</p>
+      <h2 class="state__title"><%= t('staff.loans.empty') %></h2>
+      <p class="state__body">
+        <%= status === 'open' ? t('staff.loans.emptyOpen') : '' %>
+      </p>
+    </div>
+  <% } else { %>
+    <p class="muted small" role="status">
+      <%= t('search.showing', { from: range.from, to: range.to, total: range.total }) %>
+    </p>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th scope="col"><%= t('staff.loan.book') %></th>
+            <th scope="col"><%= t('staff.loan.borrower') %></th>
+            <th scope="col"><%= t('staff.loans.loaned') %></th>
+            <th scope="col"><%= t('staff.loan.due') %></th>
+            <th scope="col"></th>
+          </tr>
+        </thead>
+        <tbody>
+          <% results.rows.forEach(function (loan) { %>
+            <tr>
+              <td>
+                <a href="/staff/books/<%= loan.book_id %>"><%= loan.book_title %></a>
+                <% if (loan.barcode) { %>
+                  <br><span class="mono small faint"><%= loan.barcode %></span>
+                <% } %>
+              </td>
+              <td>
+                <%# Borrower names are shown here because this page is behind
+                    authentication. No public template reads this table. -%>
+                <a href="/staff/borrowers/<%= loan.borrower_id %>"><%= loan.borrower_name %></a>
+                <% if (loan.borrower_class) { %>
+                  <span class="faint small">(<%= loan.borrower_class %>)</span>
+                <% } %>
+              </td>
+              <td class="nowrap faint small"><%= loan.loaned_at.slice(0, 10) %></td>
+              <td class="nowrap">
+                <% if (loan.returned_at) { %>
+                  <span class="badge badge--available">
+                    <%= t('staff.loans.returnedAt') %> <%= loan.returned_at.slice(0, 10) %>
+                  </span>
+                <% } else if (loan.is_overdue) { %>
+                  <span class="badge badge--overdue"><%= loan.due_at.slice(0, 10) %></span>
+                <% } else { %>
+                  <span class="badge badge--loaned"><%= loan.due_at.slice(0, 10) %></span>
+                <% } %>
+              </td>
+              <td class="nowrap">
+                <% if (!loan.returned_at) { %>
+                  <form class="inline-form" method="post" action="/staff/loans/checkin">
+                    <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                    <input type="hidden" name="loan_id" value="<%= loan.id %>">
+                    <button class="button button--secondary button--small" type="submit">
+                      <%= t('staff.action.checkin') %>
+                    </button>
+                  </form>
+                  <form class="inline-form" method="post" action="/staff/loans/<%= loan.id %>/renew">
+                    <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                    <button class="button button--quiet button--small" type="submit">
+                      <%= t('staff.loans.renew') %>
+                    </button>
+                  </form>
+                <% } %>
+              </td>
+            </tr>
+          <% }); %>
+        </tbody>
+      </table>
+    </div>
+
+    <%- include('../partials/pagination', {
+          results: results, pages: pages, pageUrl: pageUrl, t: t }) %>
+  <% } %>
+
+</div>

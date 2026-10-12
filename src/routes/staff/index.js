@@ -13,9 +13,12 @@ import { requireAdmin, requireStaff } from '../../lib/auth.js';
 import { takeFlash } from '../../lib/flash.js';
 import authRoutes, { logoutRoutes } from './auth.js';
 import staffBookRoutes from './books.js';
+import staffBorrowerRoutes from './borrowers.js';
 import staffCopyRoutes from './copies.js';
 import dashboardRoutes from './dashboard.js';
+import staffLoanRoutes from './loans.js';
 import staffTaxonomyRoutes from './taxonomy.js';
+import staffUserRoutes from './users.js';
 
 export default async function staffRoutes(app) {
   // --------------------------------------------------- unauthenticated part
@@ -54,5 +57,8 @@ export default async function staffRoutes(app) {
     await protectedScope.register(staffBookRoutes);
     await protectedScope.register(staffCopyRoutes);
     await protectedScope.register(staffTaxonomyRoutes);
+    await protectedScope.register(staffLoanRoutes);
+    await protectedScope.register(staffBorrowerRoutes);
+    await protectedScope.register(staffUserRoutes);
   });
 }
