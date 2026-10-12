@@ -759,15 +759,28 @@ textarea[aria-invalid="true"] {
   }
 }
 
+/* The title block spans the full width above the two columns, so the page
+   heading comes first in the document as well as on the screen. */
+.book-detail__header {
+  margin-bottom: var(--space-5);
+}
+
 .book-detail__title {
   font-family: var(--font-serif);
+  margin-bottom: var(--space-2);
+}
+
+.book-detail__subtitle {
+  font-family: var(--font-serif);
+  font-size: 1.125rem;
+  color: var(--color-text-muted);
   margin-bottom: var(--space-2);
 }
 
 .book-detail__authors {
   font-size: 1.0625rem;
   color: var(--color-text-muted);
-  margin-bottom: var(--space-4);
+  margin-bottom: var(--space-3);
 }
 
 .meta-list {

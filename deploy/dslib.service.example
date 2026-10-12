@@ -1,0 +1,84 @@
+# Example systemd unit for dsLib. DOCUMENTATION ONLY — this file does nothing
+# where it sits. To use it:
+#
+#   sudo cp deploy/dslib.service.example /etc/systemd/system/dslib.service
+#   sudo nano /etc/systemd/system/dslib.service     # adjust the paths below
+#   sudo systemctl daemon-reload
+#   sudo systemctl enable --now dslib
+#   sudo systemctl status dslib
+#
+# Review every path and the User= line before installing it.
+
+[Unit]
+Description=dsLib school library catalogue
+Documentation=file:///opt/dslib/README.md
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+
+# A dedicated unprivileged account. Create it with:
+#   sudo useradd --system --home /opt/dslib --shell /usr/sbin/nologin dslib
+User=dslib
+Group=dslib
+
+WorkingDirectory=/opt/dslib
+ExecStart=/usr/bin/node src/server.js
+
+# Configuration lives in .env, readable only by the service account:
+#   sudo chown dslib:dslib /opt/dslib/.env && sudo chmod 600 /opt/dslib/.env
+EnvironmentFile=/opt/dslib/.env
+Environment=NODE_ENV=production
+
+Restart=on-failure
+RestartSec=5s
+
+# --- Hardening ------------------------------------------------------------
+# The application needs to read its own code and write exactly one directory:
+# data/ (the SQLite database and uploaded covers). Everything else is denied.
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/opt/dslib/data
+PrivateTmp=true
+PrivateDevices=true
+
+NoNewPrivileges=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectKernelLogs=true
+ProtectControlGroups=true
+ProtectClock=true
+ProtectHostname=true
+ProtectProc=invisible
+RestrictNamespaces=true
+RestrictRealtime=true
+RestrictSUIDSGID=true
+LockPersonality=true
+MemoryDenyWriteExecute=true
+RemoveIPC=true
+
+# Only the address families an HTTP server needs. AF_UNIX stays because the
+# Node runtime uses it internally.
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+SystemCallArchitectures=native
+SystemCallFilter=@system-service
+SystemCallErrorNumber=EPERM
+
+# Bind to localhost only (set HOST=127.0.0.1 in .env) and let Nginx terminate
+# TLS in front. This makes the port unreachable from outside the machine even
+# if a firewall rule is wrong.
+IPAddressDeny=any
+IPAddressAllow=localhost
+
+# Logs go to the journal; read them with: journalctl -u dslib -f
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=dslib
+
+# --- Limits ---------------------------------------------------------------
+LimitNOFILE=4096
+TasksMax=64
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,137 @@
+# Example Nginx site for dsLib. DOCUMENTATION ONLY — this file does nothing
+# where it sits, and installing it is a decision for whoever runs the server.
+#
+# IMPORTANT, if Nginx already serves another site on this machine:
+#   * Back up the existing configuration first:
+#       sudo tar czf ~/nginx-backup-$(date +%F).tar.gz /etc/nginx
+#   * Add this as a NEW file in sites-available and symlink it. Do not edit or
+#     replace an existing site file.
+#   * Check the configuration before reloading, so a mistake cannot take the
+#     other site down:
+#       sudo nginx -t && sudo systemctl reload nginx
+#
+# Installing:
+#   sudo cp deploy/nginx-dslib.conf.example /etc/nginx/sites-available/dslib
+#   sudo nano /etc/nginx/sites-available/dslib      # set server_name
+#   sudo ln -s /etc/nginx/sites-available/dslib /etc/nginx/sites-enabled/dslib
+#   sudo nginx -t && sudo systemctl reload nginx
+#
+# Then obtain a certificate (certbot rewrites the TLS lines below for you):
+#   sudo certbot --nginx -d library.example.gr
+
+# Rate-limit zone for the login endpoint, as a second line of defence behind
+# the application's own limiter. Must live at http{} level; if your nginx.conf
+# does not include sites-enabled inside http{}, move this line there.
+limit_req_zone $binary_remote_addr zone=dslib_login:10m rate=20r/m;
+
+server {
+    listen 80;
+    listen [::]:80;
+    server_name library.example.gr;        # <-- change this
+
+    # Everything except the ACME challenge goes to HTTPS.
+    location /.well-known/acme-challenge/ {
+        root /var/www/html;
+    }
+
+    location / {
+        return 301 https://$host$request_uri;
+    }
+}
+
+server {
+    listen 443 ssl;
+    listen [::]:443 ssl;
+    http2 on;
+    server_name library.example.gr;        # <-- change this
+
+    # certbot fills these in. Do not point them at the example paths.
+    ssl_certificate     /etc/letsencrypt/live/library.example.gr/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/library.example.gr/privkey.pem;
+    ssl_protocols       TLSv1.2 TLSv1.3;
+    ssl_prefer_server_ciphers off;
+    ssl_session_cache   shared:SSL:10m;
+    ssl_session_timeout 1d;
+    ssl_stapling        on;
+    ssl_stapling_verify on;
+
+    # The application sets its own HSTS, CSP and other security headers. They
+    # are not duplicated here, because two sources for one header is how you
+    # end up with a contradictory policy.
+
+    # Greek text is UTF-8 throughout; make sure Nginx says so for any file it
+    # serves itself.
+    charset utf-8;
+
+    # Cover uploads are capped at 2 MB by the application (MAX_UPLOAD_BYTES).
+    # Leave a little headroom for multipart overhead, and keep this in step
+    # with that setting.
+    client_max_body_size 4m;
+
+    access_log /var/log/nginx/dslib-access.log;
+    error_log  /var/log/nginx/dslib-error.log;
+
+    # --- Login: an extra throttle -----------------------------------------
+    # The application already rate-limits and locks accounts out. This simply
+    # keeps a flood from reaching Node at all.
+    location = /staff/login {
+        limit_req zone=dslib_login burst=10 nodelay;
+        limit_req_status 429;
+
+        proxy_pass http://127.0.0.1:3000;
+        include /etc/nginx/proxy_params;        # Debian/Ubuntu ships this
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    # --- Uploaded cover images --------------------------------------------
+    # Served by the application so that permissions and content types stay in
+    # one place, but cached hard: the filenames are content-addressed UUIDs
+    # and a given file never changes.
+    location /covers/ {
+        proxy_pass http://127.0.0.1:3000;
+        include /etc/nginx/proxy_params;
+        proxy_set_header X-Forwarded-Proto $scheme;
+
+        proxy_cache_valid 200 30d;
+        add_header Cache-Control "public, max-age=2592000, immutable";
+    }
+
+    # --- Static assets ----------------------------------------------------
+    location /assets/ {
+        proxy_pass http://127.0.0.1:3000;
+        include /etc/nginx/proxy_params;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        add_header Cache-Control "public, max-age=604800";
+    }
+
+    # --- Everything else --------------------------------------------------
+    location / {
+        proxy_pass http://127.0.0.1:3000;
+        include /etc/nginx/proxy_params;
+
+        # X-Forwarded-Proto is load-bearing, not decoration. With
+        # TRUST_PROXY=true the application reads it to decide that the
+        # connection is HTTPS, which is what marks the staff session cookie
+        # Secure and makes rate limiting see real client addresses.
+        proxy_set_header X-Forwarded-Proto $scheme;
+
+        proxy_http_version 1.1;
+        proxy_read_timeout 60s;
+    }
+
+    # The health endpoint is useful to a monitor on this machine and to nobody
+    # else. Uncomment to keep it local-only.
+    # location = /healthz {
+    #     allow 127.0.0.1;
+    #     deny all;
+    #     proxy_pass http://127.0.0.1:3000;
+    #     include /etc/nginx/proxy_params;
+    # }
+}
+
+# If /etc/nginx/proxy_params does not exist on your system, replace each
+# `include /etc/nginx/proxy_params;` above with:
+#
+#     proxy_set_header Host              $http_host;
+#     proxy_set_header X-Real-IP         $remote_addr;
+#     proxy_set_header X-Forwarded-For   $proxy_add_x_forwarded_for;
