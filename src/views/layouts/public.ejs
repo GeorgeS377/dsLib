@@ -11,6 +11,15 @@
 <body>
   <a class="skip-link" href="#main"><%= t('nav.skip') %></a>
 
+  <%#
+    Search-first header. There is deliberately no row of navigation links:
+    browsing happens on one catalogue page where category, author, year and
+    availability are filters, so a second set of destinations in the header
+    would be a parallel route to the same books.
+
+    The search box is hidden on the home page, which has its own prominent
+    one — showing both would be the same control twice on one screen.
+  -%>
   <header class="site-header">
     <div class="container site-header__inner">
       <a class="site-brand" href="/">
@@ -18,34 +27,20 @@
         <span class="site-brand__name"><%= libraryName %></span>
       </a>
 
-      <%#
-        Each nav item marks itself as current with a conditional block rather
-        than by interpolating an attribute string: an escaping output tag would
-        turn the quotes into entities and the attribute would never apply.
-      -%>
-      <nav class="site-nav" aria-label="<%= t('nav.menu') %>">
-        <ul class="site-nav__list">
-          <% [
-               { href: '/', key: 'nav.home', match: (p) => p === '/' || p.startsWith('/?') },
-               { href: '/books', key: 'nav.books', match: (p) => p.startsWith('/books') },
-               { href: '/categories', key: 'nav.categories', match: (p) => p.startsWith('/categories') },
-               { href: '/authors', key: 'nav.authors', match: (p) => p.startsWith('/authors') },
-             ].forEach(function (item) { %>
-            <li>
-              <a href="<%= item.href %>"<% if (item.match(currentPath)) { %> aria-current="page"<% } %>>
-                <%= t(item.key) %>
-              </a>
-            </li>
-          <% }); %>
-        </ul>
-      </nav>
+      <% if (!(typeof hideHeaderSearch !== 'undefined' && hideHeaderSearch)) { %>
+        <form class="site-header__search" method="get" action="/books" role="search">
+          <label class="visually-hidden" for="header-q"><%= t('common.searchLabel') %></label>
+          <input type="search" id="header-q" name="q"
+                 value="<%= typeof query !== 'undefined' && query.q ? query.q : '' %>"
+                 placeholder="<%= t('common.searchPlaceholder') %>" autocomplete="off">
+          <button class="button button--small" type="submit"><%= t('common.search') %></button>
+        </form>
+      <% } %>
 
       <div class="lang-switch" role="group" aria-label="<%= t('lang.label') %>">
         <% supportedLangs.forEach(function (code) { %>
-          <% if (code === lang) { %>
-            <span class="lang-switch__current" aria-current="true"><%= t('lang.' + code) %></span>
-          <% } else { %>
-            <a class="lang-switch__link" href="<%= langUrl(code) %>" lang="<%= code %>"><%= t('lang.' + code) %></a>
+          <% if (code !== lang) { %>
+            <a class="lang-switch__link" href="<%= langUrl(code) %>" lang="<%= code %>"><%= code.toUpperCase() %></a>
           <% } %>
         <% }); %>
       </div>
@@ -59,7 +54,15 @@
   <footer class="site-footer">
     <div class="container site-footer__inner">
       <p><%= libraryName %> · <%= t('footer.catalogue') %></p>
-      <p><a href="/staff"><%= t('nav.staff') %></a></p>
+      <%# Categories and authors live here rather than in the header: they are
+          useful entry points, but not a second way to browse the whole
+          catalogue. -%>
+      <nav class="site-footer__links" aria-label="<%= t('nav.browseBy') %>">
+        <a href="/books"><%= t('nav.catalogue') %></a>
+        <a href="/categories"><%= t('nav.categories') %></a>
+        <a href="/authors"><%= t('nav.authors') %></a>
+        <a href="/staff"><%= t('nav.staff') %></a>
+      </nav>
     </div>
   </footer>
 

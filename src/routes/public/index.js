@@ -27,6 +27,9 @@ export default async function publicRoutes(app) {
       recent: recentBooks(db, 8),
       categories: listPublicCategories(db).slice(0, 12),
       stats,
+      // The home page has its own prominent search field, so the header does
+      // not repeat it. Every other page shows the header one.
+      hideHeaderSearch: true,
     });
   });
 
@@ -158,8 +161,11 @@ export default async function publicRoutes(app) {
 
     return reply.render('public/collection', {
       title: author.name,
+      // The author's name alone. Greek has no gender-neutral way to say
+      // "books by X" without knowing whether X is male or female, and
+      // "του/της" reads like a form rather than a page.
       heading: reply.locals.t('authors.booksBy', { name: author.name }),
-      lead: null,
+      lead: reply.locals.t('authors.leadForAuthor'),
       results,
       range: resultRange(results),
       pages: pageWindow(results.page, results.totalPages),

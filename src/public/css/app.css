@@ -274,8 +274,32 @@ kbd,
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: var(--space-3) var(--space-5);
+  gap: var(--space-3) var(--space-4);
   padding-block: var(--space-3);
+}
+
+/* The search box is the header's main control, so it takes the free space. */
+.site-header__search {
+  display: flex;
+  gap: var(--space-2);
+  flex: 1 1 18rem;
+  margin-inline-start: auto;
+  max-width: 34rem;
+}
+
+.site-header__search input {
+  min-height: 2.25rem;
+}
+
+@media (max-width: 40rem) {
+  /* On a phone the search box gets its own line rather than being squeezed
+     next to the library name. */
+  .site-header__search {
+    order: 3;
+    flex-basis: 100%;
+    max-width: none;
+    margin-inline-start: 0;
+  }
 }
 
 .site-brand {
@@ -290,38 +314,6 @@ kbd,
 
 .site-brand__mark {
   font-size: 1.25rem;
-}
-
-.site-nav {
-  margin-inline-end: auto;
-}
-
-.site-nav__list {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-1);
-  list-style: none;
-  padding: 0;
-}
-
-.site-nav__list a {
-  display: block;
-  padding: var(--space-2) var(--space-3);
-  border-radius: var(--radius);
-  color: var(--color-text-muted);
-  text-decoration: none;
-  font-weight: 500;
-}
-
-.site-nav__list a:hover {
-  background: var(--color-surface-sunken);
-  color: var(--color-text);
-}
-
-.site-nav__list a[aria-current="page"] {
-  background: var(--color-accent-soft);
-  color: var(--color-accent);
-  font-weight: 600;
 }
 
 .lang-switch {
@@ -365,6 +357,15 @@ kbd,
   flex-wrap: wrap;
   gap: var(--space-3);
   justify-content: space-between;
+  align-items: center;
+}
+
+/* Categories, authors and the staff link live here rather than in the
+   header. */
+.site-footer__links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-4);
 }
 
 /* ------------------------------------------------- 6. Buttons and links */
@@ -1084,111 +1085,216 @@ tbody tr:hover {
 /* ------------------------------------------------------------ 13. Staff shell */
 
 .staff-header {
+  background: var(--color-surface);
+  border-bottom: 1px solid var(--color-border);
+}
+
+/* Band 1: who you are, and how to leave. Dark so the staff area is instantly
+   distinguishable from the public site at a glance. */
+.staff-identity {
   background: var(--color-text);
   color: var(--color-bg);
-  border-bottom: 3px solid var(--color-accent);
 }
 
 @media (prefers-color-scheme: dark) {
-  .staff-header {
+  .staff-identity {
     background: #000;
     color: var(--color-text);
   }
 }
 
-.staff-header__inner {
+.staff-identity__inner {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: var(--space-3) var(--space-5);
-  padding-block: var(--space-3);
+  justify-content: space-between;
+  gap: var(--space-2) var(--space-4);
+  padding-block: var(--space-2);
+  min-height: 2.75rem;
 }
 
-.staff-header a {
+.staff-identity a {
   color: inherit;
 }
 
 .staff-brand {
-  font-weight: 650;
-  text-decoration: none;
   display: flex;
   align-items: center;
   gap: var(--space-2);
-}
-
-.staff-nav {
-  margin-inline-end: auto;
-}
-
-.staff-nav__list {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-1);
-  list-style: none;
-  padding: 0;
+  font-weight: 650;
   font-size: 0.9375rem;
-}
-
-.staff-nav__list a {
-  display: block;
-  padding: var(--space-2) var(--space-3);
-  border-radius: var(--radius);
   text-decoration: none;
-  opacity: 0.85;
 }
 
-.staff-nav__list a:hover {
-  background: rgb(255 255 255 / 12%);
-  opacity: 1;
-}
-
-.staff-nav__list a[aria-current="page"] {
-  background: var(--color-accent);
-  color: var(--color-accent-contrast);
-  opacity: 1;
-  font-weight: 600;
-}
-
-.staff-session {
+/* Pinned right: the user and the way out, where people reach for them. */
+.staff-identity__right {
   display: flex;
   align-items: center;
   gap: var(--space-3);
   font-size: 0.875rem;
+  margin-inline-start: auto;
 }
 
-.staff-session__user {
-  opacity: 0.8;
+.staff-identity__user {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  text-decoration: none;
+  opacity: 0.85;
 }
 
+.staff-identity__user:hover {
+  opacity: 1;
+  text-decoration: underline;
+}
+
+.staff-identity__role {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 0.1rem 0.4rem;
+  border: 1px solid currentcolor;
+  border-radius: var(--radius-sm);
+  opacity: 0.7;
+}
+
+.staff-identity .lang-switch__link {
+  border-color: currentcolor;
+  opacity: 0.7;
+}
+
+.staff-identity .lang-switch__link:hover {
+  opacity: 1;
+  background: rgb(255 255 255 / 12%);
+  color: inherit;
+}
+
+/* Band 2: the sections, as tabs. */
+.staff-tabs {
+  background: var(--color-surface);
+  border-bottom: 1px solid var(--color-border);
+  overflow-x: auto;
+}
+
+.staff-tabs__inner {
+  display: flex;
+  gap: var(--space-1);
+  align-items: stretch;
+}
+
+.staff-tabs__tab {
+  display: flex;
+  align-items: center;
+  padding: var(--space-3) var(--space-4);
+  color: var(--color-text-muted);
+  text-decoration: none;
+  font-weight: 500;
+  font-size: 0.9375rem;
+  white-space: nowrap;
+  /* A transparent border of the same width as the active one, so the label
+     does not shift by a pixel when a tab becomes current. */
+  border-bottom: 2px solid transparent;
+}
+
+.staff-tabs__tab:hover {
+  color: var(--color-text);
+  background: var(--color-surface-sunken);
+}
+
+.staff-tabs__tab[aria-current="page"] {
+  color: var(--color-accent);
+  border-bottom-color: var(--color-accent);
+  font-weight: 650;
+}
+
+/* Settings sits apart from the day-to-day sections. */
+.staff-tabs__tab--end {
+  margin-inline-start: auto;
+}
+
+@media (max-width: 48rem) {
+  .staff-tabs__tab--end {
+    margin-inline-start: 0;
+  }
+}
+
+/* A <ul>, so `list-style: none` is required — without it the browser draws a
+   bullet beside every tile. */
 .stat-grid {
   display: grid;
-  gap: var(--space-4);
-  grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
+  gap: var(--space-3);
+  grid-template-columns: repeat(auto-fit, minmax(8rem, 1fr));
+  list-style: none;
+  padding: 0;
+  margin: 0;
 }
 
 .stat {
   background: var(--color-surface);
   border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
-  padding: var(--space-4);
+  border-radius: var(--radius);
+  padding: var(--space-3) var(--space-4);
   box-shadow: var(--shadow-sm);
 }
 
 .stat__label {
-  font-size: 0.875rem;
+  font-size: 0.8125rem;
   color: var(--color-text-muted);
   margin-bottom: var(--space-1);
 }
 
 .stat__value {
-  font-size: 1.875rem;
+  /* Deliberately not huge: five figures side by side are compared, not
+     admired, and an oversized number pushes everything else below the fold. */
+  font-size: 1.5rem;
   font-weight: 650;
-  line-height: 1.1;
+  line-height: 1.15;
   font-variant-numeric: tabular-nums;
 }
 
 .stat--alert .stat__value {
   color: var(--color-danger);
+}
+
+/* The settings hub. */
+.settings-grid {
+  display: grid;
+  gap: var(--space-4);
+  grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.settings-card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  padding: var(--space-4);
+}
+
+.settings-card__title {
+  font-size: 1.0625rem;
+  margin-bottom: var(--space-1);
+}
+
+.settings-card__title a {
+  text-decoration: none;
+}
+
+.settings-card__title a:hover {
+  text-decoration: underline;
+}
+
+.settings-card__body {
+  font-size: 0.9375rem;
+  color: var(--color-text-muted);
+}
+
+.settings-card__meta {
+  margin-top: var(--space-2);
+  font-size: 0.8125rem;
+  color: var(--color-text-faint);
 }
 
 .login-shell {

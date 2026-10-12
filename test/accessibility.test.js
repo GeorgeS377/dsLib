@@ -61,6 +61,7 @@ async function pages() {
 
   const staffUrls = [
     '/staff',
+    '/staff/settings',
     '/staff/books',
     '/staff/books/new',
     `/staff/books/${fixtures.books.odyssey}`,

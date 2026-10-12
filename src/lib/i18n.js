@@ -24,6 +24,8 @@ const el = {
   'lang.el': 'Ελληνικά',
   'lang.en': 'English',
   'footer.catalogue': 'Κατάλογος σχολικής βιβλιοθήκης',
+  'nav.catalogue': 'Κατάλογος',
+  'nav.browseBy': 'Περιήγηση ανά',
 
   // --- Shared controls ---
   'common.search': 'Αναζήτηση',
@@ -135,8 +137,8 @@ const el = {
   // --- Copy status labels (public wording) ---
   'status.available': 'Διαθέσιμο',
   'status.on_loan': 'Σε δανεισμό',
-  'status.repair': 'Σε επιδιόρθωση',
-  'status.lost': 'Απολεσθέν',
+  'status.repair': 'Σε επισκευή',
+  'status.lost': 'Χαμένο',
   'status.withdrawn': 'Αποσυρμένο',
 
   // --- Categories and authors ---
@@ -149,7 +151,8 @@ const el = {
   'authors.lead': 'Περιηγηθείτε στον κατάλογο ανά συγγραφέα.',
   'authors.empty': 'Δεν έχουν καταχωριστεί συγγραφείς ακόμη.',
   'authors.findByName': 'Αναζήτηση συγγραφέα',
-  'authors.booksBy': 'Βιβλία του/της {name}',
+  'authors.leadForAuthor': 'Τίτλοι αυτού του συγγραφέα στον κατάλογο.',
+  'authors.booksBy': '{name}',
 
   // --- Login ---
   'login.title': 'Σύνδεση προσωπικού',
@@ -180,7 +183,15 @@ const el = {
   'staff.nav.categories': 'Κατηγορίες',
   'staff.nav.authors': 'Συγγραφείς',
   'staff.nav.users': 'Χρήστες',
-  'staff.nav.account': 'Ο λογαριασμός μου',
+  'staff.nav.account': 'Λογαριασμός',
+  'staff.nav.settings': 'Ρυθμίσεις',
+  'staff.settings.title': 'Ρυθμίσεις',
+  'staff.settings.lead': 'Μεταδεδομένα καταλόγου και λογαριασμοί προσωπικού.',
+  'staff.settings.categories': 'Οργάνωση των βιβλίων σε θέματα.',
+  'staff.settings.authors': 'Ενοποίηση διπλοεγγραφών και διόρθωση ονομάτων.',
+  'staff.settings.users': 'Λογαριασμοί προσωπικού και δικαιώματα.',
+  'staff.settings.account': 'Αλλαγή του δικού σας κωδικού πρόσβασης.',
+  'staff.settings.adminOnly': 'Μόνο για διαχειριστές',
 
   // --- Dashboard ---
   'staff.dashboard.title': 'Επισκόπηση',
@@ -208,7 +219,7 @@ const el = {
   'staff.book.archived': 'Αρχειοθετημένο',
   'staff.loan.book': 'Βιβλίο',
   'staff.loan.borrower': 'Αναγνώστης',
-  'staff.loan.due': 'Λήξη',
+  'staff.loan.due': 'Προθεσμία',
 
   // --- Catalogue management ---
   'staff.books.title': 'Κατάλογος',
@@ -475,6 +486,8 @@ const en = {
   'lang.el': 'Ελληνικά',
   'lang.en': 'English',
   'footer.catalogue': 'School library catalogue',
+  'nav.catalogue': 'Catalogue',
+  'nav.browseBy': 'Browse by',
 
   // --- Shared controls ---
   'common.search': 'Search',
@@ -599,7 +612,8 @@ const en = {
   'authors.lead': 'Browse the catalogue by author.',
   'authors.empty': 'No authors have been recorded yet.',
   'authors.findByName': 'Find an author',
-  'authors.booksBy': 'Books by {name}',
+  'authors.leadForAuthor': 'Titles by this author in the catalogue.',
+  'authors.booksBy': '{name}',
 
   // --- Login ---
   'login.title': 'Staff sign in',
@@ -629,7 +643,15 @@ const en = {
   'staff.nav.categories': 'Categories',
   'staff.nav.authors': 'Authors',
   'staff.nav.users': 'Users',
-  'staff.nav.account': 'My account',
+  'staff.nav.account': 'Account',
+  'staff.nav.settings': 'Settings',
+  'staff.settings.title': 'Settings',
+  'staff.settings.lead': 'Catalogue metadata and staff accounts.',
+  'staff.settings.categories': 'Organise books by subject.',
+  'staff.settings.authors': 'Merge duplicates and correct names.',
+  'staff.settings.users': 'Staff accounts and permissions.',
+  'staff.settings.account': 'Change your own password.',
+  'staff.settings.adminOnly': 'Administrators only',
 
   // --- Dashboard ---
   'staff.dashboard.title': 'Overview',

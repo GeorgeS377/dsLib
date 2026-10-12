@@ -37,14 +37,26 @@
     </ul>
   </section>
 
-  <% if (stats.archived_titles > 0 || stats.copies_lost > 0 || stats.copies_repair > 0) { %>
+  <%# Only what is actually true. A row of zeros is noise: "Χαμένο: 0" tells a
+      librarian nothing they need to act on. -%>
+  <%
+    const exceptions = [
+      { count: stats.copies_repair, label: t('status.repair') },
+      { count: stats.copies_lost, label: t('status.lost') },
+      { count: stats.copies_withdrawn, label: t('status.withdrawn') },
+    ].filter(function (item) { return item.count > 0; });
+  %>
+  <% if (exceptions.length > 0 || stats.archived_titles > 0) { %>
     <p class="small muted">
+      <% exceptions.forEach(function (item, index) { %>
+        <%= item.label %>: <%= item.count %><%= index < exceptions.length - 1 ? ' · ' : '' %>
+      <% }); %>
       <% if (stats.archived_titles > 0) { %>
-        <a href="/staff/books?archived=only"><%= t('staff.stat.archived') %>: <%= stats.archived_titles %></a> ·
+        <%= exceptions.length > 0 ? ' · ' : '' %>
+        <a href="/staff/books?archived=only">
+          <%= t('staff.stat.archived') %>: <%= stats.archived_titles %>
+        </a>
       <% } %>
-      <%= t('status.repair') %>: <%= stats.copies_repair %> ·
-      <%= t('status.lost') %>: <%= stats.copies_lost %> ·
-      <%= t('status.withdrawn') %>: <%= stats.copies_withdrawn %>
     </p>
   <% } %>
 

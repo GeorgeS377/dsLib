@@ -1,0 +1,52 @@
+<%#
+  The things a librarian touches occasionally, gathered in one place so the
+  tab row stays short. Each card says what the section is for, because
+  "Κατηγορίες" alone does not tell a new librarian whether it edits the
+  catalogue or just lists it.
+-%>
+<div class="container stack">
+
+  <div>
+    <h1 class="mt-0"><%= t('staff.settings.title') %></h1>
+    <p class="muted"><%= t('staff.settings.lead') %></p>
+  </div>
+
+  <ul class="settings-grid" role="list">
+    <li class="settings-card">
+      <h2 class="settings-card__title">
+        <a href="/staff/categories"><%= t('staff.nav.categories') %></a>
+      </h2>
+      <p class="settings-card__body"><%= t('staff.settings.categories') %></p>
+      <p class="settings-card__meta"><%= counts.categories %></p>
+    </li>
+
+    <li class="settings-card">
+      <h2 class="settings-card__title">
+        <a href="/staff/authors"><%= t('staff.nav.authors') %></a>
+      </h2>
+      <p class="settings-card__body"><%= t('staff.settings.authors') %></p>
+      <p class="settings-card__meta"><%= counts.authors %></p>
+    </li>
+
+    <li class="settings-card">
+      <h2 class="settings-card__title">
+        <a href="/staff/account"><%= t('staff.nav.account') %></a>
+      </h2>
+      <p class="settings-card__body"><%= t('staff.settings.account') %></p>
+      <p class="settings-card__meta"><%= staffUser.username %></p>
+    </li>
+
+    <% if (staffUser.role === 'admin') { %>
+      <li class="settings-card">
+        <h2 class="settings-card__title">
+          <a href="/staff/users"><%= t('staff.nav.users') %></a>
+        </h2>
+        <p class="settings-card__body"><%= t('staff.settings.users') %></p>
+        <p class="settings-card__meta">
+          <%= counts.staff %> · <%= t('staff.settings.adminOnly') %>
+        </p>
+      </li>
+    <% } %>
+  </ul>
+
+</div>

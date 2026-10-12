@@ -14,63 +14,86 @@
 <body>
   <a class="skip-link" href="#main"><%= t('nav.skip') %></a>
 
+  <%#
+    Two bands, which is the conventional admin arrangement:
+
+      1. identity — who you are and how to leave, pinned to the right where
+         people reach for it;
+      2. sections — the five places you actually work, as tabs.
+
+    Everything occasional (categories, authors, staff users, your own
+    password) sits behind Ρυθμίσεις rather than competing for space in the
+    tab row.
+  -%>
   <header class="staff-header">
-    <div class="container staff-header__inner">
-      <a class="staff-brand" href="/staff">
-        <span aria-hidden="true">🗂️</span>
-        <span><%= t('staff.area') %></span>
-      </a>
+    <div class="staff-identity">
+      <div class="container staff-identity__inner">
+        <a class="staff-brand" href="/staff">
+          <span aria-hidden="true">🗂️</span>
+          <span><%= t('staff.area') %></span>
+        </a>
 
-      <nav class="staff-nav" aria-label="<%= t('nav.menu') %>">
-        <ul class="staff-nav__list">
-          <% [
-               { href: '/staff', key: 'staff.nav.dashboard', exact: true },
-               { href: '/staff/books', key: 'staff.nav.books' },
-               { href: '/staff/loans', key: 'staff.nav.loans' },
-               { href: '/staff/borrowers', key: 'staff.nav.borrowers' },
-               { href: '/staff/categories', key: 'staff.nav.categories' },
-               { href: '/staff/authors', key: 'staff.nav.authors' },
-             ].forEach(function (item) { %>
-            <% const active = item.exact
-                 ? currentPath === item.href || currentPath.startsWith(item.href + '?')
-                 : currentPath.startsWith(item.href); %>
-            <li>
-              <a href="<%= item.href %>"<% if (active) { %> aria-current="page"<% } %>>
-                <%= t(item.key) %>
-              </a>
-            </li>
-          <% }); %>
-          <% if (staffUser && staffUser.role === 'admin') { %>
-            <li>
-              <a href="/staff/users"<% if (currentPath.startsWith('/staff/users')) { %> aria-current="page"<% } %>>
-                <%= t('staff.nav.users') %>
-              </a>
-            </li>
-          <% } %>
-        </ul>
-      </nav>
-
-      <div class="staff-session">
-        <span class="lang-switch">
-          <% supportedLangs.forEach(function (code) { %>
-            <% if (code !== lang) { %>
-              <a class="lang-switch__link" href="<%= langUrl(code) %>" lang="<%= code %>"><%= code.toUpperCase() %></a>
-            <% } %>
-          <% }); %>
-        </span>
-
-        <% if (staffUser) { %>
-          <span class="staff-session__user">
-            <%= staffUser.display_name %><% if (staffUser.role === 'admin') { %> · <%= t('staff.role.admin') %><% } %>
+        <div class="staff-identity__right">
+          <span class="lang-switch">
+            <% supportedLangs.forEach(function (code) { %>
+              <% if (code !== lang) { %>
+                <a class="lang-switch__link" href="<%= langUrl(code) %>" lang="<%= code %>"><%= code.toUpperCase() %></a>
+              <% } %>
+            <% }); %>
           </span>
-          <a href="/staff/account"><%= t('staff.nav.account') %></a>
-          <form class="inline-form" method="post" action="/staff/logout">
-            <input type="hidden" name="_csrf" value="<%= csrfToken %>">
-            <button class="button button--quiet button--small" type="submit"><%= t('staff.logout') %></button>
-          </form>
-        <% } %>
+
+          <% if (staffUser) { %>
+            <a class="staff-identity__user" href="/staff/account">
+              <%= staffUser.display_name %>
+              <% if (staffUser.role === 'admin') { %>
+                <span class="staff-identity__role"><%= t('staff.role.admin') %></span>
+              <% } %>
+            </a>
+
+            <form class="inline-form" method="post" action="/staff/logout">
+              <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+              <button class="button button--secondary button--small" type="submit">
+                <%= t('staff.logout') %>
+              </button>
+            </form>
+          <% } %>
+        </div>
       </div>
     </div>
+
+    <nav class="staff-tabs" aria-label="<%= t('nav.menu') %>">
+      <div class="container staff-tabs__inner">
+        <%
+          const sections = [
+            { href: '/staff', key: 'staff.nav.dashboard', exact: true },
+            { href: '/staff/books', key: 'staff.nav.books' },
+            { href: '/staff/loans', key: 'staff.nav.loans' },
+            { href: '/staff/borrowers', key: 'staff.nav.borrowers' },
+          ];
+          // One tab for everything occasional, active for any page it covers.
+          const settingsPaths = [
+            '/staff/settings', '/staff/categories', '/staff/authors',
+            '/staff/users', '/staff/account',
+          ];
+        %>
+        <% sections.forEach(function (item) { %>
+          <%
+            const active = item.exact
+              ? currentPath === item.href || currentPath.startsWith(item.href + '?')
+              : currentPath.startsWith(item.href);
+          %>
+          <a class="staff-tabs__tab" href="<%= item.href %>"<% if (active) { %> aria-current="page"<% } %>>
+            <%= t(item.key) %>
+          </a>
+        <% }); %>
+
+        <% const settingsActive = settingsPaths.some(function (p) { return currentPath.startsWith(p); }); %>
+        <a class="staff-tabs__tab staff-tabs__tab--end" href="/staff/settings"
+           <% if (settingsActive) { %>aria-current="page"<% } %>>
+          <span aria-hidden="true">⚙</span> <%= t('staff.nav.settings') %>
+        </a>
+      </div>
+    </nav>
   </header>
 
   <main id="main" class="site-main">

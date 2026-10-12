@@ -252,7 +252,7 @@ describe('book detail page', () => {
   it('shows a copy that is away for repair as unavailable', async () => {
     const response = await get(`/books/${fixtures.books.austen}`);
     assert.ok(response.body.includes('Μη διαθέσιμο'));
-    assert.ok(response.body.includes('Σε επιδιόρθωση'));
+    assert.ok(response.body.includes('Σε επισκευή'));
   });
 
   it('returns 404 for an archived, unknown or malformed id', async () => {
@@ -370,9 +370,37 @@ describe('markup matches what the CSP allows', () => {
     }
   });
 
-  it('marks the current nav item', async () => {
-    const response = await get('/books');
-    assert.match(response.body, /<a href="\/books" aria-current="page">/);
+  it('carries no navigation links in the public header', () => {
+    // Browsing happens on one catalogue page with filters; a nav row would be
+    // a second route to the same books. Categories and authors stay reachable
+    // from the footer.
+    return (async () => {
+      const response = await get('/books');
+      const header = response.body.slice(
+        response.body.indexOf('<header'),
+        response.body.indexOf('</header>'),
+      );
+      assert.ok(!header.includes('/categories'), 'the header still links to categories');
+      assert.ok(!header.includes('/authors'), 'the header still links to authors');
+      assert.match(header, /role="search"/, 'the header has no search box');
+
+      const footer = response.body.slice(response.body.indexOf('<footer'));
+      assert.ok(footer.includes('/categories'), 'categories are unreachable from the footer');
+      assert.ok(footer.includes('/authors'), 'authors are unreachable from the footer');
+    })();
+  });
+
+  it('shows the header search everywhere except the home page', async () => {
+    // The home page has its own prominent field; two would be the same
+    // control twice on one screen.
+    const home = await get('/');
+    assert.ok(!home.body.includes('id="header-q"'), 'the home page duplicates the search box');
+    assert.match(home.body, /data-autofocus/, 'the home page lost its own search box');
+
+    for (const url of ['/books', '/categories', '/authors']) {
+      const response = await get(url);
+      assert.ok(response.body.includes('id="header-q"'), `${url} has no header search`);
+    }
   });
 
   it('references only same-origin assets', async () => {
