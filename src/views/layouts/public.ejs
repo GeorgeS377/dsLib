@@ -18,12 +18,25 @@
         <span class="site-brand__name"><%= libraryName %></span>
       </a>
 
+      <%#
+        Each nav item marks itself as current with a conditional block rather
+        than by interpolating an attribute string: an escaping output tag would
+        turn the quotes into entities and the attribute would never apply.
+      -%>
       <nav class="site-nav" aria-label="<%= t('nav.menu') %>">
         <ul class="site-nav__list">
-          <li><a href="/" <%= currentPath === '/' ? 'aria-current="page"' : '' %>><%= t('nav.home') %></a></li>
-          <li><a href="/books" <%= currentPath.startsWith('/books') ? 'aria-current="page"' : '' %>><%= t('nav.books') %></a></li>
-          <li><a href="/categories" <%= currentPath.startsWith('/categories') ? 'aria-current="page"' : '' %>><%= t('nav.categories') %></a></li>
-          <li><a href="/authors" <%= currentPath.startsWith('/authors') ? 'aria-current="page"' : '' %>><%= t('nav.authors') %></a></li>
+          <% [
+               { href: '/', key: 'nav.home', match: (p) => p === '/' || p.startsWith('/?') },
+               { href: '/books', key: 'nav.books', match: (p) => p.startsWith('/books') },
+               { href: '/categories', key: 'nav.categories', match: (p) => p.startsWith('/categories') },
+               { href: '/authors', key: 'nav.authors', match: (p) => p.startsWith('/authors') },
+             ].forEach(function (item) { %>
+            <li>
+              <a href="<%= item.href %>"<% if (item.match(currentPath)) { %> aria-current="page"<% } %>>
+                <%= t(item.key) %>
+              </a>
+            </li>
+          <% }); %>
         </ul>
       </nav>
 
@@ -49,5 +62,8 @@
       <p><a href="/staff"><%= t('nav.staff') %></a></p>
     </div>
   </footer>
+
+  <%# Progressive enhancement only — every page works without this file. -%>
+  <script src="/assets/js/app.js" defer></script>
 </body>
 </html>

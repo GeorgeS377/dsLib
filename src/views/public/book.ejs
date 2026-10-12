@@ -1,0 +1,163 @@
+<%#
+  Book detail page.
+
+  Nothing on this page comes from the borrower or loan tables beyond a derived
+  availability flag per copy. There is no borrower name, no due date and no
+  loan history — those exist only in the staff area.
+-%>
+<div class="container stack-lg">
+
+  <% if (backUrl) { %>
+    <p><a href="<%= backUrl %>">← <%= t('book.backToResults') %></a></p>
+  <% } %>
+
+  <article class="book-detail">
+    <div>
+      <% if (book.cover_path) { %>
+        <div class="cover">
+          <img src="/covers/<%= book.cover_path %>"
+               alt="<%= t('book.coverAlt', { title: book.title }) %>"
+               width="300" height="450">
+        </div>
+      <% } else { %>
+        <div class="cover cover--empty" role="img" aria-label="<%= t('book.noCover') %>">
+          <span aria-hidden="true">📘</span>
+        </div>
+      <% } %>
+
+      <%# Availability summary, derived from copy status and open loans. -%>
+      <div class="card mt-4">
+        <h2 class="small muted mt-0"><%= t('book.availability') %></h2>
+        <% if (book.copies_total === 0) { %>
+          <p class="muted"><%= t('book.noCopies') %></p>
+        <% } else if (book.copies_available > 0) { %>
+          <p>
+            <span class="badge badge--available"><%= t('book.allAvailable') %></span>
+          </p>
+          <p class="small muted">
+            <%= t('book.availableCount', {
+                  available: book.copies_available, total: book.copies_total }) %>
+          </p>
+        <% } else { %>
+          <p>
+            <span class="badge badge--unavailable"><%= t('book.noneAvailable') %></span>
+          </p>
+          <p class="small muted">
+            <%= t('book.availableCount', { available: 0, total: book.copies_total }) %>
+          </p>
+        <% } %>
+      </div>
+    </div>
+
+    <div>
+      <h1 class="book-detail__title"><%= book.title %></h1>
+      <% if (book.subtitle) { %>
+        <p class="book-detail__authors"><%= book.subtitle %></p>
+      <% } %>
+
+      <% if (book.authors.length > 0) { %>
+        <p class="book-detail__authors">
+          <% book.authors.forEach(function (author, index) { %><%
+            %><a href="/authors/<%= author.id %>"><%= author.name %></a><%
+            %><%= index < book.authors.length - 1 ? ', ' : '' %><%
+          %><% }); %>
+        </p>
+      <% } %>
+
+      <% if (book.categories.length > 0) { %>
+        <ul class="chip-list mb-4">
+          <% book.categories.forEach(function (category) { %>
+            <li><a class="chip" href="/categories/<%= category.slug %>"><%= category.name %></a></li>
+          <% }); %>
+        </ul>
+      <% } %>
+
+      <dl class="meta-list">
+        <% if (book.isbn13 || book.isbn10) { %>
+          <dt><%= t('book.isbn') %></dt>
+          <dd class="mono"><%= book.isbn13 || book.isbn10 %></dd>
+        <% } %>
+        <% if (book.publisher) { %>
+          <dt><%= t('book.publisher') %></dt>
+          <dd><%= book.publisher %></dd>
+        <% } %>
+        <% if (book.publication_year) { %>
+          <dt><%= t('book.year') %></dt>
+          <dd><%= book.publication_year %></dd>
+        <% } %>
+        <% if (book.edition) { %>
+          <dt><%= t('book.edition') %></dt>
+          <dd><%= book.edition %></dd>
+        <% } %>
+        <% if (book.language) { %>
+          <dt><%= t('book.language') %></dt>
+          <dd><%= book.language %></dd>
+        <% } %>
+        <% if (book.copies_total > 0) { %>
+          <dt><%= t('book.copies') %></dt>
+          <dd><%= book.copies_total %></dd>
+        <% } %>
+      </dl>
+
+      <% if (book.description) { %>
+        <section class="mt-6">
+          <h2><%= t('book.description') %></h2>
+          <%# Rendered as escaped text with paragraph breaks preserved, never
+              as raw HTML — a librarian's description must not be able to
+              inject markup into a public page. -%>
+          <% book.description.split(/\n\s*\n/).forEach(function (paragraph) { %>
+            <p><%= paragraph.trim() %></p>
+          <% }); %>
+        </section>
+      <% } %>
+
+      <%# Per-copy table: shelf location helps a student find the book on the
+          shelf. Status is the physical state or 'on loan' — never who has it. -%>
+      <% if (book.copies.length > 0) { %>
+        <section class="mt-6">
+          <h2><%= t('book.copiesTable') %></h2>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th scope="col"><%= t('book.copyNumber') %></th>
+                  <th scope="col"><%= t('book.shelf') %></th>
+                  <th scope="col"><%= t('book.status') %></th>
+                </tr>
+              </thead>
+              <tbody>
+                <% book.copies.forEach(function (copy, index) { %>
+                  <tr>
+                    <td><%= index + 1 %></td>
+                    <td><%= copy.shelf_location || '—' %></td>
+                    <td>
+                      <% if (copy.is_available) { %>
+                        <span class="badge badge--available"><%= t('status.available') %></span>
+                      <% } else if (copy.open_loan_id) { %>
+                        <span class="badge badge--loaned"><%= t('status.on_loan') %></span>
+                      <% } else { %>
+                        <span class="badge badge--<%= copy.status %>"><%= t('status.' + copy.status) %></span>
+                      <% } %>
+                    </td>
+                  </tr>
+                <% }); %>
+              </tbody>
+            </table>
+          </div>
+        </section>
+      <% } %>
+    </div>
+  </article>
+
+  <% if (related.length > 0) { %>
+    <section>
+      <h2><%= t('book.relatedByAuthor') %></h2>
+      <ul class="book-grid">
+        <% related.forEach(function (item) { %>
+          <%- include('../partials/book-card', { book: item, t: t }) %>
+        <% }); %>
+      </ul>
+    </section>
+  <% } %>
+
+</div>

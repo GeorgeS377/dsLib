@@ -1,0 +1,35 @@
+<%#
+  One book in a grid. Expects `book` with: id, title, authors,
+  cover_thumb_path, copies_available, copies_total.
+  Every value is output through an escaping tag; nothing here is rendered as
+  raw HTML.
+-%>
+<li class="book-card">
+  <a class="book-card__link" href="/books/<%= book.id %>">
+    <% if (book.cover_thumb_path || book.cover_path) { %>
+      <div class="cover">
+        <img src="/covers/<%= book.cover_thumb_path || book.cover_path %>"
+             alt="<%= t('book.coverAlt', { title: book.title }) %>"
+             loading="lazy" width="200" height="300">
+      </div>
+    <% } else { %>
+      <div class="cover cover--empty" role="img" aria-label="<%= t('book.noCover') %>">
+        <span aria-hidden="true">📘</span>
+      </div>
+    <% } %>
+
+    <span class="book-card__title"><%= book.title %></span>
+
+    <% if (book.authors) { %>
+      <span class="book-card__author"><%= book.authors %></span>
+    <% } %>
+
+    <% if (book.copies_total > 0) { %>
+      <% if (book.copies_available > 0) { %>
+        <span class="badge badge--available"><%= t('status.available') %></span>
+      <% } else { %>
+        <span class="badge badge--unavailable"><%= t('book.noneAvailable') %></span>
+      <% } %>
+    <% } %>
+  </a>
+</li>

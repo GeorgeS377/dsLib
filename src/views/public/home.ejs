@@ -1,0 +1,73 @@
+<div class="container stack-lg">
+
+  <section class="hero">
+    <h1 class="hero__title"><%= t('home.title') %></h1>
+    <p class="hero__lead"><%= t('home.lead') %></p>
+
+    <form class="search-form search-form--hero hero__search" method="get" action="/books"
+          role="search">
+      <label class="visually-hidden" for="q"><%= t('common.searchLabel') %></label>
+      <input class="search-form__input" type="search" id="q" name="q"
+             placeholder="<%= t('common.searchPlaceholder') %>"
+             autocomplete="off" data-autofocus>
+      <button class="button" type="submit"><%= t('common.search') %></button>
+    </form>
+
+    <% if (stats && stats.titles > 0) { %>
+      <p class="small muted mt-4">
+        <%= t('home.stats.titles', { count: stats.titles }) %>
+        ·
+        <%= t('home.stats.available', { count: stats.copies_available }) %>
+      </p>
+    <% } %>
+
+    <div class="button-row button-row--center mt-4">
+      <a class="button button--secondary" href="/books"><%= t('home.browseAll') %></a>
+      <a class="button button--secondary" href="/categories"><%= t('home.browseCategories') %></a>
+    </div>
+  </section>
+
+  <%# Recently added. Empty state covers a brand-new catalogue. -%>
+  <section>
+    <div class="section-head">
+      <h2><%= t('home.recent') %></h2>
+      <% if (recent.length > 0) { %>
+        <a class="section-head__link" href="/books?sort=newest"><%= t('home.browseAll') %> →</a>
+      <% } %>
+    </div>
+
+    <% if (recent.length === 0) { %>
+      <div class="state state--empty">
+        <p class="state__icon" aria-hidden="true">📚</p>
+        <h3 class="state__title"><%= t('home.recentEmpty') %></h3>
+        <p class="state__body"><%= t('home.recentEmptyHint') %></p>
+      </div>
+    <% } else { %>
+      <ul class="book-grid">
+        <% recent.forEach(function (book) { %>
+          <%- include('../partials/book-card', { book: book, t: t }) %>
+        <% }); %>
+      </ul>
+    <% } %>
+  </section>
+
+  <% if (categories.length > 0) { %>
+    <section>
+      <div class="section-head">
+        <h2><%= t('home.categories') %></h2>
+        <a class="section-head__link" href="/categories"><%= t('categories.title') %> →</a>
+      </div>
+      <ul class="chip-list">
+        <% categories.forEach(function (category) { %>
+          <li>
+            <a class="chip" href="/categories/<%= category.slug %>">
+              <%= category.name %>
+              <span class="chip__count">(<%= category.book_count %>)</span>
+            </a>
+          </li>
+        <% }); %>
+      </ul>
+    </section>
+  <% } %>
+
+</div>

@@ -1,0 +1,41 @@
+<%#
+  Pagination. Expects `results` ({ page, totalPages }), `pages` (the window
+  from pageWindow(), with nulls for gaps) and `pageUrl(n)`.
+
+  Every link is built by pageUrl, which carries the current search and filter
+  parameters — this is what makes filters survive page navigation.
+-%>
+<% if (results.totalPages > 1) { %>
+  <nav class="pagination" aria-label="<%= t('pagination.label') %>">
+    <% if (results.page > 1) { %>
+      <a class="pagination__link" href="<%= pageUrl(results.page - 1) %>" rel="prev">
+        <span aria-hidden="true">←</span> <%= t('pagination.previous') %>
+      </a>
+    <% } else { %>
+      <span class="pagination__link" aria-disabled="true">
+        <span aria-hidden="true">←</span> <%= t('pagination.previous') %>
+      </span>
+    <% } %>
+
+    <% pages.forEach(function (page) { %>
+      <% if (page === null) { %>
+        <span class="pagination__status" aria-hidden="true">…</span>
+      <% } else if (page === results.page) { %>
+        <span class="pagination__link" aria-current="page"
+              aria-label="<%= t('pagination.page', { current: page, total: results.totalPages }) %>"><%= page %></span>
+      <% } else { %>
+        <a class="pagination__link" href="<%= pageUrl(page) %>"><%= page %></a>
+      <% } %>
+    <% }); %>
+
+    <% if (results.page < results.totalPages) { %>
+      <a class="pagination__link" href="<%= pageUrl(results.page + 1) %>" rel="next">
+        <%= t('pagination.next') %> <span aria-hidden="true">→</span>
+      </a>
+    <% } else { %>
+      <span class="pagination__link" aria-disabled="true">
+        <%= t('pagination.next') %> <span aria-hidden="true">→</span>
+      </span>
+    <% } %>
+  </nav>
+<% } %>

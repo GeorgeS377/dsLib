@@ -1,0 +1,40 @@
+<%#
+  Shared layout for "all books in a category" and "all books by an author".
+  Expects: heading, lead, results, range, pages, pageUrl, sortUrl, query, kept.
+-%>
+<div class="container stack-lg">
+
+  <div>
+    <h1><%= heading %></h1>
+    <% if (lead) { %>
+      <p class="muted"><%= lead %></p>
+    <% } %>
+  </div>
+
+  <% if (results.total === 0) { %>
+    <div class="state state--empty">
+      <p class="state__icon" aria-hidden="true">🔍</p>
+      <h2 class="state__title"><%= t('search.empty.title') %></h2>
+      <p class="state__body"><%= t('search.empty.catalogue') %></p>
+      <p><a class="button button--secondary" href="/books"><%= t('home.browseAll') %></a></p>
+    </div>
+  <% } else { %>
+    <div class="section-head">
+      <p class="muted" role="status">
+        <%= t('search.showing', { from: range.from, to: range.to, total: range.total }) %>
+      </p>
+      <%- include('../partials/sort-form', {
+            kept: kept, query: query, action: currentPath.split('?')[0], t: t }) %>
+    </div>
+
+    <ul class="book-grid">
+      <% results.rows.forEach(function (book) { %>
+        <%- include('../partials/book-card', { book: book, t: t }) %>
+      <% }); %>
+    </ul>
+
+    <%- include('../partials/pagination', {
+          results: results, pages: pages, pageUrl: pageUrl, t: t }) %>
+  <% } %>
+
+</div>

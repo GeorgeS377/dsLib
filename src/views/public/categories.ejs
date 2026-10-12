@@ -1,0 +1,31 @@
+<div class="container stack-lg">
+
+  <div>
+    <h1><%= t('categories.title') %></h1>
+    <p class="muted"><%= t('categories.lead') %></p>
+  </div>
+
+  <% if (categories.length === 0) { %>
+    <div class="state state--empty">
+      <p class="state__icon" aria-hidden="true">🏷️</p>
+      <h2 class="state__title"><%= t('categories.empty') %></h2>
+      <p><a class="button button--secondary" href="/books"><%= t('home.browseAll') %></a></p>
+    </div>
+  <% } else { %>
+    <ul class="chip-list">
+      <% categories.forEach(function (category) { %>
+        <li>
+          <a class="chip" href="/categories/<%= category.slug %>">
+            <%= category.name %>
+            <span class="chip__count">
+              (<%= category.book_count === 1
+                    ? t('categories.bookCountOne')
+                    : t('categories.bookCount', { count: category.book_count }) %>)
+            </span>
+          </a>
+        </li>
+      <% }); %>
+    </ul>
+  <% } %>
+
+</div>

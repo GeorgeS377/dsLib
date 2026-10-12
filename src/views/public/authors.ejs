@@ -1,0 +1,40 @@
+<div class="container stack-lg">
+
+  <div>
+    <h1><%= t('authors.title') %></h1>
+    <p class="muted"><%= t('authors.lead') %></p>
+  </div>
+
+  <form class="search-form" method="get" action="/authors" role="search">
+    <label class="visually-hidden" for="author-q"><%= t('authors.findByName') %></label>
+    <input class="search-form__input" type="search" id="author-q" name="q"
+           value="<%= q || '' %>" placeholder="<%= t('authors.findByName') %>"
+           autocomplete="off">
+    <button class="button" type="submit"><%= t('common.search') %></button>
+  </form>
+
+  <% if (authors.length === 0) { %>
+    <div class="state state--empty">
+      <p class="state__icon" aria-hidden="true">✍️</p>
+      <h2 class="state__title">
+        <%= q ? t('search.empty.title') : t('authors.empty') %>
+      </h2>
+      <% if (q) { %>
+        <p class="state__body"><%= t('search.empty.withQuery', { query: q }) %></p>
+        <p><a class="button button--secondary" href="/authors"><%= t('common.clear') %></a></p>
+      <% } %>
+    </div>
+  <% } else { %>
+    <ul class="chip-list">
+      <% authors.forEach(function (author) { %>
+        <li>
+          <a class="chip" href="/authors/<%= author.id %>">
+            <%= author.name %>
+            <span class="chip__count">(<%= author.book_count %>)</span>
+          </a>
+        </li>
+      <% }); %>
+    </ul>
+  <% } %>
+
+</div>

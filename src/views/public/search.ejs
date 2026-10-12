@@ -1,0 +1,132 @@
+<div class="container stack-lg">
+
+  <h1><%= t('search.title') %></h1>
+
+  <%# Search box. Keeps the active filters as hidden inputs so that running a
+      new search does not silently discard them. -%>
+  <form class="search-form" method="get" action="/books" role="search">
+    <% ['category', 'author', 'year', 'language', 'available', 'sort'].forEach(function (name) { %>
+      <% if (kept[name] !== undefined && kept[name] !== null && kept[name] !== '') { %>
+        <input type="hidden" name="<%= name %>" value="<%= kept[name] %>">
+      <% } %>
+    <% }); %>
+    <label class="visually-hidden" for="q"><%= t('common.searchLabel') %></label>
+    <input class="search-form__input" type="search" id="q" name="q"
+           value="<%= query.q || '' %>"
+           placeholder="<%= t('common.searchPlaceholder') %>" autocomplete="off">
+    <button class="button" type="submit"><%= t('common.search') %></button>
+  </form>
+
+  <%# Filters. A <details> element, so it collapses on small screens with no
+      JavaScript involved. Open by default when a filter is active, so the
+      visitor can see why their results are narrowed. -%>
+  <details class="filters" <%= hasFilters ? 'open' : '' %>>
+    <summary class="filters__summary"><%= t('common.filters') %></summary>
+
+    <form class="filters__body" method="get" action="/books" data-autosubmit>
+      <% if (query.q) { %>
+        <input type="hidden" name="q" value="<%= query.q %>">
+      <% } %>
+      <% if (query.sort) { %>
+        <input type="hidden" name="sort" value="<%= query.sort %>">
+      <% } %>
+
+      <div class="field">
+        <label class="field__label" for="category"><%= t('search.filter.category') %></label>
+        <select id="category" name="category">
+          <option value=""><%= t('search.filter.allCategories') %></option>
+          <% categories.forEach(function (category) { %>
+            <option value="<%= category.id %>" <%= query.category === category.id ? 'selected' : '' %>>
+              <%= category.name %> (<%= category.book_count %>)
+            </option>
+          <% }); %>
+        </select>
+      </div>
+
+      <div class="field">
+        <label class="field__label" for="author"><%= t('search.filter.author') %></label>
+        <select id="author" name="author">
+          <option value=""><%= t('search.filter.allAuthors') %></option>
+          <% authors.forEach(function (author) { %>
+            <option value="<%= author.id %>" <%= query.author === author.id ? 'selected' : '' %>>
+              <%= author.name %> (<%= author.book_count %>)
+            </option>
+          <% }); %>
+        </select>
+      </div>
+
+      <div class="field">
+        <label class="field__label" for="year"><%= t('search.filter.year') %></label>
+        <select id="year" name="year">
+          <option value=""><%= t('search.filter.allYears') %></option>
+          <% years.forEach(function (year) { %>
+            <option value="<%= year %>" <%= query.year === year ? 'selected' : '' %>><%= year %></option>
+          <% }); %>
+        </select>
+      </div>
+
+      <% if (languages.length > 1) { %>
+        <div class="field">
+          <label class="field__label" for="language"><%= t('search.filter.language') %></label>
+          <select id="language" name="language">
+            <option value=""><%= t('search.filter.allLanguages') %></option>
+            <% languages.forEach(function (code) { %>
+              <option value="<%= code %>" <%= query.language === code ? 'selected' : '' %>><%= code %></option>
+            <% }); %>
+          </select>
+        </div>
+      <% } %>
+
+      <div class="field">
+        <div class="checkbox-row">
+          <input type="checkbox" id="available" name="available" value="1"
+                 <%= query.available ? 'checked' : '' %>>
+          <label for="available"><%= t('search.filter.availableOnly') %></label>
+        </div>
+      </div>
+
+      <div class="filters__actions button-row">
+        <button class="button" type="submit" data-autosubmit-hide><%= t('common.apply') %></button>
+        <% if (hasFilters) { %>
+          <a class="button button--quiet" href="<%= clearUrl %>"><%= t('search.clearFilters') %></a>
+        <% } %>
+      </div>
+    </form>
+  </details>
+
+  <% if (results.total === 0) { %>
+    <div class="state state--empty">
+      <p class="state__icon" aria-hidden="true">🔍</p>
+      <h2 class="state__title"><%= t('search.empty.title') %></h2>
+      <p class="state__body">
+        <% if (query.q) { %>
+          <%= t('search.empty.withQuery', { query: query.q }) %>
+        <% } else if (hasFilters) { %>
+          <%= t('search.empty.withFilters') %>
+        <% } else { %>
+          <%= t('search.empty.catalogue') %>
+        <% } %>
+      </p>
+      <% if (query.q || hasFilters) { %>
+        <p><a class="button button--secondary" href="/books"><%= t('search.clearFilters') %></a></p>
+      <% } %>
+    </div>
+  <% } else { %>
+    <div class="section-head">
+      <p class="muted" role="status">
+        <%= t('search.showing', { from: range.from, to: range.to, total: range.total }) %>
+      </p>
+      <%- include('../partials/sort-form', { kept: kept, query: query, action: '/books', t: t }) %>
+    </div>
+
+    <ul class="book-grid">
+      <% results.rows.forEach(function (book) { %>
+        <%- include('../partials/book-card', { book: book, t: t }) %>
+      <% }); %>
+    </ul>
+
+    <%- include('../partials/pagination', {
+          results: results, pages: pages, pageUrl: pageUrl, t: t }) %>
+  <% } %>
+
+</div>

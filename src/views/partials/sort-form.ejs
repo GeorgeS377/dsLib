@@ -1,0 +1,31 @@
+<%#
+  Sort control. A GET form, so it works with no JavaScript at all: every
+  current filter is re-emitted as a hidden input, which is what keeps the
+  search and filters intact when the sort order changes.
+
+  The submit button is always rendered. /assets/js/app.js hides it and
+  auto-submits on change when scripting is available — an enhancement, never a
+  requirement. (An inline onchange handler would be blocked by our CSP, which
+  allows no inline script.)
+
+  Expects `kept` (preserved parameters), `query` and `action`.
+-%>
+<form class="sort-form" method="get" action="<%= action %>" data-autosubmit>
+  <% Object.entries(kept).forEach(function ([name, value]) { %>
+    <% if (value !== undefined && value !== null && value !== '' && name !== 'sort') { %>
+      <input type="hidden" name="<%= name %>" value="<%= value %>">
+    <% } %>
+  <% }); %>
+
+  <label class="sort-form__label" for="sort"><%= t('search.sort.label') %></label>
+  <select id="sort" name="sort">
+    <% ['title', 'title_desc', 'author', 'newest', 'year_desc', 'year'].forEach(function (option) { %>
+      <option value="<%= option %>" <%= (query.sort || 'title') === option ? 'selected' : '' %>>
+        <%= t('search.sort.' + option) %>
+      </option>
+    <% }); %>
+  </select>
+  <button class="button button--secondary button--small" type="submit" data-autosubmit-hide>
+    <%= t('common.apply') %>
+  </button>
+</form>

@@ -1,6 +1,7 @@
 // Application assembly: builds a configured Fastify instance without starting
 // it. Tests call buildApp() and use app.inject(); src/server.js calls it and
 // listens. Keeping the two apart means tests never bind a port.
+import fs from 'node:fs';
 import path from 'node:path';
 import fastifyCookie from '@fastify/cookie';
 import fastifyFormbody from '@fastify/formbody';
@@ -11,8 +12,10 @@ import fastifyView from '@fastify/view';
 import ejs from 'ejs';
 import Fastify from 'fastify';
 import { config as defaultConfig } from './config.js';
+import { getDatabase } from './db/index.js';
 import { LANG_COOKIE, SUPPORTED_LANGS, resolveLang, translatorFor } from './lib/i18n.js';
 import healthRoutes from './routes/health.js';
+import publicRoutes from './routes/public/index.js';
 
 const ONE_YEAR_SECONDS = 365 * 24 * 60 * 60;
 
@@ -20,8 +23,9 @@ const ONE_YEAR_SECONDS = 365 * 24 * 60 * 60;
  * @param {object} [options]
  * @param {typeof defaultConfig} [options.config] Override configuration (tests).
  * @param {object} [options.logger] Fastify logger options, or false to silence.
+ * @param {object} [options.db] An open database, so tests can supply their own.
  */
-export async function buildApp({ config = defaultConfig, logger } = {}) {
+export async function buildApp({ config = defaultConfig, logger, db } = {}) {
   const app = Fastify({
     logger: logger ?? loggerOptions(config),
     trustProxy: config.trustProxy,
@@ -35,6 +39,7 @@ export async function buildApp({ config = defaultConfig, logger } = {}) {
   });
 
   app.decorate('config', config);
+  app.decorate('db', db ?? getDatabase());
 
   // --- Security headers ---------------------------------------------------
   // No inline scripts or styles anywhere in this app, so the CSP can stay
@@ -111,6 +116,22 @@ export async function buildApp({ config = defaultConfig, logger } = {}) {
     maxAge: config.isProduction ? '7d' : 0,
   });
 
+  // Uploaded cover images, served read-only from outside the source tree.
+  // Files here are written by the upload handler, which re-encodes every
+  // image, so nothing user-supplied is served back verbatim.
+  fs.mkdirSync(path.join(config.uploadDir, 'covers'), { recursive: true, mode: 0o750 });
+  await app.register(fastifyStatic, {
+    root: path.join(config.uploadDir, 'covers'),
+    prefix: '/covers/',
+    index: false,
+    list: false,
+    // A second @fastify/static instance must not re-decorate reply.sendFile.
+    decorateReply: false,
+    maxAge: config.isProduction ? '30d' : 0,
+    // Never let a dotfile or an unexpected extension be served from here.
+    serveDotFiles: false,
+  });
+
   // --- Language resolution ------------------------------------------------
   // One hook sets the language for every request, so no route can forget it.
   app.decorateRequest('lang', null);
@@ -156,6 +177,7 @@ export async function buildApp({ config = defaultConfig, logger } = {}) {
 
   // --- Routes -------------------------------------------------------------
   await app.register(healthRoutes);
+  await app.register(publicRoutes);
 
   // --- Error handling -----------------------------------------------------
   // Visitors see a generic page; the detail goes to the log only. This is what
