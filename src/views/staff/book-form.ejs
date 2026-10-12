@@ -1,0 +1,281 @@
+<%#
+  Create and edit a title. One template for both: `book` is null when
+  creating. On a rejected submission the handler re-renders this with
+  `values` from the submitted body, so nothing the librarian typed is lost.
+-%>
+<div class="container stack-lg">
+
+  <div class="section-head">
+    <h1 class="mt-0"><%= book ? t('staff.books.edit') : t('staff.books.new') %></h1>
+    <div class="button-row">
+      <a class="button button--quiet" href="/staff/books">← <%= t('staff.books.title') %></a>
+      <% if (book) { %>
+        <a class="button button--secondary" href="/staff/books/<%= book.id %>/copies">
+          <%= t('staff.books.manageCopies') %> (<%= book.copies_total %>)
+        </a>
+        <% if (!book.archived_at) { %>
+          <a class="button button--quiet" href="/books/<%= book.id %>"><%= t('staff.books.viewPublic') %></a>
+        <% } %>
+      <% } %>
+    </div>
+  </div>
+
+  <% if (book && book.archived_at) { %>
+    <div class="flash flash--warning" role="status">
+      <span><%= t('staff.books.isArchived') %></span>
+    </div>
+  <% } %>
+
+  <% const errorKeys = Object.keys(errors || {}); %>
+  <% if (errorKeys.length > 0) { %>
+    <%# A summary at the top, with links to each field: a long form should not
+        require hunting for what went wrong. -%>
+    <div class="error-summary" role="alert">
+      <strong><%= t('error.summary.title') %></strong>
+      <ul>
+        <% errorKeys.forEach(function (key) { %>
+          <li>
+            <a href="#field-<%= key %>">
+              <%= t('staff.field.' + key) !== 'staff.field.' + key ? t('staff.field.' + key) : key %>
+            </a>
+          </li>
+        <% }); %>
+      </ul>
+    </div>
+  <% } %>
+
+  <% if (typeof duplicate !== 'undefined' && duplicate) { %>
+    <div class="flash flash--error" role="alert">
+      <span>
+        <%= t('error.field.duplicate_isbn') %>
+        <a href="/staff/books/<%= duplicate.id %>"><%= duplicate.title %></a>
+      </span>
+    </div>
+  <% } %>
+
+  <div class="card">
+    <form method="post" action="<%= book ? '/staff/books/' + book.id : '/staff/books' %>">
+      <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+
+      <div class="field">
+        <label class="field__label" for="field-title"><%= t('staff.field.title') %></label>
+        <input type="text" id="field-title" name="title" value="<%= values.title %>"
+               required maxlength="500"
+               <%- errors.title ? 'aria-invalid="true" aria-describedby="err-title"' : '' %>>
+        <span id="err-title"><%- include('../partials/field-error', { code: errors.title, t: t }) %></span>
+      </div>
+
+      <div class="field">
+        <label class="field__label" for="field-subtitle">
+          <%= t('staff.field.subtitle') %>
+          <span class="field__optional"><%= t('common.optional') %></span>
+        </label>
+        <input type="text" id="field-subtitle" name="subtitle" value="<%= values.subtitle %>"
+               maxlength="500">
+      </div>
+
+      <%# Authors: one input per author, so a surname-first name containing a
+          comma stays one person. app.js adds further rows when scripting is
+          available; without it, the existing rows plus one blank are enough,
+          and the form can be saved repeatedly to add more. -%>
+      <fieldset class="fieldset" data-repeatable>
+        <legend class="fieldset__legend"><%= t('staff.field.authors') %></legend>
+        <p class="field__hint"><%= t('staff.field.authorsHint') %></p>
+
+        <div data-repeatable-list>
+          <% values.authors.forEach(function (name, index) { %>
+            <div class="field" data-repeatable-row>
+              <label class="visually-hidden" for="field-author-<%= index %>">
+                <%= t('staff.field.authors') %> <%= index + 1 %>
+              </label>
+              <input type="text" id="field-author-<%= index %>" name="authors"
+                     value="<%= name %>" maxlength="200" autocomplete="off">
+            </div>
+          <% }); %>
+          <%# Always render one spare row so an author can be added with no JS. -%>
+          <div class="field" data-repeatable-row>
+            <label class="visually-hidden" for="field-author-extra">
+              <%= t('staff.field.addAuthor') %>
+            </label>
+            <input type="text" id="field-author-extra" name="authors" value=""
+                   maxlength="200" autocomplete="off">
+          </div>
+        </div>
+
+        <button class="button button--secondary button--small" type="button"
+                data-repeatable-add hidden>
+          + <%= t('staff.field.addAuthor') %>
+        </button>
+      </fieldset>
+
+      <div class="field">
+        <label class="field__label" for="field-isbn"><%= t('staff.field.isbn') %>
+          <span class="field__optional"><%= t('common.optional') %></span>
+        </label>
+        <span class="field__hint"><%= t('staff.field.isbnHint') %></span>
+        <input type="text" id="field-isbn" name="isbn" value="<%= values.isbn %>"
+               maxlength="32" inputmode="numeric" autocomplete="off"
+               <%- errors.isbn ? 'aria-invalid="true" aria-describedby="err-isbn"' : '' %>>
+        <span id="err-isbn"><%- include('../partials/field-error', { code: errors.isbn, t: t }) %></span>
+      </div>
+
+      <div class="field">
+        <label class="field__label" for="field-publisher"><%= t('staff.field.publisher') %>
+          <span class="field__optional"><%= t('common.optional') %></span>
+        </label>
+        <input type="text" id="field-publisher" name="publisher" value="<%= values.publisher %>"
+               maxlength="200">
+      </div>
+
+      <div class="field">
+        <label class="field__label" for="field-publication_year"><%= t('staff.field.year') %>
+          <span class="field__optional"><%= t('common.optional') %></span>
+        </label>
+        <input type="number" id="field-publication_year" name="publication_year"
+               value="<%= values.publication_year %>" min="1400" max="2200" step="1"
+               <%- errors.publication_year ? 'aria-invalid="true" aria-describedby="err-year"' : '' %>>
+        <span id="err-year"><%- include('../partials/field-error', { code: errors.publication_year, t: t }) %></span>
+      </div>
+
+      <div class="field">
+        <label class="field__label" for="field-edition"><%= t('staff.field.edition') %>
+          <span class="field__optional"><%= t('common.optional') %></span>
+        </label>
+        <input type="text" id="field-edition" name="edition" value="<%= values.edition %>"
+               maxlength="100">
+      </div>
+
+      <div class="field">
+        <label class="field__label" for="field-language"><%= t('staff.field.language') %>
+          <span class="field__optional"><%= t('common.optional') %></span>
+        </label>
+        <span class="field__hint"><%= t('staff.field.languageHint') %></span>
+        <input type="text" id="field-language" name="language" value="<%= values.language %>"
+               maxlength="40" list="language-options" autocomplete="off">
+        <datalist id="language-options">
+          <% languages.forEach(function (code) { %>
+            <option value="<%= code %>"></option>
+          <% }); %>
+          <option value="el"></option>
+          <option value="en"></option>
+        </datalist>
+      </div>
+
+      <div class="field">
+        <label class="field__label" for="field-categories"><%= t('staff.field.categories') %>
+          <span class="field__optional"><%= t('common.optional') %></span>
+        </label>
+        <span class="field__hint"><%= t('staff.field.categoriesHint') %></span>
+        <select id="field-categories" name="categories" multiple size="6">
+          <% categories.forEach(function (category) { %>
+            <option value="<%= category.id %>"
+                    <%= values.categories.includes(category.id) ? 'selected' : '' %>>
+              <%= category.name %>
+            </option>
+          <% }); %>
+        </select>
+        <% if (categories.length === 0) { %>
+          <span class="field__hint">
+            <a href="/staff/categories"><%= t('staff.categories.add') %></a>
+          </span>
+        <% } %>
+      </div>
+
+      <div class="field">
+        <label class="field__label" for="field-description"><%= t('staff.field.description') %>
+          <span class="field__optional"><%= t('common.optional') %></span>
+        </label>
+        <textarea id="field-description" name="description" maxlength="10000"
+                  rows="6"><%= values.description %></textarea>
+      </div>
+
+      <div class="button-row mt-6">
+        <button class="button" type="submit"><%= t('common.save') %></button>
+        <a class="button button--quiet" href="/staff/books"><%= t('common.cancel') %></a>
+      </div>
+    </form>
+  </div>
+
+  <%# Cover image. A separate form because it is a multipart upload, and
+      because replacing a cover should not require resaving the whole record. -%>
+  <% if (book) { %>
+    <section class="card">
+      <h2 class="mt-0"><%= t('staff.field.cover') %></h2>
+
+      <div class="book-detail">
+        <div>
+          <% if (book.cover_path) { %>
+            <div class="cover">
+              <img src="/covers/<%= book.cover_thumb_path || book.cover_path %>"
+                   alt="<%= t('book.coverAlt', { title: book.title }) %>"
+                   width="240" height="360">
+            </div>
+          <% } else { %>
+            <div class="cover cover--empty" role="img" aria-label="<%= t('book.noCover') %>">
+              <span aria-hidden="true">📘</span>
+            </div>
+          <% } %>
+        </div>
+
+        <div>
+          <form method="post" action="/staff/books/<%= book.id %>/cover"
+                enctype="multipart/form-data">
+            <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+            <div class="field">
+              <label class="field__label" for="field-cover">
+                <%= book.cover_path ? t('staff.cover.replace') : t('staff.cover.upload') %>
+              </label>
+              <span class="field__hint"><%= t('staff.cover.hint', { mb: maxUploadMb }) %></span>
+              <input type="file" id="field-cover" name="cover"
+                     accept="image/jpeg,image/png,image/webp" required>
+            </div>
+            <button class="button button--secondary" type="submit"><%= t('common.save') %></button>
+          </form>
+
+          <% if (book.cover_path) { %>
+            <form class="mt-4" method="post" action="/staff/books/<%= book.id %>/cover/delete"
+                  data-confirm="<%= t('staff.cover.remove') %>?">
+              <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+              <button class="button button--danger button--small" type="submit">
+                <%= t('staff.cover.remove') %>
+              </button>
+            </form>
+          <% } %>
+        </div>
+      </div>
+    </section>
+  <% } %>
+
+  <%# Archive, restore and delete. Archiving is offered first and described,
+      because it is almost always the right action for a retired record. -%>
+  <% if (book) { %>
+    <section class="card">
+      <h2 class="mt-0"><%= t('staff.books.archiveInstead') %></h2>
+      <p class="muted small"><%= t('staff.books.archiveExplain') %></p>
+
+      <div class="button-row">
+        <% if (book.archived_at) { %>
+          <form method="post" action="/staff/books/<%= book.id %>/unarchive">
+            <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+            <button class="button button--secondary" type="submit">
+              <%= t('staff.books.restoreAction') %>
+            </button>
+          </form>
+        <% } else { %>
+          <form method="post" action="/staff/books/<%= book.id %>/archive"
+                data-confirm="<%= t('staff.books.archiveConfirm', { title: book.title }) %>">
+            <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+            <button class="button button--secondary" type="submit">
+              <%= t('staff.books.archiveAction') %>
+            </button>
+          </form>
+        <% } %>
+
+        <a class="button button--danger" href="/staff/books/<%= book.id %>/delete">
+          <%= t('staff.books.deleteTitle') %>
+        </a>
+      </div>
+    </section>
+  <% } %>
+
+</div>

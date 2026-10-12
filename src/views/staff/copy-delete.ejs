@@ -1,0 +1,57 @@
+<div class="container">
+  <div class="card login-shell">
+    <h1 class="mt-0"><%= t('staff.copies.deleteTitle') %></h1>
+
+    <dl class="meta-list">
+      <dt><%= t('staff.book.title') %></dt>
+      <dd><a href="/staff/books/<%= copy.book_id %>"><%= copy.book_title %></a></dd>
+      <dt><%= t('staff.field.barcode') %></dt>
+      <dd class="mono"><%= copy.barcode || '—' %></dd>
+      <dt><%= t('staff.field.shelf') %></dt>
+      <dd><%= copy.shelf_location || '—' %></dd>
+      <dt><%= t('staff.field.status') %></dt>
+      <dd><%= t('status.' + copy.status) %></dd>
+    </dl>
+
+    <% if (!deletability.deletable) { %>
+      <%# A copy with loan history must stay, so the history keeps pointing at
+          a real item. Withdrawing it is the non-destructive equivalent. -%>
+      <div class="flash flash--error mt-4" role="alert">
+        <span><%= t('staff.copies.deleteBlocked.' + deletability.reason) %></span>
+      </div>
+
+      <% if (loans.total > 0) { %>
+        <p class="muted small"><%= t('pagination.results', { count: loans.total }) %></p>
+      <% } %>
+
+      <div class="button-row mt-6">
+        <% if (deletability.reason === 'has_loans' && copy.status !== 'withdrawn') { %>
+          <form method="post" action="/staff/copies/<%= copy.id %>">
+            <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+            <input type="hidden" name="status" value="withdrawn">
+            <input type="hidden" name="barcode" value="<%= copy.barcode || '' %>">
+            <input type="hidden" name="shelf_location" value="<%= copy.shelf_location || '' %>">
+            <button class="button" type="submit"><%= t('staff.copies.withdrawInstead') %></button>
+          </form>
+        <% } %>
+        <a class="button button--quiet" href="/staff/books/<%= copy.book_id %>/copies">
+          <%= t('common.cancel') %>
+        </a>
+      </div>
+    <% } else { %>
+      <div class="flash flash--warning mt-4" role="alert">
+        <span><%= t('staff.books.deleteWarning', { count: 1 }) %></span>
+      </div>
+
+      <div class="button-row mt-6">
+        <form method="post" action="/staff/copies/<%= copy.id %>/delete">
+          <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+          <button class="button button--danger" type="submit"><%= t('common.delete') %></button>
+        </form>
+        <a class="button button--quiet" href="/staff/books/<%= copy.book_id %>/copies">
+          <%= t('common.cancel') %>
+        </a>
+      </div>
+    <% } %>
+  </div>
+</div>

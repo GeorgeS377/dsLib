@@ -1,0 +1,92 @@
+<div class="container stack-lg">
+
+  <h1 class="mt-0"><%= t('staff.categories.title') %></h1>
+
+  <% if (categories.length === 0) { %>
+    <div class="state state--empty">
+      <p class="state__icon" aria-hidden="true">🏷️</p>
+      <h2 class="state__title"><%= t('staff.categories.empty') %></h2>
+    </div>
+  <% } else { %>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th scope="col"><%= t('staff.field.title') %></th>
+            <th scope="col"><%= t('staff.categories.slug') %></th>
+            <th scope="col" class="num"><%= t('staff.authors.bookCount') %></th>
+            <th scope="col"></th>
+          </tr>
+        </thead>
+        <tbody>
+          <% categories.forEach(function (category) { %>
+            <tr>
+              <td>
+                <a href="/staff/categories/<%= category.id %>"><%= category.name %></a>
+                <% if (category.description) { %>
+                  <br><span class="small faint"><%= category.description %></span>
+                <% } %>
+              </td>
+              <td class="mono small faint">/<%= category.slug %></td>
+              <td class="num"><%= category.book_count %></td>
+              <td class="nowrap small">
+                <a href="/staff/categories/<%= category.id %>"><%= t('common.edit') %></a>
+                ·
+                <a href="/staff/categories/<%= category.id %>/delete"><%= t('common.delete') %></a>
+              </td>
+            </tr>
+          <% }); %>
+        </tbody>
+      </table>
+    </div>
+  <% } %>
+
+  <section class="card">
+    <h2 class="mt-0">
+      <%= editing ? t('common.edit') + ': ' + editing.name : t('staff.categories.add') %>
+    </h2>
+
+    <% if (errors.name) { %>
+      <div class="error-summary" role="alert">
+        <%- include('../partials/field-error', { code: errors.name, t: t }) %>
+        <% if (typeof existing !== 'undefined' && existing) { %>
+          <p><%= t('staff.categories.existing', { name: existing.name }) %></p>
+        <% } %>
+      </div>
+    <% } %>
+
+    <form method="post"
+          action="<%= editing ? '/staff/categories/' + editing.id : '/staff/categories' %>">
+      <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+
+      <div class="field">
+        <label class="field__label" for="cat-name"><%= t('staff.field.title') %></label>
+        <input type="text" id="cat-name" name="name" value="<%= values.name %>"
+               required maxlength="200" <%- errors.name ? 'aria-invalid="true"' : '' %>>
+      </div>
+
+      <div class="field">
+        <label class="field__label" for="cat-description"><%= t('staff.field.description') %>
+          <span class="field__optional"><%= t('common.optional') %></span>
+        </label>
+        <textarea id="cat-description" name="description" rows="2"
+                  maxlength="1000"><%= values.description %></textarea>
+      </div>
+
+      <% if (editing) { %>
+        <p class="field__hint">
+          <%= t('staff.categories.slug') %>: <code>/categories/<%= editing.slug %></code><br>
+          <%= t('staff.categories.slugHint') %>
+        </p>
+      <% } %>
+
+      <div class="button-row">
+        <button class="button" type="submit"><%= t('common.save') %></button>
+        <% if (editing) { %>
+          <a class="button button--quiet" href="/staff/categories"><%= t('common.cancel') %></a>
+        <% } %>
+      </div>
+    </form>
+  </section>
+
+</div>

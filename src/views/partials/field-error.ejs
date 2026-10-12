@@ -1,0 +1,15 @@
+<%#
+  One field-level error message. Error codes come from the validation layer
+  and are translated here, so no message text is built in JavaScript.
+  Expects `code`.
+-%>
+<% if (code) { %>
+  <span class="field__error">
+    <%
+      const known = ['required', 'invalid_isbn', 'duplicate_isbn', 'duplicate_barcode',
+                     'duplicate', 'invalid_date', 'too_big', 'too_small'];
+      const key = known.includes(code) ? code : 'generic';
+    %>
+    <%= t('error.field.' + key) %>
+  </span>
+<% } %>

@@ -7,6 +7,7 @@ import fastifyCookie from '@fastify/cookie';
 import fastifyCsrf from '@fastify/csrf-protection';
 import fastifyFormbody from '@fastify/formbody';
 import fastifyHelmet from '@fastify/helmet';
+import fastifyMultipart from '@fastify/multipart';
 import fastifyRateLimit from '@fastify/rate-limit';
 import fastifySession from '@fastify/session';
 import fastifyStatic from '@fastify/static';
@@ -40,9 +41,11 @@ export async function buildApp({ config = defaultConfig, logger, db, onRoute } =
     // Do not echo a client-supplied request id back into logs unvalidated.
     requestIdHeader: config.trustProxy ? 'x-request-id' : false,
     bodyLimit: 256 * 1024,
-    // /staff/ and /staff should be the same page: a librarian typing a
-    // trailing slash should not get a 404.
-    ignoreTrailingSlash: true,
+    routerOptions: {
+      // /staff/ and /staff should be the same page: a librarian typing a
+      // trailing slash should not get a 404.
+      ignoreTrailingSlash: true,
+    },
     // Reject requests whose URL carries unescaped characters rather than
     // guessing at intent.
     onProtoPoisoning: 'remove',
@@ -92,6 +95,29 @@ export async function buildApp({ config = defaultConfig, logger, db, onRoute } =
       sameSite: 'lax',
       secure: config.isProduction,
       path: '/',
+    },
+  });
+
+  // --- File uploads -------------------------------------------------------
+  // Only cover images, only from the staff area.
+  //
+  // attachFieldsToBody is required, not a convenience: it populates
+  // request.body during preValidation, which runs *before* preHandler. The
+  // CSRF check is a preHandler that reads the token from request.body, so
+  // without this a multipart upload would arrive with no body for it to
+  // inspect and every cover upload would be refused with a 403.
+  //
+  // 'keyValues' also means the file reaches the handler as a Buffer, already
+  // capped by limits.fileSize — an oversized upload is rejected by the
+  // transport rather than buffered in full and rejected afterwards.
+  await app.register(fastifyMultipart, {
+    attachFieldsToBody: 'keyValues',
+    limits: {
+      fileSize: config.maxUploadBytes,
+      files: 1,
+      fields: 20,
+      fieldSize: 100_000,
+      parts: 30,
     },
   });
 

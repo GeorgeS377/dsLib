@@ -1,0 +1,66 @@
+<%#
+  Deletion confirmation. A dedicated page rather than a JavaScript dialog, so
+  the destructive action always takes two deliberate steps and the
+  consequences can be spelled out — including the archive alternative, which
+  is usually what the librarian actually wants.
+-%>
+<div class="container">
+  <div class="card login-shell">
+    <h1 class="mt-0"><%= t('staff.books.deleteConfirm', { title: book.title }) %></h1>
+
+    <% if (!deletability.deletable) { %>
+      <%# Blocked. Explain why and offer archiving. -%>
+      <div class="flash flash--error" role="alert">
+        <span><%= t('staff.books.deleteBlocked.' + deletability.reason) %></span>
+      </div>
+
+      <h2><%= t('staff.books.archiveInstead') %></h2>
+      <p class="muted"><%= t('staff.books.archiveExplain') %></p>
+
+      <div class="button-row">
+        <% if (!book.archived_at) { %>
+          <form method="post" action="/staff/books/<%= book.id %>/archive">
+            <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+            <button class="button" type="submit"><%= t('staff.books.archiveAction') %></button>
+          </form>
+        <% } %>
+        <a class="button button--quiet" href="/staff/books/<%= book.id %>"><%= t('common.cancel') %></a>
+      </div>
+    <% } else { %>
+      <div class="flash flash--warning" role="alert">
+        <span><%= t('staff.books.deleteWarning', { count: deletability.copies }) %></span>
+      </div>
+
+      <dl class="meta-list">
+        <dt><%= t('staff.book.title') %></dt>
+        <dd><%= book.title %></dd>
+        <% if (book.authors.length > 0) { %>
+          <dt><%= t('staff.field.authors') %></dt>
+          <dd><%= book.authors.map(function (a) { return a.name; }).join(', ') %></dd>
+        <% } %>
+        <dt><%= t('staff.book.copies') %></dt>
+        <dd><%= deletability.copies %></dd>
+      </dl>
+
+      <p class="muted small mt-4"><%= t('staff.books.archiveExplain') %></p>
+
+      <div class="button-row mt-6">
+        <form method="post" action="/staff/books/<%= book.id %>/delete">
+          <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+          <button class="button button--danger" type="submit"><%= t('common.delete') %></button>
+        </form>
+
+        <% if (!book.archived_at) { %>
+          <form method="post" action="/staff/books/<%= book.id %>/archive">
+            <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+            <button class="button button--secondary" type="submit">
+              <%= t('staff.books.archiveAction') %>
+            </button>
+          </form>
+        <% } %>
+
+        <a class="button button--quiet" href="/staff/books/<%= book.id %>"><%= t('common.cancel') %></a>
+      </div>
+    <% } %>
+  </div>
+</div>

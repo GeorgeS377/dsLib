@@ -20,7 +20,7 @@ export function listPublicCategories(db) {
 /** Every category, including empty ones. For the staff area. */
 export function listAllCategories(db) {
   return db.all(
-    `SELECT c.id, c.name, c.slug, c.description, c.created_at,
+    `SELECT c.id, c.name, c.name_norm, c.slug, c.description, c.created_at,
             (SELECT COUNT(*) FROM book_category bc WHERE bc.category_id = c.id) AS book_count
        FROM category c
       ORDER BY c.name_norm`,

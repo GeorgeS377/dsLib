@@ -81,7 +81,7 @@ export async function login(app, { username = 'maria', password = TEST_PASSWORD 
         method,
         url,
         headers: { cookie: session, 'content-type': 'application/x-www-form-urlencoded' },
-        payload: new URLSearchParams({ _csrf: formToken, ...stringify(fields) }).toString(),
+        payload: encodeFields({ _csrf: formToken, ...fields }),
       });
     },
 
@@ -91,17 +91,28 @@ export async function login(app, { username = 'maria', password = TEST_PASSWORD 
         method: 'POST',
         url,
         headers: { cookie: session, 'content-type': 'application/x-www-form-urlencoded' },
-        payload: new URLSearchParams(stringify(fields)).toString(),
+        payload: encodeFields(fields),
       }),
   };
 }
 
-/** URLSearchParams wants strings; booleans and numbers are common in callers. */
-function stringify(fields) {
-  const out = {};
+/**
+ * Encode form fields the way a browser does.
+ *
+ * An array value becomes repeated entries with the same name — which is how a
+ * form with several inputs called `authors` actually submits. Passing the
+ * array through String() instead would join it with a comma and arrive as one
+ * value, quietly testing something the browser never sends.
+ */
+export function encodeFields(fields) {
+  const params = new URLSearchParams();
   for (const [key, value] of Object.entries(fields)) {
     if (value === undefined || value === null) continue;
-    out[key] = typeof value === 'boolean' ? (value ? '1' : '') : String(value);
+    const list = Array.isArray(value) ? value : [value];
+    for (const item of list) {
+      if (item === undefined || item === null) continue;
+      params.append(key, typeof item === 'boolean' ? (item ? '1' : '') : String(item));
+    }
   }
-  return out;
+  return params.toString();
 }

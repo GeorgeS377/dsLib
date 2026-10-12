@@ -12,7 +12,10 @@
 import { requireAdmin, requireStaff } from '../../lib/auth.js';
 import { takeFlash } from '../../lib/flash.js';
 import authRoutes, { logoutRoutes } from './auth.js';
+import staffBookRoutes from './books.js';
+import staffCopyRoutes from './copies.js';
 import dashboardRoutes from './dashboard.js';
+import staffTaxonomyRoutes from './taxonomy.js';
 
 export default async function staffRoutes(app) {
   // --------------------------------------------------- unauthenticated part
@@ -32,6 +35,10 @@ export default async function staffRoutes(app) {
         staffUser: request.staffUser,
         csrfToken: reply.generateCsrf(),
         flash: takeFlash(request),
+        // Shown in the cover upload hint, so the limit the templates advertise
+        // is always the limit the server actually enforces.
+        maxUploadMb: Math.round(protectedScope.config.maxUploadBytes / (1024 * 1024)),
+        defaultLoanDays: protectedScope.config.defaultLoanDays,
       };
     });
 
@@ -44,5 +51,8 @@ export default async function staffRoutes(app) {
 
     await protectedScope.register(logoutRoutes);
     await protectedScope.register(dashboardRoutes);
+    await protectedScope.register(staffBookRoutes);
+    await protectedScope.register(staffCopyRoutes);
+    await protectedScope.register(staffTaxonomyRoutes);
   });
 }

@@ -1,0 +1,86 @@
+<div class="container stack-lg">
+
+  <div class="section-head">
+    <h1 class="mt-0"><%= t('staff.books.title') %></h1>
+    <a class="button" href="/staff/books/new"><%= t('staff.action.addBook') %></a>
+  </div>
+
+  <form class="search-form" method="get" action="/staff/books" role="search">
+    <% if (query.archived) { %>
+      <input type="hidden" name="archived" value="<%= query.archived %>">
+    <% } %>
+    <label class="visually-hidden" for="q"><%= t('staff.books.search') %></label>
+    <input class="search-form__input" type="search" id="q" name="q"
+           value="<%= query.q || '' %>" placeholder="<%= t('common.searchPlaceholder') %>"
+           autocomplete="off">
+    <button class="button button--secondary" type="submit"><%= t('common.search') %></button>
+  </form>
+
+  <nav class="button-row" aria-label="<%= t('common.filters') %>">
+    <a class="button button--small <%= query.archived ? 'button--quiet' : 'button--secondary' %>"
+       href="<%= query.q ? '/staff/books?q=' + encodeURIComponent(query.q) : '/staff/books' %>">
+      <%= t('staff.books.showActive') %>
+    </a>
+    <a class="button button--small <%= query.archived ? 'button--secondary' : 'button--quiet' %>"
+       href="/staff/books?archived=only<%= query.q ? '&q=' + encodeURIComponent(query.q) : '' %>">
+      <%= t('staff.books.showArchived') %>
+    </a>
+  </nav>
+
+  <% if (results.total === 0) { %>
+    <div class="state state--empty">
+      <p class="state__icon" aria-hidden="true">📚</p>
+      <h2 class="state__title"><%= t('staff.books.empty') %></h2>
+      <p class="state__body">
+        <%= query.q ? t('search.empty.withQuery', { query: query.q }) : t('staff.books.emptyHint') %>
+      </p>
+      <p><a class="button" href="/staff/books/new"><%= t('staff.action.addBook') %></a></p>
+    </div>
+  <% } else { %>
+    <p class="muted small" role="status">
+      <%= t('search.showing', { from: range.from, to: range.to, total: range.total }) %>
+    </p>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th scope="col"><%= t('staff.book.title') %></th>
+            <th scope="col"><%= t('search.filter.author') %></th>
+            <th scope="col"><%= t('staff.field.year') %></th>
+            <th scope="col" class="num"><%= t('staff.copies.availability') %></th>
+            <th scope="col"></th>
+          </tr>
+        </thead>
+        <tbody>
+          <% results.rows.forEach(function (book) { %>
+            <tr>
+              <td>
+                <a href="/staff/books/<%= book.id %>"><%= book.title %></a>
+                <% if (book.archived_at) { %>
+                  <span class="badge badge--archived"><%= t('staff.book.archived') %></span>
+                <% } %>
+              </td>
+              <td class="muted"><%= book.authors || '—' %></td>
+              <td class="muted"><%= book.publication_year || '—' %></td>
+              <td class="num">
+                <% if (book.copies_total === 0) { %>
+                  <span class="badge badge--unavailable">0</span>
+                <% } else { %>
+                  <%= book.copies_available %>/<%= book.copies_total %>
+                <% } %>
+              </td>
+              <td class="nowrap small">
+                <a href="/staff/books/<%= book.id %>/copies"><%= t('staff.book.copies') %></a>
+              </td>
+            </tr>
+          <% }); %>
+        </tbody>
+      </table>
+    </div>
+
+    <%- include('../partials/pagination', {
+          results: results, pages: pages, pageUrl: pageUrl, t: t }) %>
+  <% } %>
+
+</div>

@@ -1,0 +1,89 @@
+<div class="container stack-lg">
+
+  <h1 class="mt-0"><%= t('staff.authors.title') %></h1>
+
+  <% if (editing) { %>
+    <section class="card">
+      <h2 class="mt-0"><%= t('common.edit') %>: <%= editing.name %></h2>
+
+      <% if (errors.name) { %>
+        <div class="error-summary" role="alert">
+          <%- include('../partials/field-error', { code: errors.name, t: t }) %>
+          <% if (typeof mergeTarget !== 'undefined' && mergeTarget) { %>
+            <p><%= t('staff.authors.mergeExplain', { name: mergeTarget.name }) %></p>
+          <% } %>
+        </div>
+      <% } %>
+
+      <form method="post" action="/staff/authors/<%= editing.id %>">
+        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+        <div class="field">
+          <label class="field__label" for="author-name"><%= t('staff.field.title') %></label>
+          <input type="text" id="author-name" name="name" value="<%= values.name %>"
+                 required maxlength="200" <%- errors.name ? 'aria-invalid="true"' : '' %>>
+        </div>
+        <div class="button-row">
+          <button class="button" type="submit"><%= t('common.save') %></button>
+          <a class="button button--quiet" href="/staff/authors"><%= t('common.cancel') %></a>
+        </div>
+      </form>
+
+      <%# When a rename collides, the two records are almost certainly the same
+          person spelled two ways. Offer the merge rather than just refusing. -%>
+      <% if (typeof mergeTarget !== 'undefined' && mergeTarget) { %>
+        <form class="mt-4" method="post" action="/staff/authors/<%= editing.id %>/merge"
+              data-confirm="<%= t('staff.authors.mergeConfirm', { name: mergeTarget.name }) %>?">
+          <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+          <input type="hidden" name="target_id" value="<%= mergeTarget.id %>">
+          <button class="button button--secondary" type="submit">
+            <%= t('staff.authors.mergeConfirm', { name: mergeTarget.name }) %>
+          </button>
+        </form>
+      <% } %>
+    </section>
+  <% } %>
+
+  <% if (authors.length === 0) { %>
+    <div class="state state--empty">
+      <p class="state__icon" aria-hidden="true">✍️</p>
+      <h2 class="state__title"><%= t('staff.authors.empty') %></h2>
+      <p class="state__body"><%= t('staff.field.authorsHint') %></p>
+    </div>
+  <% } else { %>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th scope="col"><%= t('staff.field.title') %></th>
+            <th scope="col" class="num"><%= t('staff.authors.bookCount') %></th>
+            <th scope="col"></th>
+          </tr>
+        </thead>
+        <tbody>
+          <% authors.forEach(function (author) { %>
+            <tr>
+              <td><a href="/staff/authors/<%= author.id %>"><%= author.name %></a></td>
+              <td class="num"><%= author.book_count %></td>
+              <td class="nowrap small">
+                <a href="/staff/books?author=<%= author.id %>"><%= t('staff.nav.books') %></a>
+                <% if (author.book_count === 0) { %>
+                  ·
+                  <form class="inline-form" method="post"
+                        action="/staff/authors/<%= author.id %>/delete"
+                        data-confirm="<%= t('common.delete') %>: <%= author.name %>?">
+                    <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                    <button class="button button--quiet button--small" type="submit">
+                      <%= t('common.delete') %>
+                    </button>
+                  </form>
+                <% } %>
+              </td>
+            </tr>
+          <% }); %>
+        </tbody>
+      </table>
+    </div>
+    <p class="muted small"><%= t('staff.field.authorsHint') %></p>
+  <% } %>
+
+</div>

@@ -1,0 +1,18 @@
+<div class="container">
+  <div class="card login-shell">
+    <h1 class="mt-0"><%= t('staff.categories.deleteConfirm', { name: category.name }) %></h1>
+
+    <%# Deleting a category is safe by construction: the join rows cascade but
+        no title is touched. Say so plainly, so the librarian is not scared
+        off a harmless tidy-up. -%>
+    <p class="muted"><%= t('staff.categories.deleteExplain', { count: bookCount }) %></p>
+
+    <div class="button-row mt-6">
+      <form method="post" action="/staff/categories/<%= category.id %>/delete">
+        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+        <button class="button button--danger" type="submit"><%= t('common.delete') %></button>
+      </form>
+      <a class="button button--quiet" href="/staff/categories"><%= t('common.cancel') %></a>
+    </div>
+  </div>
+</div>
