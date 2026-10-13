@@ -1,11 +1,17 @@
+<%#
+  Home.
+
+  The catalogue is what this site is for, so searching it is the first thing
+  on the page rather than a welcome banner. Search and filters together, then
+  what arrived recently.
+-%>
 <div class="container stack-lg">
 
   <section class="hero">
     <h1 class="hero__title"><%= t('home.title') %></h1>
     <p class="hero__lead"><%= t('home.lead') %></p>
 
-    <form class="search-form search-form--hero hero__search" method="get" action="/books"
-          role="search">
+    <form class="search-form search-form--hero" method="get" action="/books" role="search">
       <label class="visually-hidden" for="q"><%= t('common.searchLabel') %></label>
       <input class="search-form__input" type="search" id="q" name="q"
              placeholder="<%= t('common.searchPlaceholder') %>"
@@ -13,32 +19,32 @@
       <button class="button" type="submit"><%= t('common.search') %></button>
     </form>
 
+    <%# The same filters as the catalogue page, so narrowing a search is
+        possible from the first screen rather than only after one. -%>
+    <%- include('../partials/filters', {
+          query: query, categories: categories, authors: authors, years: years,
+          languages: languages, action: '/books', hasFilters: false,
+          clearUrl: '/books', t: t }) %>
+
     <% if (stats && stats.titles > 0) { %>
-      <p class="small muted mt-4">
-        <%= t('home.stats.titles', { count: stats.titles }) %>
-        ·
-        <%= t('home.stats.available', { count: stats.copies_available }) %>
+      <p class="hero__stats">
+        <%= t('home.stats.summary', {
+              titles: stats.titles, available: stats.copies_available }) %>
       </p>
     <% } %>
-
-    <div class="button-row button-row--center mt-4">
-      <a class="button button--secondary" href="/books"><%= t('home.browseAll') %></a>
-      <a class="button button--secondary" href="/categories"><%= t('home.browseCategories') %></a>
-    </div>
   </section>
 
-  <%# Recently added. Empty state covers a brand-new catalogue. -%>
   <section>
     <div class="section-head">
       <h2><%= t('home.recent') %></h2>
       <% if (recent.length > 0) { %>
-        <a class="section-head__link" href="/books?sort=newest"><%= t('home.browseAll') %> →</a>
+        <a class="section-head__link" href="/books?sort=newest"><%= t('home.browseAll') %></a>
       <% } %>
     </div>
 
     <% if (recent.length === 0) { %>
       <div class="state state--empty">
-        <p class="state__icon" aria-hidden="true">📚</p>
+        <p class="state__icon"><%- include('../partials/icon', { name: 'book', size: 32 }) %></p>
         <h3 class="state__title"><%= t('home.recentEmpty') %></h3>
         <p class="state__body"><%= t('home.recentEmptyHint') %></p>
       </div>
@@ -51,18 +57,18 @@
     <% } %>
   </section>
 
-  <% if (categories.length > 0) { %>
+  <% if (topCategories.length > 0) { %>
     <section>
       <div class="section-head">
         <h2><%= t('home.categories') %></h2>
-        <a class="section-head__link" href="/categories"><%= t('categories.title') %> →</a>
+        <a class="section-head__link" href="/categories"><%= t('categories.title') %></a>
       </div>
       <ul class="chip-list">
-        <% categories.forEach(function (category) { %>
+        <% topCategories.forEach(function (category) { %>
           <li>
-            <a class="chip" href="/categories/<%= category.slug %>">
+            <a class="chip" href="/books?category=<%= category.id %>">
               <%= category.name %>
-              <span class="chip__count">(<%= category.book_count %>)</span>
+              <span class="chip__count"><%= category.book_count %></span>
             </a>
           </li>
         <% }); %>

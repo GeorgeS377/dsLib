@@ -1,0 +1,52 @@
+<%#
+  Inline SVG icons.
+
+  Emoji were standing in for icons, which looked wrong for two reasons: every
+  platform draws them differently (the "book" is a glossy blue slab on Linux,
+  a brown hardback on macOS), and they carry colour that fights the palette.
+  These are drawn in one weight, inherit currentColor, and sit on the text
+  baseline.
+
+  Include it with name, and optionally size (default 20) and label. An EJS
+  comment cannot contain a closing tag, so no usage example is written here —
+  see any caller, for instance views/public/categories.ejs.
+
+  A decorative icon gets aria-hidden; one that carries meaning on its own
+  gets role="img" and a label.
+-%>
+<%
+  const paths = {
+    // Open book — the library mark.
+    book: 'M12 6.5C10.5 5.2 8.5 4.5 6 4.5H3v13h3c2.5 0 4.5.7 6 2M12 6.5c1.5-1.3 3.5-2 6-2h3v13h-3c-2.5 0-4.5.7-6 2M12 6.5v13',
+    search: 'M11 4a7 7 0 1 0 0 14 7 7 0 0 0 0-14ZM20 20l-4.1-4.1',
+    user: 'M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8ZM4 20c0-3.3 3.6-5.5 8-5.5s8 2.2 8 5.5',
+    tag: 'M3 11.5V4.5a1.5 1.5 0 0 1 1.5-1.5h7l9 9-8.5 8.5-9-9ZM7.5 7.5h.01',
+    settings: 'M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6ZM19.4 15a1.6 1.6 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.6 1.6 0 0 0-2.7 1.1 2 2 0 1 1-4 0 1.6 1.6 0 0 0-2.7-1.1l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.6 1.6 0 0 0-1.1-2.7 2 2 0 1 1 0-4 1.6 1.6 0 0 0 1.1-2.7l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.6 1.6 0 0 0 1.8.3H8a1.6 1.6 0 0 0 1-1.5 2 2 0 1 1 4 0 1.6 1.6 0 0 0 2.7 1.1l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.6 1.6 0 0 0 1.1 2.7 2 2 0 1 1 0 4 1.6 1.6 0 0 0-1.2 1Z',
+    lock: 'M7 10V7a5 5 0 0 1 10 0v3M5 10h14v10H5z',
+    clock: 'M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18ZM12 7v5l3 2',
+    warning: 'M12 3 2 20h20L12 3ZM12 9v5M12 17.5h.01',
+    check: 'M4 12.5 9 17.5 20 6.5',
+    archive: 'M3 4h18v4H3zM5 8v12h14V8M9.5 12h5',
+    // Shelf of upright books — the cover placeholder.
+    shelf: 'M4 4h4v16H4zM10 4h4v16h-4zM16.5 4.6l3.4.9-4 14.9-3.4-.9',
+    plus: 'M12 5v14M5 12h14',
+    close: 'M6 6l12 12M18 6 6 18',
+    'chevron-left': 'M15 5 8 12l7 7',
+    'chevron-right': 'M9 5l7 7-7 7',
+    // Sun and moon, for the light/dark control.
+    sun: 'M12 16a4 4 0 1 0 0-8 4 4 0 0 0 0 8ZM12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4',
+    moon: 'M20 14.5A8.5 8.5 0 0 1 9.5 4a8.5 8.5 0 1 0 10.5 10.5Z',
+  };
+  // Distinct names from the incoming locals: `const size = … size …` would
+  // shadow the caller's `size` and read it inside its own temporal dead zone.
+  const iconSize = typeof size === 'undefined' ? 20 : size;
+  const iconLabel = typeof label === 'undefined' ? null : label;
+  const extraClass = typeof iconClass === 'undefined' ? '' : ' ' + iconClass;
+  const d = paths[name] || paths.book;
+-%>
+<svg class="icon<%= extraClass %>" width="<%= iconSize %>" height="<%= iconSize %>"
+     viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"
+     stroke-linecap="round" stroke-linejoin="round"
+     <% if (iconLabel) { %>role="img" aria-label="<%= iconLabel %>"<% } else { %>aria-hidden="true" focusable="false"<% } %>>
+  <path d="<%= d %>"></path>
+</svg>

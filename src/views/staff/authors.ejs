@@ -45,7 +45,7 @@
 
   <% if (authors.length === 0) { %>
     <div class="state state--empty">
-      <p class="state__icon" aria-hidden="true">✍️</p>
+      <p class="state__icon" aria-hidden="true"><%- include('../partials/icon', { name: 'user' }) %></p>
       <h2 class="state__title"><%= t('staff.authors.empty') %></h2>
       <p class="state__body"><%= t('staff.field.authorsHint') %></p>
     </div>

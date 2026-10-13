@@ -66,7 +66,7 @@
     <section>
       <div class="section-head">
         <h2><%= t('staff.dashboard.overdue') %></h2>
-        <a class="section-head__link" href="/staff/loans?status=overdue"><%= t('staff.nav.loans') %> →</a>
+        <a class="section-head__link" href="/staff/loans?status=overdue"><%= t('staff.nav.loans') %></a>
       </div>
       <div class="table-wrap">
         <table>
@@ -98,12 +98,12 @@
   <section>
     <div class="section-head">
       <h2><%= t('staff.dashboard.recent') %></h2>
-      <a class="section-head__link" href="/staff/books"><%= t('staff.nav.books') %> →</a>
+      <a class="section-head__link" href="/staff/books"><%= t('staff.nav.books') %></a>
     </div>
 
     <% if (recent.length === 0) { %>
       <div class="state state--empty">
-        <p class="state__icon" aria-hidden="true">📚</p>
+        <p class="state__icon" aria-hidden="true"><%- include('../partials/icon', { name: 'book' }) %></p>
         <h3 class="state__title"><%= t('staff.dashboard.empty') %></h3>
         <p class="state__body"><%= t('staff.dashboard.emptyHint') %></p>
         <p><a class="button" href="/staff/books/new"><%= t('staff.action.addBook') %></a></p>

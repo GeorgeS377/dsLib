@@ -4,7 +4,7 @@
   contains, and there is no logged-in user to render.
 -%>
 <!DOCTYPE html>
-<html lang="<%= lang %>">
+<html lang="<%= lang %>"<% if (theme === 'dark') { %> data-theme="dark"<% } %>>
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -20,7 +20,7 @@
 
   <footer class="site-footer">
     <div class="container site-footer__inner">
-      <p class="small"><a href="/">← <%= t('staff.viewPublicSite') %></a></p>
+      <p class="small"><a href="/"><%= t('staff.viewPublicSite') %></a></p>
       <p class="small faint"><%= libraryName %></p>
     </div>
   </footer>

@@ -98,23 +98,32 @@ function buildWhere(filters = {}) {
     params.push(`%${token}%`);
   }
 
-  if (filters.categoryId) {
+  // Categories and authors accept several values. Multiple values are ORed —
+  // picking Ιστορία and Επιστήμες means "either", which is what a reader
+  // choosing two subjects expects. ANDing them would usually return nothing,
+  // since few books sit in two subjects at once.
+  const categoryIds = idList(filters.categoryId ?? filters.categoryIds);
+  if (categoryIds.length > 0) {
     clauses.push(
-      'EXISTS (SELECT 1 FROM book_category bc WHERE bc.book_id = b.id AND bc.category_id = ?)',
+      `EXISTS (SELECT 1 FROM book_category bc WHERE bc.book_id = b.id
+                AND bc.category_id IN (${placeholders(categoryIds)}))`,
     );
-    params.push(filters.categoryId);
+    params.push(...categoryIds);
   }
 
-  if (filters.authorId) {
+  const authorIds = idList(filters.authorId ?? filters.authorIds);
+  if (authorIds.length > 0) {
     clauses.push(
-      'EXISTS (SELECT 1 FROM book_author ba WHERE ba.book_id = b.id AND ba.author_id = ?)',
+      `EXISTS (SELECT 1 FROM book_author ba WHERE ba.book_id = b.id
+                AND ba.author_id IN (${placeholders(authorIds)}))`,
     );
-    params.push(filters.authorId);
+    params.push(...authorIds);
   }
 
-  if (filters.year) {
-    clauses.push('b.publication_year = ?');
-    params.push(filters.year);
+  const years = idList(filters.year ?? filters.years);
+  if (years.length > 0) {
+    clauses.push(`b.publication_year IN (${placeholders(years)})`);
+    params.push(...years);
   }
 
   if (filters.language) {
@@ -519,6 +528,26 @@ export function distinctLanguages(db) {
         ORDER BY language`,
     )
     .map((r) => r.language);
+}
+
+/**
+ * Normalize a filter value that may be a single id or a list of them into a
+ * de-duplicated array of positive integers. Anything unparseable is dropped
+ * rather than rejected, so a hand-edited URL narrows the results oddly at
+ * worst instead of erroring.
+ */
+function idList(value) {
+  if (value === undefined || value === null || value === '') return [];
+  const list = Array.isArray(value) ? value : [value];
+  const ids = list
+    .map((item) => Number(item))
+    .filter((item) => Number.isInteger(item) && item > 0);
+  return [...new Set(ids)].slice(0, 50);
+}
+
+/** `?, ?, ?` for an IN clause. Count only — no user data reaches the SQL. */
+function placeholders(items) {
+  return items.map(() => '?').join(', ');
 }
 
 function clamp(value, min, max) {

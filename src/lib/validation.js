@@ -117,9 +117,11 @@ const manyIds = z
  */
 export const searchQuerySchema = z.object({
   q: z.string().trim().max(200).optional().catch(undefined),
-  category: positiveInt(),
-  author: positiveInt(),
-  year: z.coerce.number().int().min(1400).max(2200).optional().catch(undefined),
+  // Lists, because a reader may want two subjects or two authors at once.
+  // A single value still arrives as a one-element array.
+  category: manyIds,
+  author: manyIds,
+  year: manyIds,
   language: z.string().trim().max(20).optional().catch(undefined),
   available: checkbox,
   sort: z
@@ -150,6 +152,8 @@ export function searchFilters(query, { perPage = 24 } = {}) {
 export function preservedParams(query) {
   return {
     q: query.q,
+    // buildUrl appends one entry per array element, so a multi-value filter
+    // survives pagination and sorting intact.
     category: query.category,
     author: query.author,
     year: query.year,
@@ -157,6 +161,17 @@ export function preservedParams(query) {
     available: query.available ? '1' : undefined,
     sort: query.sort,
   };
+}
+
+/** Whether any filter beyond the free-text query is active. */
+export function hasActiveFilters(query) {
+  return Boolean(
+    (query.category && query.category.length) ||
+      (query.author && query.author.length) ||
+      (query.year && query.year.length) ||
+      query.language ||
+      query.available,
+  );
 }
 
 // ------------------------------------------------------------- staff: login

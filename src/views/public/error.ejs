@@ -1,7 +1,13 @@
 <div class="container">
   <div class="state state--error" role="alert">
-    <p class="state__icon" aria-hidden="true">
-      <%= status === 404 ? '🔍' : status === 403 ? '🔒' : status === 429 ? '⏳' : '⚠️' %>
+    <p class="state__icon">
+      <%
+        const errorIcon = status === 404 ? 'search'
+          : status === 403 ? 'lock'
+          : status === 429 ? 'clock'
+          : 'warning';
+      %>
+      <%- include('../partials/icon', { name: errorIcon, size: 32 }) %>
     </p>
     <h1 class="state__title"><%= t('error.' + status + '.title') %></h1>
     <p class="state__body"><%= t('error.' + status + '.body') %></p>

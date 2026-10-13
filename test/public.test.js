@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { after, before, describe, it } from 'node:test';
 import { buildApp } from '../src/app.js';
 import { createBook } from '../src/db/queries/books.js';
+import { createCopy } from '../src/db/queries/copies.js';
 import { createBorrower } from '../src/db/queries/borrowers.js';
 import { checkIn, checkOut } from '../src/db/queries/loans.js';
 import { cleanupDir, makeTestDb, seedTestCatalogue, testConfig } from './helpers.js';
@@ -193,15 +194,45 @@ describe('filters, sorting and pagination (acceptance 3)', () => {
 
   it('preserves every active filter across pagination links', async () => {
     const category = db.get('SELECT id FROM category WHERE name = ?', 'Αρχαία Γραμματεία');
+
+    // Enough titles in that category, each with an available copy, for the
+    // filtered result set to span more than one page.
+    for (let i = 0; i < 30; i += 1) {
+      const id = createBook(db, {
+        title: `Φιλτραρισμένο Βιβλίο ${i}`,
+        categoryIds: [category.id],
+      });
+      createCopy(db, id, { shelfLocation: 'Δ1' });
+    }
+
     const response = await get(
-      `/books?q=${encodeURIComponent('ο')}&category=${category.id}&sort=newest&available=1`,
+      `/books?q=${encodeURIComponent('φιλτραρισμενο')}&category=${category.id}` +
+        '&sort=newest&available=1',
     );
     assert.equal(response.statusCode, 200);
 
-    // Each filter is re-emitted in the sort form, so changing sort keeps them.
-    assert.match(response.body, new RegExp(`name="category" value="${category.id}"`));
-    assert.match(response.body, /name="available" value="1"/);
-    assert.match(response.body, /name="q" value="ο"/);
+    // What matters is that moving between pages does not silently drop a
+    // filter. Assert on the links themselves rather than on how the form
+    // happens to hold its state — the controls now carry it directly, as
+    // selected options and a checked box.
+    const links = [...response.body.matchAll(/href="(\/books\?[^"]+)"/g)].map((m) =>
+      m[1].replace(/&amp;/g, '&'),
+    );
+    const pageLinks = links.filter((href) => href.includes('page='));
+    assert.ok(pageLinks.length > 0, 'no pagination links were produced');
+
+    for (const href of pageLinks) {
+      assert.ok(href.includes(`category=${category.id}`), `category dropped from ${href}`);
+      assert.ok(href.includes('available=1'), `availability dropped from ${href}`);
+      assert.ok(href.includes('sort=newest'), `sort dropped from ${href}`);
+      assert.ok(href.includes('q='), `the search term dropped from ${href}`);
+    }
+
+    // And the controls show that state back to the reader.
+    // The attributes are rendered across lines, so allow any whitespace.
+    assert.match(response.body, new RegExp(`value="${category.id}"\\s+selected`));
+    assert.match(response.body, /name="available" value="1"\s+checked/);
+    assert.match(response.body, /value="newest"\s+selected/);
   });
 
   it('clamps an out-of-range page number', async () => {

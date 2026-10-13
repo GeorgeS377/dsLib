@@ -12,7 +12,12 @@ import {
 import { distinctLanguages, distinctYears } from '../../db/queries/books.js';
 import { publicStats } from '../../db/queries/stats.js';
 import { buildUrl, pageWindow, resultRange, withParams } from '../../lib/urls.js';
-import { preservedParams, searchFilters, searchQuerySchema } from '../../lib/validation.js';
+import {
+  hasActiveFilters,
+  preservedParams,
+  searchFilters,
+  searchQuerySchema,
+} from '../../lib/validation.js';
 
 const PER_PAGE = 24;
 
@@ -20,13 +25,22 @@ export default async function publicRoutes(app) {
   const db = app.db;
 
   // ------------------------------------------------------------------ home
-  app.get('/', async (_request, reply) => {
-    const stats = publicStats(db);
+  app.get('/', async (request, reply) => {
+    const categories = listPublicCategories(db);
+    // The filter bar is shared with the catalogue page and expects the same
+    // shape, so an empty parsed query stands in for "nothing selected yet".
+    const query = searchQuerySchema.parse({});
+
     return reply.render('public/home', {
       title: null,
       recent: recentBooks(db, 8),
-      categories: listPublicCategories(db).slice(0, 12),
-      stats,
+      stats: publicStats(db),
+      query,
+      categories,
+      authors: listPublicAuthors(db),
+      years: distinctYears(db),
+      languages: distinctLanguages(db),
+      topCategories: categories.slice(0, 12),
       // The home page has its own prominent search field, so the header does
       // not repeat it. Every other page shows the header one.
       hideHeaderSearch: true,
@@ -60,9 +74,7 @@ export default async function publicRoutes(app) {
       authors: listPublicAuthors(db),
       years: distinctYears(db),
       languages: distinctLanguages(db),
-      hasFilters: Boolean(
-        query.category || query.author || query.year || query.language || query.available,
-      ),
+      hasFilters: hasActiveFilters(query),
     });
   });
 
@@ -110,7 +122,7 @@ export default async function publicRoutes(app) {
       ...searchFilters(query, { perPage: PER_PAGE }),
       categoryId: category.id,
     });
-    const kept = preservedParams({ ...query, category: undefined });
+    const kept = preservedParams({ ...query, category: [] });
     const basePath = `/categories/${encodeURIComponent(category.slug)}`;
 
     return reply.render('public/collection', {
@@ -156,7 +168,7 @@ export default async function publicRoutes(app) {
       if (anyPublic === 0) return reply.callNotFound();
     }
 
-    const kept = preservedParams({ ...query, author: undefined });
+    const kept = preservedParams({ ...query, author: [] });
     const basePath = `/authors/${author.id}`;
 
     return reply.render('public/collection', {

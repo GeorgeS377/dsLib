@@ -1,0 +1,16 @@
+<%#
+  Light/dark control.
+
+  A link, not a button with script: it sets a cookie server-side and reloads,
+  so the choice survives with JavaScript disabled and the server can render
+  the right palette on first paint. The icon shows what you would switch *to*,
+  which is the convention people expect.
+-%>
+<a class="theme-toggle" href="<%= themeUrl(theme === 'dark' ? 'light' : 'dark') %>"
+   title="<%= theme === 'dark' ? t('theme.switchToLight') : t('theme.switchToDark') %>">
+  <%- include('./icon', {
+        name: theme === 'dark' ? 'sun' : 'moon',
+        size: 18,
+        label: theme === 'dark' ? t('theme.switchToLight') : t('theme.switchToDark'),
+      }) %>
+</a>

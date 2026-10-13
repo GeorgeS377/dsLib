@@ -3,6 +3,7 @@
 // A copy is one item on a shelf. Its `status` records its physical condition
 // (available / repair / lost / withdrawn); whether it is currently out on loan
 // is derived from the loan table, never stored here.
+import { queryTokens } from '../../lib/normalize.js';
 import { now } from '../index.js';
 import { AVAILABLE_COPY } from './books.js';
 
@@ -42,6 +43,48 @@ export function getCopyByBarcode(db, barcode) {
        FROM copy c JOIN book b ON b.id = c.book_id
       WHERE c.barcode = ?`,
     trimmed,
+  );
+}
+
+/**
+ * Find lendable copies by searching the catalogue.
+ *
+ * The desk needs this because a barcode is optional: a copy that was never
+ * labelled had no way to be lent at all, and typing a barcode is slower than
+ * typing a title even when one exists. Searches the same normalized
+ * search_text the public catalogue uses, so Greek case and accents behave
+ * identically here.
+ *
+ * Returns one row per copy, not per title, since the librarian is choosing a
+ * physical item to hand over.
+ */
+export function findLendableCopies(db, { q, limit = 20 } = {}) {
+  const tokens = queryTokens(q);
+  if (tokens.length === 0) return [];
+
+  const clauses = tokens.map(() => 'b.search_text LIKE ?');
+  const params = tokens.map((token) => `%${token}%`);
+
+  return db.all(
+    `SELECT c.id, c.barcode, c.shelf_location, c.status,
+            b.id AS book_id, b.title AS book_title,
+            (SELECT group_concat(a.name, ', ' ORDER BY ba.position)
+               FROM book_author ba JOIN author a ON a.id = ba.author_id
+              WHERE ba.book_id = b.id) AS authors,
+            CASE WHEN ${AVAILABLE_COPY} THEN 1 ELSE 0 END AS is_available,
+            (SELECT l.due_at FROM loan l
+              WHERE l.copy_id = c.id AND l.returned_at IS NULL) AS open_loan_due_at
+       FROM copy c
+       JOIN book b ON b.id = c.book_id
+      WHERE ${clauses.join(' AND ')}
+        AND c.status <> 'withdrawn'
+      ORDER BY
+        CASE WHEN ${AVAILABLE_COPY} THEN 0 ELSE 1 END,
+        b.title_norm,
+        c.barcode IS NULL, c.barcode
+      LIMIT ?`,
+    ...params,
+    limit,
   );
 }
 

@@ -8,7 +8,7 @@
   <div class="section-head">
     <h1 class="mt-0"><%= book ? t('staff.books.edit') : t('staff.books.new') %></h1>
     <div class="button-row">
-      <a class="button button--quiet" href="/staff/books">← <%= t('staff.books.title') %></a>
+      <a class="button button--quiet" href="/staff/books"><%= t('staff.books.title') %></a>
       <% if (book) { %>
         <a class="button button--secondary" href="/staff/books/<%= book.id %>/copies">
           <%= t('staff.books.manageCopies') %> (<%= book.copies_total %>)
@@ -212,7 +212,7 @@
             </div>
           <% } else { %>
             <div class="cover cover--empty" role="img" aria-label="<%= t('book.noCover') %>">
-              <span aria-hidden="true">📘</span>
+              <%- include('../partials/icon', { name: 'book' }) %>
             </div>
           <% } %>
         </div>

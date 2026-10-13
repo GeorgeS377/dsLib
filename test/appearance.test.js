@@ -1,0 +1,349 @@
+// Theme, icons and the filter bar — the parts of the interface a design
+// review flagged. These exist so the fixes cannot quietly regress.
+import assert from 'node:assert/strict';
+import { after, before, describe, it } from 'node:test';
+import { buildApp } from '../src/app.js';
+import { createBook } from '../src/db/queries/books.js';
+import { createCategory } from '../src/db/queries/categories.js';
+import { createCopy } from '../src/db/queries/copies.js';
+import { cleanupDir, cookieValue, makeTestDb, seedTestCatalogue, testConfig } from './helpers.js';
+import { login, makeStaffUser } from './staff-helpers.js';
+
+let app;
+let db;
+let dir;
+let fixtures;
+
+before(async () => {
+  const setup = testConfig();
+  dir = setup.dir;
+  db = makeTestDb();
+  fixtures = seedTestCatalogue(db);
+  await makeStaffUser(db);
+  app = await buildApp({ config: setup.config, logger: false, db });
+  await app.ready();
+});
+
+after(async () => {
+  await app.close();
+  db.close();
+  cleanupDir(dir);
+});
+
+const get = (url, options = {}) => app.inject({ method: 'GET', url, ...options });
+
+describe('theme', () => {
+  it('serves light by default', async () => {
+    for (const url of ['/', '/books', '/staff/login']) {
+      const response = await get(url);
+      assert.ok(
+        !response.body.includes('data-theme="dark"'),
+        `${url} rendered dark without being asked`,
+      );
+    }
+  });
+
+  it('ignores the operating system preference', async () => {
+    // A machine set to dark must still get light. The stylesheet carries no
+    // prefers-color-scheme rule at all, so the OS cannot decide this.
+    const css = await get('/assets/css/app.css');
+    assert.ok(
+      !css.body.includes('prefers-color-scheme'),
+      'the stylesheet still switches on the OS preference',
+    );
+  });
+
+  it('switches to dark on request and remembers it', async () => {
+    const response = await get('/?theme=dark');
+    assert.match(response.body, /<html lang="el" data-theme="dark">/);
+    assert.equal(cookieValue(response, 'theme'), 'dark');
+
+    // The choice survives to the next page without the parameter.
+    const next = await get('/books', { cookies: { theme: 'dark' } });
+    assert.ok(next.body.includes('data-theme="dark"'));
+  });
+
+  it('switches back to light', async () => {
+    const response = await get('/?theme=light', { cookies: { theme: 'dark' } });
+    assert.ok(!response.body.includes('data-theme="dark"'));
+    assert.equal(cookieValue(response, 'theme'), 'light');
+  });
+
+  it('ignores an unknown theme value', async () => {
+    const response = await get('/?theme=neon');
+    assert.ok(!response.body.includes('data-theme'));
+    assert.equal(cookieValue(response, 'theme'), undefined);
+  });
+
+  it('offers the toggle on public and staff pages', async () => {
+    assert.match((await get('/books')).body, /class="theme-toggle"/);
+
+    const session = await login(app);
+    assert.match((await session.get('/staff')).body, /class="theme-toggle"/);
+  });
+
+  it('applies the theme before <head> is parsed, with no flash of the wrong palette', async () => {
+    // Setting data-theme from script on load would repaint after first paint
+    // and flash light at someone who chose dark.
+    const response = await get('/?theme=dark');
+    const head = response.body.slice(0, response.body.indexOf('</head>'));
+    assert.ok(head.includes('data-theme="dark"'), 'the theme is set too late');
+  });
+});
+
+describe('icons', () => {
+  it('uses no emoji anywhere in the interface', async () => {
+    const session = await login(app);
+    const pages = [
+      ['/', (await get('/')).body],
+      ['/books', (await get('/books')).body],
+      ['/books (empty)', (await get('/books?q=zzznothing')).body],
+      ['/books/:id', (await get(`/books/${fixtures.books.odyssey}`)).body],
+      ['/categories', (await get('/categories')).body],
+      ['/authors', (await get('/authors')).body],
+      ['404', (await get('/no-such-page')).body],
+      ['/staff', (await session.get('/staff')).body],
+      ['/staff/books', (await session.get('/staff/books')).body],
+      ['/staff/loans/checkout', (await session.get('/staff/loans/checkout')).body],
+      ['/staff/borrowers', (await session.get('/staff/borrowers')).body],
+      ['/staff/settings', (await session.get('/staff/settings')).body],
+    ];
+
+    // Pictographs, dingbats and arrows. Greek text and ordinary punctuation
+    // fall outside these ranges.
+    const emoji = /[\u{1F300}-\u{1FAFF}\u{2190}-\u{21FF}\u{2600}-\u{27BF}\u{FE0F}]/u;
+    for (const [name, body] of pages) {
+      const match = body.match(emoji);
+      assert.equal(match, null, `${name} still renders an emoji: ${match && match[0]}`);
+    }
+  });
+
+  it('draws icons as inline SVG that inherits the text colour', async () => {
+    const response = await get('/books');
+    assert.match(response.body, /<svg class="icon[^"]*"/);
+    assert.match(response.body, /stroke="currentColor"/);
+  });
+
+  it('hides decorative icons from assistive technology', async () => {
+    const response = await get('/books');
+    const icons = response.body.match(/<svg class="icon[\s\S]*?<\/svg>/g) ?? [];
+    assert.ok(icons.length > 0, 'no icons were rendered');
+    for (const icon of icons) {
+      assert.ok(
+        icon.includes('aria-hidden="true"') || icon.includes('role="img"'),
+        'an icon is neither hidden nor labelled',
+      );
+    }
+  });
+});
+
+describe('header and footer layout', () => {
+  it('puts the library name first and the language control last', async () => {
+    for (const url of ['/', '/books', '/categories']) {
+      const body = (await get(url)).body;
+      const header = body.slice(body.indexOf('<header'), body.indexOf('</header>'));
+      assert.ok(
+        header.indexOf('site-brand') < header.indexOf('lang-switch'),
+        `${url}: the language control comes before the library name`,
+      );
+      assert.ok(header.includes('site-header__end'), `${url}: no right-hand cluster`);
+    }
+  });
+
+  it('puts staff sign-in on the right of the footer, apart from the browse links', async () => {
+    const body = (await get('/books')).body;
+    const footer = body.slice(body.indexOf('<footer'));
+    assert.ok(footer.includes('site-footer__staff'), 'the staff link has no slot of its own');
+    assert.ok(
+      footer.indexOf('site-footer__links') < footer.indexOf('site-footer__staff'),
+      'the staff link comes before the browse links',
+    );
+  });
+
+  it('sets no label in all caps, which would strip Greek accents', async () => {
+    const css = await get('/assets/css/app.css');
+    assert.ok(
+      !css.body.includes('text-transform: uppercase'),
+      'an uppercase transform renders Greek without its accents',
+    );
+  });
+
+  it('puts the staff sign-out control in the top band', async () => {
+    const session = await login(app);
+    const body = (await session.get('/staff')).body;
+    const identity = body.slice(
+      body.indexOf('staff-identity__inner'),
+      body.indexOf('staff-tabs'),
+    );
+    assert.ok(identity.includes('/staff/logout'), 'sign out is not in the identity band');
+    assert.ok(
+      identity.indexOf('staff-brand') < identity.indexOf('staff-identity__right'),
+      'the brand is not first in the identity band',
+    );
+  });
+});
+
+describe('catalogue filters', () => {
+  it('shows the filters without needing to open anything', async () => {
+    const response = await get('/books');
+    assert.ok(!response.body.includes('<details class="filters"'), 'filters are still collapsed');
+    assert.match(response.body, /<form class="filters"/);
+  });
+
+  it('shows the same filters on the home page', async () => {
+    const response = await get('/');
+    assert.match(response.body, /<form class="filters"/);
+    assert.match(response.body, /id="f-category"/);
+  });
+
+  it('offers only one search box per page', async () => {
+    for (const url of ['/', '/books']) {
+      const body = (await get(url)).body;
+      const searchInputs = (body.match(/<input[^>]*type="search"[^>]*>/g) ?? []).filter((tag) =>
+        tag.includes('name="q"'),
+      );
+      assert.equal(searchInputs.length, 1, `${url} has ${searchInputs.length} search boxes`);
+    }
+  });
+
+  it('allows several categories and authors at once', async () => {
+    const response = await get('/books');
+    assert.match(response.body, /<select id="f-category" name="category" multiple/);
+    assert.match(response.body, /<select id="f-author" name="author" multiple/);
+  });
+
+  it('treats two categories as "either", not "both"', async () => {
+    const ancient = db.get('SELECT id FROM category WHERE name = ?', 'Αρχαία Γραμματεία');
+    const foreign = db.get('SELECT id FROM category WHERE name = ?', 'Ξένη Λογοτεχνία');
+
+    const one = await get(`/books?category=${ancient.id}`);
+    assert.ok(one.body.includes('Οδύσσεια'));
+    assert.ok(!one.body.includes('Pride and Prejudice'));
+
+    const both = await get(`/books?category=${ancient.id}&category=${foreign.id}`);
+    assert.ok(both.body.includes('Οδύσσεια'), 'the first category was dropped');
+    assert.ok(both.body.includes('Pride and Prejudice'), 'the second category was dropped');
+  });
+
+  it('keeps every selected value when paginating', async () => {
+    const category = db.get('SELECT id FROM category LIMIT 1');
+    const extra = createCategory(db, { name: 'Δοκιμαστική Κατηγορία' });
+    // Enough titles to force a second page.
+    for (let i = 0; i < 30; i += 1) {
+      createBook(db, { title: `Σελιδοποίηση ${i}`, categoryIds: [extra.id] });
+    }
+
+    const response = await get(`/books?category=${category.id}&category=${extra.id}`);
+    assert.equal(response.statusCode, 200);
+
+    const nextLink = (response.body.match(/href="(\/books\?[^"]*page=2[^"]*)"/) ?? [])[1];
+    assert.ok(nextLink, 'no pagination link was produced');
+    assert.ok(nextLink.includes(`category=${category.id}`), 'the first category was dropped');
+    assert.ok(nextLink.includes(`category=${extra.id}`), 'the second category was dropped');
+  });
+
+  it('does not auto-submit the filter form', async () => {
+    // With a multi-select, submitting on change would fire after the first
+    // option is clicked and before the second is chosen.
+    const response = await get('/books');
+    const start = response.body.indexOf('<form class="filters"');
+    const form = response.body.slice(start, response.body.indexOf('</form>', start));
+    assert.ok(!form.includes('data-autosubmit'), 'the filter form auto-submits');
+  });
+
+  it('survives a hand-edited URL with nonsense values', async () => {
+    for (const url of [
+      '/books?category=abc',
+      '/books?category=-1&author=0',
+      '/books?year=notayear',
+      '/books?category=1&category=1&category=1',
+    ]) {
+      assert.equal((await get(url)).statusCode, 200, url);
+    }
+  });
+});
+
+describe('lending without a barcode', () => {
+  it('finds copies by title', async () => {
+    const session = await login(app);
+    const response = await session.get(`/staff/loans/checkout?q=${encodeURIComponent('οδυσσεια')}`);
+    assert.equal(response.statusCode, 200);
+    assert.ok(response.body.includes('Οδύσσεια'));
+    assert.ok(response.body.includes('T-0001'), 'the matching copies are not listed');
+  });
+
+  it('finds copies by author, in any Greek casing', async () => {
+    const session = await login(app);
+    for (const q of ['Όμηρος', 'ομηροσ', 'ΟΜΗΡΟΣ']) {
+      const response = await session.get(`/staff/loans/checkout?q=${encodeURIComponent(q)}`);
+      assert.ok(response.body.includes('Οδύσσεια'), `"${q}" found nothing`);
+    }
+  });
+
+  it('lends a copy that has no barcode at all', async () => {
+    // The case the barcode-only flow could never handle.
+    const session = await login(app);
+    const copy = createCopy(db, fixtures.books.iliad, { shelfLocation: 'Α1-09' });
+    assert.ok(copy.ok);
+
+    const page = await session.get(`/staff/loans/checkout?copy=${copy.id}`);
+    assert.equal(page.statusCode, 200);
+    assert.ok(page.body.includes('Ιλιάδα'));
+
+    const response = await session.post(
+      '/staff/loans/checkout',
+      { copy_id: copy.id, new_borrower_name: 'Χωρίς Barcode', new_borrower_class: 'Α2' },
+      { tokenFrom: `/staff/loans/checkout?copy=${copy.id}` },
+    );
+    assert.equal(response.statusCode, 302);
+
+    const loan = db.get(
+      'SELECT id FROM loan WHERE copy_id = ? AND returned_at IS NULL',
+      copy.id,
+    );
+    assert.ok(loan, 'the loan was not created');
+  });
+
+  it('offers no Choose action for a copy that is already out', async () => {
+    const session = await login(app);
+    const copy = db.get("SELECT id FROM copy WHERE barcode = 'T-0003'");
+    await session.post(
+      '/staff/loans/checkout',
+      { copy_id: copy.id, new_borrower_name: 'Κάποιος' },
+      { tokenFrom: `/staff/loans/checkout?copy=${copy.id}` },
+    );
+
+    const response = await session.get(`/staff/loans/checkout?q=${encodeURIComponent('ιλιαδα')}`);
+    // The row still appears with its status, but without a way to lend it.
+    assert.ok(response.body.includes('T-0003'));
+    assert.ok(!response.body.includes(`/staff/loans/checkout?copy=${copy.id}"`));
+  });
+
+  it('still accepts a scanned barcode', async () => {
+    const session = await login(app);
+    const response = await session.get('/staff/loans/checkout?barcode=T-0002');
+    assert.equal(response.statusCode, 200);
+    assert.ok(response.body.includes('Οδύσσεια'));
+    assert.ok(response.body.includes('T-0002'));
+  });
+
+  it('reports a search that matches nothing', async () => {
+    const session = await login(app);
+    const response = await session.get('/staff/loans/checkout?q=zzznothingmatches');
+    assert.ok(response.body.includes('Δεν βρέθηκαν βιβλία'));
+  });
+
+  it('shows a checkout refusal where the librarian is looking', async () => {
+    // The reason comes from checkOut(), by which point the barcode lookup
+    // field is off screen — an error attached to it would never be seen.
+    const session = await login(app);
+    const copy = db.get("SELECT id FROM copy WHERE barcode = 'T-0004'");
+    const response = await session.post(
+      '/staff/loans/checkout',
+      { copy_id: copy.id, new_borrower_name: 'Χρονοταξιδιώτης', due_date: '2020-01-01' },
+      { tokenFrom: `/staff/loans/checkout?copy=${copy.id}` },
+    );
+    assert.equal(response.statusCode, 422);
+    assert.ok(response.body.includes('παρελθόν'), 'the reason was not shown');
+  });
+});

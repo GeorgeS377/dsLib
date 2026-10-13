@@ -1,5 +1,10 @@
 <!DOCTYPE html>
-<html lang="<%= lang %>">
+<%#
+  data-theme is written server-side from a cookie rather than by script on
+  load. Setting it in JavaScript would repaint the page after first paint and
+  flash the light palette at someone who chose dark.
+-%>
+<html lang="<%= lang %>"<% if (theme === 'dark') { %> data-theme="dark"<% } %>>
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -12,18 +17,17 @@
   <a class="skip-link" href="#main"><%= t('nav.skip') %></a>
 
   <%#
-    Search-first header. There is deliberately no row of navigation links:
-    browsing happens on one catalogue page where category, author, year and
-    availability are filters, so a second set of destinations in the header
-    would be a parallel route to the same books.
+    Three fixed positions: library name left, search in the middle, language
+    right. No navigation links — browsing happens on one catalogue page where
+    category, author, year and availability are filters, so a second set of
+    destinations here would be a parallel route to the same books.
 
-    The search box is hidden on the home page, which has its own prominent
-    one — showing both would be the same control twice on one screen.
+    The search box is hidden on the home page, which has its own.
   -%>
   <header class="site-header">
     <div class="container site-header__inner">
       <a class="site-brand" href="/">
-        <span class="site-brand__mark" aria-hidden="true">📚</span>
+        <%- include('../partials/icon', { name: 'book', size: 22, iconClass: 'site-brand__mark' }) %>
         <span class="site-brand__name"><%= libraryName %></span>
       </a>
 
@@ -37,12 +41,15 @@
         </form>
       <% } %>
 
-      <div class="lang-switch" role="group" aria-label="<%= t('lang.label') %>">
-        <% supportedLangs.forEach(function (code) { %>
-          <% if (code !== lang) { %>
-            <a class="lang-switch__link" href="<%= langUrl(code) %>" lang="<%= code %>"><%= code.toUpperCase() %></a>
-          <% } %>
-        <% }); %>
+      <div class="site-header__end">
+        <%- include('../partials/theme-toggle', { theme: theme, themeUrl: themeUrl, t: t }) %>
+        <div class="lang-switch" role="group" aria-label="<%= t('lang.label') %>">
+          <% supportedLangs.forEach(function (code) { %>
+            <% if (code !== lang) { %>
+              <a class="lang-switch__link" href="<%= langUrl(code) %>" lang="<%= code %>"><%= code.toUpperCase() %></a>
+            <% } %>
+          <% }); %>
+        </div>
       </div>
     </div>
   </header>
@@ -53,16 +60,15 @@
 
   <footer class="site-footer">
     <div class="container site-footer__inner">
-      <p><%= libraryName %> · <%= t('footer.catalogue') %></p>
-      <%# Categories and authors live here rather than in the header: they are
-          useful entry points, but not a second way to browse the whole
-          catalogue. -%>
       <nav class="site-footer__links" aria-label="<%= t('nav.browseBy') %>">
         <a href="/books"><%= t('nav.catalogue') %></a>
         <a href="/categories"><%= t('nav.categories') %></a>
         <a href="/authors"><%= t('nav.authors') %></a>
-        <a href="/staff"><%= t('nav.staff') %></a>
       </nav>
+
+      <%# Staff sign-in sits on the right, apart from the browse links: it is
+          for one or two people, not for the students the rest serves. -%>
+      <p class="site-footer__staff"><a href="/staff"><%= t('nav.staff') %></a></p>
     </div>
   </footer>
 

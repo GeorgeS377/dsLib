@@ -40,6 +40,16 @@ paginate. Greek search is case- and accent-insensitive, matches partial words,
 and treats final sigma (`ς`) and medial sigma (`σ`) as the same letter, so
 `ΟΔΥΣΣΕΙΑ`, `οδύσσεια` and `οδυσσεια` all find the same book.
 
+Browsing happens on one page: the search box lives in the header and the
+filters sit under the heading, always visible. Category, author and year take
+several values at once — picking two subjects means "either", so a reader
+after history *or* science gets both. Categories and authors also have their
+own pages, linked from the footer, for deep links and bookmarks.
+
+The interface is light by default. A toggle in the header switches to dark and
+remembers the choice; the operating system's preference is deliberately not
+consulted, because a school library is used in daylight on shared machines.
+
 Availability is always derived from the physical copies and the open loans. It
 is never a typed-in field, so what a student sees matches what is on the shelf.
 
@@ -48,6 +58,10 @@ edit, archive and delete titles; manage copies with barcodes and shelf
 locations; upload cover images; manage categories and authors (including
 merging duplicates); check books out and in; track overdues; manage borrowers;
 and, for administrators, manage staff accounts.
+
+Lending works by searching for the book by title or author and picking a copy.
+A barcode field sits beside it for a scanner, but barcodes are optional on a
+copy, so search is the path that always works.
 
 **Not built** (spec §12): student accounts or logins, public reservations,
 fines or payments, barcode-scanner hardware integration, email or SMS
@@ -592,6 +606,17 @@ sqlite3 data/library.db \
 **Greek search finds nothing it should find.**
 The search index may be stale — it is rebuilt on every write, but a direct
 database edit bypasses that. Run `npm run reindex`.
+
+**The site arrives in dark mode.**
+Someone used the toggle on that browser; it is stored in a `theme` cookie.
+Switch it back with the toggle, or clear the cookie. The operating system's
+dark setting has no effect — the stylesheet carries no `prefers-color-scheme`
+rule at all.
+
+**A copy cannot be found at the lending desk.**
+Search by title or author rather than barcode: a copy added in bulk has no
+barcode until someone types one in. The search box on `/staff/loans/checkout`
+matches the same way the public catalogue does.
 
 **A book shows as unavailable but is on the shelf.**
 Either its copy's status is not `available` (check the copies page), or a loan

@@ -17,7 +17,7 @@
 
   <% if (results.total === 0) { %>
     <div class="state state--empty">
-      <p class="state__icon" aria-hidden="true">👤</p>
+      <p class="state__icon" aria-hidden="true"><%- include('../partials/icon', { name: 'user' }) %></p>
       <h2 class="state__title">
         <%= q ? t('search.empty.title') : t('staff.borrowers.empty') %>
       </h2>

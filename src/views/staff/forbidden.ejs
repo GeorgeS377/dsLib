@@ -1,6 +1,6 @@
 <div class="container">
   <div class="state state--error" role="alert">
-    <p class="state__icon" aria-hidden="true">🔒</p>
+    <p class="state__icon" aria-hidden="true"><%- include('../partials/icon', { name: 'lock' }) %></p>
     <h1 class="state__title"><%= t('error.403.title') %></h1>
     <p class="state__body"><%= t('staff.forbidden.body') %></p>
     <p><a class="button button--secondary" href="/staff"><%= t('staff.nav.dashboard') %></a></p>

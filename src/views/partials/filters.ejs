@@ -1,0 +1,115 @@
+<%#
+  The catalogue filter bar.
+
+  Shared by the home page and the catalogue page, so filtering works the same
+  in both places. Always visible rather than folded behind a disclosure: the
+  whole point of the page is narrowing a list, and a hidden control is one
+  nobody finds.
+
+  Category, author and year are multi-select, because a reader looking for
+  history *or* science wants both. Several values of one filter mean "either";
+  different filters still combine with "and".
+
+  Deliberately not auto-submitting on change: with a multi-select that would
+  fire the moment the first option is clicked, before the second is chosen.
+  The Apply button is the control, and it is always visible.
+
+  Sort lives here too, so one Apply button covers the whole "show me these
+  books, in this order" question.
+
+  Expects: query, categories, authors, years, languages, action, hasFilters,
+  clearUrl, and t.
+-%>
+<form class="filters" method="get" action="<%= action %>">
+  <% if (query.q) { %>
+    <input type="hidden" name="q" value="<%= query.q %>">
+  <% } %>
+
+  <div class="filters__row">
+    <div class="filter">
+      <label class="filter__label" for="f-category"><%= t('search.filter.category') %></label>
+      <select id="f-category" name="category" multiple size="4">
+        <% categories.forEach(function (category) { %>
+          <option value="<%= category.id %>"
+                  <%= query.category.includes(category.id) ? 'selected' : '' %>>
+            <%= category.name %> (<%= category.book_count %>)
+          </option>
+        <% }); %>
+      </select>
+    </div>
+
+    <div class="filter">
+      <label class="filter__label" for="f-author"><%= t('search.filter.author') %></label>
+      <select id="f-author" name="author" multiple size="4">
+        <% authors.forEach(function (author) { %>
+          <option value="<%= author.id %>"
+                  <%= query.author.includes(author.id) ? 'selected' : '' %>>
+            <%= author.name %> (<%= author.book_count %>)
+          </option>
+        <% }); %>
+      </select>
+    </div>
+
+    <% if (years.length > 0) { %>
+      <div class="filter filter--narrow">
+        <label class="filter__label" for="f-year"><%= t('search.filter.year') %></label>
+        <select id="f-year" name="year" multiple size="4">
+          <% years.forEach(function (year) { %>
+            <option value="<%= year %>" <%= query.year.includes(year) ? 'selected' : '' %>>
+              <%= year %>
+            </option>
+          <% }); %>
+        </select>
+      </div>
+    <% } %>
+
+    <% if (languages.length > 1) { %>
+      <div class="filter filter--narrow">
+        <label class="filter__label" for="f-language"><%= t('search.filter.language') %></label>
+        <select id="f-language" name="language">
+          <option value=""><%= t('search.filter.allLanguages') %></option>
+          <% languages.forEach(function (code) { %>
+            <option value="<%= code %>" <%= query.language === code ? 'selected' : '' %>>
+              <%= code %>
+            </option>
+          <% }); %>
+        </select>
+      </div>
+    <% } %>
+
+    <%# Sort belongs here rather than in a form of its own: narrowing a list
+        and ordering it are the same task, and two separate Apply buttons on
+        one screen is a puzzle, not a feature. -%>
+    <div class="filter filter--narrow">
+      <label class="filter__label" for="f-sort"><%= t('search.sort.label') %></label>
+      <select id="f-sort" name="sort">
+        <% ['title', 'title_desc', 'author', 'newest', 'year_desc', 'year'].forEach(function (option) { %>
+          <option value="<%= option %>" <%= (query.sort || 'title') === option ? 'selected' : '' %>>
+            <%= t('search.sort.' + option) %>
+          </option>
+        <% }); %>
+      </select>
+    </div>
+  </div>
+
+  <div class="filters__actions">
+    <div class="checkbox-row">
+      <input type="checkbox" id="f-available" name="available" value="1"
+             <%= query.available ? 'checked' : '' %>>
+      <label for="f-available"><%= t('search.filter.availableOnly') %></label>
+    </div>
+
+    <p class="filter__hint"><%= t('search.filter.multiHint') %></p>
+
+    <div class="button-row">
+      <button class="button button--small" type="submit">
+        <%= t('common.apply') %>
+      </button>
+      <% if (hasFilters) { %>
+        <a class="button button--quiet button--small" href="<%= clearUrl %>">
+          <%= t('search.clearFilters') %>
+        </a>
+      <% } %>
+    </div>
+  </div>
+</form>

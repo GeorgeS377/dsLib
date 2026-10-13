@@ -6,13 +6,15 @@
 <% if (flash && flash.length > 0) { %>
   <ul class="flash-list">
     <% flash.forEach(function (message) { %>
+      <%
+        const flashIcon = message.type === 'success' ? 'check'
+          : message.type === 'error' ? 'close'
+          : message.type === 'warning' ? 'warning'
+          : 'tag';
+      %>
       <li class="flash flash--<%= message.type %>"
           role="<%= message.type === 'error' ? 'alert' : 'status' %>">
-        <span aria-hidden="true">
-          <%= message.type === 'success' ? '✓'
-            : message.type === 'error' ? '✕'
-            : message.type === 'warning' ? '!' : 'ℹ' %>
-        </span>
+        <%- include('./icon', { name: flashIcon, size: 18 }) %>
         <span><%= t(message.key, message.vars || undefined) %></span>
       </li>
     <% }); %>

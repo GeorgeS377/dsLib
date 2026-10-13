@@ -112,8 +112,12 @@ button {
   --container: 72rem;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
+/* Dark is a choice, not a consequence of the operating system.
+   A school library is used in daylight on shared machines, and arriving in
+   dark mode because a laptop happens to be set that way surprised the
+   librarian. The toggle in the footer sets data-theme on <html>; without it
+   the light palette above applies. */
+:root[data-theme="dark"] {
     --color-bg: #17181a;
     --color-surface: #202225;
     --color-surface-sunken: #191b1d;
@@ -140,7 +144,6 @@ button {
     --focus-ring: 0 0 0 3px #5fc2c455, 0 0 0 1px var(--color-accent);
     --shadow-sm: 0 1px 2px rgb(0 0 0 / 35%);
     --shadow: 0 2px 10px rgb(0 0 0 / 45%);
-  }
 }
 
 /* ------------------------------------------------------------ 3. Typography */
@@ -261,6 +264,152 @@ kbd,
 
 .skip-link:focus {
   transform: translateY(0);
+}
+
+
+/* Icons. Drawn in one stroke weight, inheriting the text colour, sitting on
+   the baseline — emoji were doing this job and rendered differently on every
+   platform while fighting the palette. */
+.icon {
+  display: inline-block;
+  vertical-align: -0.17em;
+  flex: none;
+}
+
+.site-brand__mark {
+  color: var(--color-accent);
+}
+
+/* Theme toggle: a link, so the choice works without JavaScript. */
+.theme-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  color: var(--color-text-muted);
+  text-decoration: none;
+}
+
+.theme-toggle:hover {
+  background: var(--color-surface-sunken);
+  color: var(--color-text);
+  border-color: var(--color-border-strong);
+}
+
+.staff-identity .theme-toggle {
+  border-color: currentcolor;
+  color: inherit;
+  opacity: 0.7;
+}
+
+.staff-identity .theme-toggle:hover {
+  opacity: 1;
+  background: rgb(255 255 255 / 12%);
+}
+
+/* The header's right-hand cluster: theme, then language. */
+.site-header__end {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-inline-start: auto;
+}
+
+/* Checkout lookup: search by title beside the barcode field. Search comes
+   first because it is the everyday path and the only one that works for a
+   copy with no barcode. */
+.lookup {
+  display: grid;
+  gap: var(--space-5);
+}
+
+@media (min-width: 52rem) {
+  .lookup {
+    grid-template-columns: 3fr 2fr;
+    align-items: start;
+  }
+}
+
+.lookup .search-form {
+  margin-top: var(--space-2);
+}
+
+/* --- Filter bar --------------------------------------------------------- */
+
+.filters {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  padding: var(--space-4);
+  display: grid;
+  gap: var(--space-4);
+}
+
+.filters__row {
+  display: grid;
+  gap: var(--space-4);
+  grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+}
+
+.filter--narrow {
+  max-width: 11rem;
+}
+
+.filter__label {
+  display: block;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  margin-bottom: var(--space-1);
+}
+
+/* Multi-select lists: tall enough to show several options without scrolling,
+   so it is obvious more than one can be chosen. */
+.filters select[multiple] {
+  width: 100%;
+  padding: var(--space-1);
+  min-height: 6rem;
+}
+
+.filters select[multiple] option {
+  padding: 0.2rem var(--space-2);
+  border-radius: var(--radius-sm);
+}
+
+.filters__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3) var(--space-5);
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--color-border);
+}
+
+.filters__actions .button-row {
+  margin-inline-start: auto;
+}
+
+.filter__hint {
+  font-size: 0.8125rem;
+  color: var(--color-text-faint);
+}
+
+.site-footer__staff {
+  margin-inline-start: auto;
+}
+
+.pagination__gap {
+  color: var(--color-text-faint);
+  padding-inline: var(--space-2);
+}
+
+.hero__stats {
+  margin-top: var(--space-4);
+  font-size: 0.9375rem;
+  color: var(--color-text-muted);
 }
 
 /* ------------------------------------------------- 5. Header, nav, footer */
@@ -599,37 +748,6 @@ textarea[aria-invalid="true"] {
   padding-block: 0.25rem;
 }
 
-/* Filter panel: a <details> element so it collapses on mobile with no JS. */
-.filters {
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius);
-}
-
-.filters__summary {
-  padding: var(--space-3) var(--space-4);
-  font-weight: 600;
-  cursor: pointer;
-  border-radius: var(--radius);
-}
-
-.filters__body {
-  padding: 0 var(--space-4) var(--space-4);
-  display: grid;
-  gap: var(--space-4);
-}
-
-@media (min-width: 48rem) {
-  .filters__body {
-    grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
-    align-items: end;
-  }
-
-  .filters__actions {
-    grid-column: 1 / -1;
-  }
-}
-
 /* --------------------------------------------------- 8. Cards and book grid */
 
 .card {
@@ -645,30 +763,31 @@ textarea[aria-invalid="true"] {
   overflow: hidden;
 }
 
+/* The home page's search block. Left-aligned and plainly sized: the job is
+   to start a search, not to make an entrance. */
 .hero {
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
-  padding: var(--space-6) var(--space-5);
-  box-shadow: var(--shadow-sm);
-  text-align: center;
+  display: grid;
+  gap: var(--space-4);
 }
 
 .hero__title {
-  font-family: var(--font-serif);
-  font-size: clamp(1.75rem, 1.3rem + 2.2vw, 2.6rem);
-  margin-bottom: var(--space-2);
+  font-size: clamp(1.5rem, 1.2rem + 1.2vw, 2rem);
+  margin-bottom: var(--space-1);
 }
 
 .hero__lead {
   color: var(--color-text-muted);
-  max-width: 44ch;
-  margin: 0 auto var(--space-5);
+  max-width: 60ch;
 }
 
-.hero__search {
-  max-width: 34rem;
-  margin-inline: auto;
+.search-form--hero .search-form__input {
+  min-height: 3rem;
+  font-size: 1.0625rem;
+}
+
+.search-form--hero .button {
+  min-height: 3rem;
+  padding-inline: var(--space-5);
 }
 
 .book-grid {
@@ -869,8 +988,8 @@ td {
 thead th {
   background: var(--color-surface-sunken);
   font-size: 0.8125rem;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
+  /* No uppercase transform: Greek capitals drop their accents, so a header
+     set in caps is not merely loud but misspelled. */
   color: var(--color-text-muted);
   white-space: nowrap;
 }
@@ -1096,11 +1215,9 @@ tbody tr:hover {
   color: var(--color-bg);
 }
 
-@media (prefers-color-scheme: dark) {
-  .staff-identity {
-    background: #000;
-    color: var(--color-text);
-  }
+:root[data-theme="dark"] .staff-identity {
+  background: #000;
+  color: var(--color-text);
 }
 
 .staff-identity__inner {
@@ -1150,8 +1267,6 @@ tbody tr:hover {
 
 .staff-identity__role {
   font-size: 0.75rem;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
   padding: 0.1rem 0.4rem;
   border: 1px solid currentcolor;
   border-radius: var(--radius-sm);

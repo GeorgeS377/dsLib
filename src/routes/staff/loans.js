@@ -9,7 +9,7 @@ import {
   getBorrowerById,
   suggestBorrowers,
 } from '../../db/queries/borrowers.js';
-import { getCopyByBarcode, getCopyById } from '../../db/queries/copies.js';
+import { findLendableCopies, getCopyByBarcode, getCopyById } from '../../db/queries/copies.js';
 import {
   checkIn,
   checkInByBarcode,
@@ -53,18 +53,40 @@ export default async function staffLoanRoutes(app) {
 
   // -------------------------------------------------------------- checkout
   app.get('/staff/loans/checkout', async (request, reply) => {
-    // A barcode may arrive in the query from a scanner typing into the URL
-    // bar, or from a link on the copies page.
+    // Three ways to land on a copy, in the order a desk actually uses them:
+    //   copy=<id>  picked from the search results below
+    //   barcode=   typed or scanned
+    //   q=         searched by title or author
     const barcode = typeof request.query?.barcode === 'string' ? request.query.barcode : '';
-    const copy = barcode ? getCopyByBarcode(db, barcode) : undefined;
+    const searchTerm = typeof request.query?.q === 'string' ? request.query.q.slice(0, 200) : '';
+    const copyId = Number(request.query?.copy);
+
+    let copy;
+    if (Number.isInteger(copyId) && copyId > 0) {
+      copy = getCopyById(db, copyId);
+    } else if (barcode) {
+      copy = getCopyByBarcode(db, barcode);
+    }
+
+    // Search only when no copy is settled on yet, so choosing one clears the
+    // list rather than leaving it underneath.
+    const matches = !copy && searchTerm ? findLendableCopies(db, { q: searchTerm }) : [];
 
     return reply.renderStaff('staff/checkout', {
       title: reply.locals.t('staff.loans.checkout'),
       barcode,
+      searchTerm,
+      matches,
       copy,
       openLoan: copy ? getOpenLoan(db, copy.id) : null,
       suggestions: [],
-      values: { barcode, borrower_id: '', new_borrower_name: '', new_borrower_class: '', due_date: defaultDue(app.config.defaultLoanDays) },
+      values: {
+        barcode,
+        borrower_id: '',
+        new_borrower_name: '',
+        new_borrower_class: '',
+        due_date: defaultDue(app.config.defaultLoanDays),
+      },
       errors: {},
     });
   });
@@ -114,7 +136,10 @@ export default async function staffLoanRoutes(app) {
     });
 
     if (!result.ok) {
-      return rerenderCheckout(reply, request.body, { barcode: result.reason }, copy);
+      // Reported against the checkout itself: by this point a copy is chosen,
+      // so the barcode lookup field is no longer on screen and an error
+      // attached to it would never be seen.
+      return rerenderCheckout(reply, request.body, { checkout: result.reason }, copy);
     }
 
     logAction(db, {
@@ -213,11 +238,20 @@ export default async function staffLoanRoutes(app) {
   function rerenderCheckout(reply, body, errors, copy) {
     reply.code(422);
     const barcode = body?.barcode ?? '';
-    const resolvedCopy = copy ?? (barcode ? getCopyByBarcode(db, barcode) : undefined);
+    const submittedCopyId = Number(body?.copy_id);
+    const resolvedCopy =
+      copy ??
+      (Number.isInteger(submittedCopyId) && submittedCopyId > 0
+        ? getCopyById(db, submittedCopyId)
+        : barcode
+          ? getCopyByBarcode(db, barcode)
+          : undefined);
 
     return reply.renderStaff('staff/checkout', {
       title: reply.locals.t('staff.loans.checkout'),
       barcode,
+      searchTerm: '',
+      matches: [],
       copy: resolvedCopy,
       openLoan: resolvedCopy ? getOpenLoan(db, resolvedCopy.id) : null,
       suggestions: body?.new_borrower_name

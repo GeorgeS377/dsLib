@@ -17,7 +17,7 @@
       </p>
     </div>
     <div class="button-row">
-      <a class="button button--quiet" href="/staff/books/<%= book.id %>">← <%= t('staff.books.edit') %></a>
+      <a class="button button--quiet" href="/staff/books/<%= book.id %>"><%= t('staff.books.edit') %></a>
       <% if (!book.archived_at) { %>
         <a class="button button--quiet" href="/books/<%= book.id %>"><%= t('staff.books.viewPublic') %></a>
       <% } %>
@@ -26,7 +26,7 @@
 
   <% if (copies.length === 0) { %>
     <div class="state state--empty">
-      <p class="state__icon" aria-hidden="true">📗</p>
+      <p class="state__icon" aria-hidden="true"><%- include('../partials/icon', { name: 'book' }) %></p>
       <h2 class="state__title"><%= t('staff.copies.empty') %></h2>
       <p class="state__body"><%= t('staff.copies.emptyHint') %></p>
     </div>

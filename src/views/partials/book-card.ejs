@@ -14,7 +14,7 @@
       </div>
     <% } else { %>
       <div class="cover cover--empty" role="img" aria-label="<%= t('book.noCover') %>">
-        <span aria-hidden="true">📘</span>
+        <%- include('../partials/icon', { name: 'book' }) %>
       </div>
     <% } %>
 

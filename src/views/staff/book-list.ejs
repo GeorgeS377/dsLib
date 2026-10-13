@@ -29,7 +29,7 @@
 
   <% if (results.total === 0) { %>
     <div class="state state--empty">
-      <p class="state__icon" aria-hidden="true">📚</p>
+      <p class="state__icon" aria-hidden="true"><%- include('../partials/icon', { name: 'book' }) %></p>
       <h2 class="state__title"><%= t('staff.books.empty') %></h2>
       <p class="state__body">
         <%= query.q ? t('search.empty.withQuery', { query: query.q }) : t('staff.books.emptyHint') %>

@@ -29,6 +29,8 @@ import publicRoutes from './routes/public/index.js';
 import staffRoutes from './routes/staff/index.js';
 
 const ONE_YEAR_SECONDS = 365 * 24 * 60 * 60;
+const THEME_COOKIE = 'theme';
+const THEMES = ['light', 'dark'];
 
 /**
  * @param {object} [options]
@@ -236,7 +238,27 @@ export async function buildApp({ config = defaultConfig, logger, db, onRoute } =
   // --- Language resolution ------------------------------------------------
   // One hook sets the language for every request, so no route can forget it.
   app.decorateRequest('lang', null);
+  app.decorateRequest('theme', 'light');
   app.addHook('onRequest', async (request, reply) => {
+    // Theme: light unless the visitor chose otherwise. The OS preference is
+    // deliberately not consulted — a school library is used in daylight on
+    // shared machines, and inheriting a laptop's dark setting surprised the
+    // librarian who opened it.
+    const requestedTheme = request.query?.theme;
+    if (THEMES.includes(requestedTheme)) {
+      request.theme = requestedTheme;
+      reply.setCookie(THEME_COOKIE, requestedTheme, {
+        path: '/',
+        httpOnly: true,
+        sameSite: 'lax',
+        secure: config.isProduction,
+        maxAge: ONE_YEAR_SECONDS,
+      });
+    } else {
+      const saved = request.cookies?.[THEME_COOKIE];
+      request.theme = THEMES.includes(saved) ? saved : 'light';
+    }
+
     const { lang, fromQuery } = resolveLang(request, config.defaultLang);
     request.lang = lang;
     if (fromQuery) {
@@ -261,10 +283,12 @@ export async function buildApp({ config = defaultConfig, logger, db, onRoute } =
       // back to a generic one — see views/partials/field-error.ejs.
       hasT: hasTranslation,
       lang: request.lang,
+      theme: request.theme,
       supportedLangs: SUPPORTED_LANGS,
       libraryName: config.libraryName,
       currentPath: request.url,
       langUrl: (target) => withQueryParam(request.url, 'lang', target),
+      themeUrl: (target) => withQueryParam(request.url, 'theme', target),
       staffUser: null,
       csrfToken: null,
       flash: [],

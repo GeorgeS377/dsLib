@@ -9,17 +9,19 @@
   <nav class="pagination" aria-label="<%= t('pagination.label') %>">
     <% if (results.page > 1) { %>
       <a class="pagination__link" href="<%= pageUrl(results.page - 1) %>" rel="prev">
-        <span aria-hidden="true">←</span> <%= t('pagination.previous') %>
+        <%- include('./icon', { name: 'chevron-left', size: 16 }) %>
+        <%= t('pagination.previous') %>
       </a>
     <% } else { %>
       <span class="pagination__link" aria-disabled="true">
-        <span aria-hidden="true">←</span> <%= t('pagination.previous') %>
+        <%- include('./icon', { name: 'chevron-left', size: 16 }) %>
+        <%= t('pagination.previous') %>
       </span>
     <% } %>
 
     <% pages.forEach(function (page) { %>
       <% if (page === null) { %>
-        <span class="pagination__status" aria-hidden="true">…</span>
+        <span class="pagination__gap" aria-hidden="true">…</span>
       <% } else if (page === results.page) { %>
         <span class="pagination__link" aria-current="page"
               aria-label="<%= t('pagination.page', { current: page, total: results.totalPages }) %>"><%= page %></span>
@@ -30,11 +32,13 @@
 
     <% if (results.page < results.totalPages) { %>
       <a class="pagination__link" href="<%= pageUrl(results.page + 1) %>" rel="next">
-        <%= t('pagination.next') %> <span aria-hidden="true">→</span>
+        <%= t('pagination.next') %>
+        <%- include('./icon', { name: 'chevron-right', size: 16 }) %>
       </a>
     <% } else { %>
       <span class="pagination__link" aria-disabled="true">
-        <%= t('pagination.next') %> <span aria-hidden="true">→</span>
+        <%= t('pagination.next') %>
+        <%- include('./icon', { name: 'chevron-right', size: 16 }) %>
       </span>
     <% } %>
   </nav>

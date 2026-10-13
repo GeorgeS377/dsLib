@@ -8,7 +8,7 @@
 <div class="container stack-lg">
 
   <% if (backUrl) { %>
-    <p><a href="<%= backUrl %>">← <%= t('book.backToResults') %></a></p>
+    <p><a href="<%= backUrl %>"><%= t('book.backToResults') %></a></p>
   <% } %>
 
   <article>
@@ -50,7 +50,7 @@
           </div>
         <% } else { %>
           <div class="cover cover--empty" role="img" aria-label="<%= t('book.noCover') %>">
-            <span aria-hidden="true">📘</span>
+            <%- include('../partials/icon', { name: 'book' }) %>
           </div>
         <% } %>
 
