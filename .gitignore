@@ -23,3 +23,6 @@ logs/
 coverage/
 *.bak
 backups/
+
+# Brainstorming mockups (superpowers visual companion)
+.superpowers/
