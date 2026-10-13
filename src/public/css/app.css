@@ -337,6 +337,89 @@ kbd,
   margin-top: var(--space-2);
 }
 
+/* --- Staff page header and breadcrumb ----------------------------------- */
+
+.page-header {
+  margin-bottom: var(--space-5);
+}
+
+.breadcrumb {
+  margin-bottom: var(--space-2);
+  font-size: 0.875rem;
+}
+
+.breadcrumb ol {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+/* A chevron between steps, drawn in CSS so the markup stays a plain list. */
+.breadcrumb li + li::before {
+  content: "";
+  display: inline-block;
+  width: 0.4em;
+  height: 0.4em;
+  margin-inline-end: var(--space-2);
+  border-top: 1.5px solid var(--color-text-faint);
+  border-right: 1.5px solid var(--color-text-faint);
+  transform: rotate(45deg);
+  vertical-align: middle;
+}
+
+.breadcrumb a {
+  color: var(--color-text-muted);
+}
+
+.breadcrumb a:hover {
+  color: var(--color-accent);
+}
+
+.breadcrumb [aria-current="page"] {
+  color: var(--color-text-faint);
+}
+
+.page-header__main {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3) var(--space-4);
+  align-items: flex-start;
+  justify-content: space-between;
+}
+
+.page-header__text {
+  min-width: 0;
+}
+
+/* The action, small and quiet, above the record's own name — which is the
+   heading, because that is what tells you where you are. */
+.page-header__kicker {
+  font-size: 0.8125rem;
+  color: var(--color-text-faint);
+  margin-bottom: 0.1rem;
+}
+
+.page-header__title {
+  margin: 0;
+}
+
+.page-header__meta {
+  margin-top: var(--space-1);
+  font-size: 0.9375rem;
+  color: var(--color-text-muted);
+}
+
+.page-header__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-inline-start: auto;
+}
+
 /* --- Filter bar --------------------------------------------------------- */
 
 .filters {
@@ -352,31 +435,89 @@ kbd,
   display: grid;
   gap: var(--space-4);
   grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+  align-items: start;
+}
+
+.filter {
+  border: 0;
+  padding: 0;
+  min-width: 0;
 }
 
 .filter--narrow {
-  max-width: 11rem;
+  max-width: 10rem;
+}
+
+.filter--stack {
+  display: grid;
+  gap: var(--space-3);
+  align-content: start;
 }
 
 .filter__label {
   display: block;
+  padding: 0;
   font-size: 0.8125rem;
   font-weight: 600;
   color: var(--color-text-muted);
   margin-bottom: var(--space-1);
 }
 
-/* Multi-select lists: tall enough to show several options without scrolling,
-   so it is obvious more than one can be chosen. */
-.filters select[multiple] {
-  width: 100%;
+/* A scrolling list of checkboxes. Bordered so it reads as one group and its
+   extent is obvious, which a bare list of checkboxes does not manage. */
+.filter__options {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-bg);
+  max-height: 8.5rem;
+  overflow-y: auto;
   padding: var(--space-1);
-  min-height: 6rem;
 }
 
-.filters select[multiple] option {
-  padding: 0.2rem var(--space-2);
+.filter__option {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 0.25rem var(--space-2);
   border-radius: var(--radius-sm);
+  font-size: 0.9375rem;
+  cursor: pointer;
+}
+
+.filter__option:hover {
+  background: var(--color-surface-sunken);
+}
+
+/* A ticked row is tinted, so what is selected is legible at a glance —
+   the thing a multi-select could not do. :has() is supported everywhere this
+   app targets; without it the checkbox alone still shows the state. */
+.filter__option:has(input:checked) {
+  background: var(--color-accent-soft);
+  color: var(--color-accent);
+  font-weight: 600;
+}
+
+.filter__option input {
+  width: 1rem;
+  height: 1rem;
+  min-height: 0;
+  flex: none;
+  accent-color: var(--color-accent);
+}
+
+.filter__option-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.filter__option-count {
+  color: var(--color-text-faint);
+  font-size: 0.8125rem;
+  font-variant-numeric: tabular-nums;
+  font-weight: 400;
 }
 
 .filters__actions {
@@ -392,13 +533,25 @@ kbd,
   margin-inline-start: auto;
 }
 
-.filter__hint {
-  font-size: 0.8125rem;
+.site-footer__name {
+  margin-inline-start: auto;
   color: var(--color-text-faint);
 }
 
-.site-footer__staff {
-  margin-inline-start: auto;
+/* Staff sign-in sits with the other account-level controls at the top right,
+   where someone who works here looks for it — not buried in the footer. */
+.site-header__staff {
+  font-size: 0.875rem;
+  color: var(--color-text-muted);
+  text-decoration: none;
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-sm);
+  white-space: nowrap;
+}
+
+.site-header__staff:hover {
+  background: var(--color-surface-sunken);
+  color: var(--color-text);
 }
 
 .pagination__gap {
@@ -1413,7 +1566,8 @@ tbody tr:hover {
 }
 
 .login-shell {
-  max-width: 24rem;
+  /* Wide enough that the Greek heading does not wrap onto two lines. */
+  max-width: 28rem;
   margin: var(--space-7) auto;
 }
 

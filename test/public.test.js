@@ -230,7 +230,7 @@ describe('filters, sorting and pagination (acceptance 3)', () => {
 
     // And the controls show that state back to the reader.
     // The attributes are rendered across lines, so allow any whitespace.
-    assert.match(response.body, new RegExp(`value="${category.id}"\\s+selected`));
+    assert.match(response.body, new RegExp(`name="category" value="${category.id}"\\s+checked`));
     assert.match(response.body, /name="available" value="1"\s+checked/);
     assert.match(response.body, /value="newest"\s+selected/);
   });

@@ -150,14 +150,17 @@ describe('header and footer layout', () => {
     }
   });
 
-  it('puts staff sign-in on the right of the footer, apart from the browse links', async () => {
+  it('puts staff sign-in at the top right, not in the footer', async () => {
     const body = (await get('/books')).body;
+    const header = body.slice(body.indexOf('<header'), body.indexOf('</header>'));
     const footer = body.slice(body.indexOf('<footer'));
-    assert.ok(footer.includes('site-footer__staff'), 'the staff link has no slot of its own');
+
+    assert.ok(header.includes('site-header__staff'), 'the staff link is not in the header');
     assert.ok(
-      footer.indexOf('site-footer__links') < footer.indexOf('site-footer__staff'),
-      'the staff link comes before the browse links',
+      header.indexOf('site-brand') < header.indexOf('site-header__staff'),
+      'the staff link comes before the library name',
     );
+    assert.ok(!footer.includes('/staff'), 'the staff link is still in the footer too');
   });
 
   it('sets no label in all caps, which would strip Greek accents', async () => {
@@ -193,7 +196,7 @@ describe('catalogue filters', () => {
   it('shows the same filters on the home page', async () => {
     const response = await get('/');
     assert.match(response.body, /<form class="filters"/);
-    assert.match(response.body, /id="f-category"/);
+    assert.match(response.body, /name="category" value="\d+"/);
   });
 
   it('offers only one search box per page', async () => {
@@ -206,10 +209,24 @@ describe('catalogue filters', () => {
     }
   });
 
-  it('allows several categories and authors at once', async () => {
+  it('offers checkboxes rather than a multi-select', async () => {
+    // A <select multiple> needs Ctrl+click to pick a second option, which
+    // nothing on screen explains, and renders the chosen row in the browser's
+    // grey so it reads as disabled. Checkboxes are one click and obvious.
     const response = await get('/books');
-    assert.match(response.body, /<select id="f-category" name="category" multiple/);
-    assert.match(response.body, /<select id="f-author" name="author" multiple/);
+    assert.ok(!response.body.includes('multiple'), 'a multi-select is still in use');
+    assert.match(response.body, /<input type="checkbox" name="category" value="\d+"/);
+    assert.match(response.body, /<input type="checkbox" name="author" value="\d+"/);
+    assert.match(response.body, /<input type="checkbox" name="year" value="\d+"/);
+  });
+
+  it('wraps each option in its own label, so the whole row is clickable', async () => {
+    const response = await get('/books');
+    assert.match(
+      response.body,
+      /<label class="filter__option">\s*<input type="checkbox"/,
+      'the checkbox is not inside its label',
+    );
   });
 
   it('treats two categories as "either", not "both"', async () => {

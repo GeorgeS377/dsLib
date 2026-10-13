@@ -120,13 +120,28 @@ describe('every page is structurally accessible', () => {
 
   it('labels every form control', () => {
     for (const { url, body } of all) {
+      // A control may be labelled three ways, all valid: aria-label, a
+      // <label for=…> pointing at its id, or by sitting inside its own
+      // <label> (an implicit label, which is what the filter checkboxes use —
+      // the whole row is then clickable).
+      const implicitlyLabelled = new Set();
+      for (const label of body.match(/<label\b[^>]*>[\s\S]*?<\/label>/g) ?? []) {
+        for (const nested of label.match(/<(input|select|textarea)\b[^>]*>/g) ?? []) {
+          implicitlyLabelled.add(nested);
+        }
+      }
+
       const controls = body.match(/<(input|select|textarea)\b[^>]*>/g) ?? [];
       for (const tag of controls) {
         if (/type="(hidden|submit|button)"/.test(tag)) continue;
         if (/aria-label(ledby)?=/.test(tag)) continue;
+        if (implicitlyLabelled.has(tag)) continue;
 
         const id = (tag.match(/\bid="([^"]+)"/) ?? [])[1];
-        assert.ok(id, `${url}: a control has neither id nor aria-label — ${tag.slice(0, 80)}`);
+        assert.ok(
+          id,
+          `${url}: a control has no label, no aria-label and no id — ${tag.slice(0, 80)}`,
+        );
 
         const escaped = id.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
         assert.match(

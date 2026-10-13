@@ -6,16 +6,18 @@
   whole point of the page is narrowing a list, and a hidden control is one
   nobody finds.
 
-  Category, author and year are multi-select, because a reader looking for
-  history *or* science wants both. Several values of one filter mean "either";
-  different filters still combine with "and".
+  Checkboxes, not <select multiple>. A multi-select is multi-select in theory
+  and single-select in practice: picking a second option needs Ctrl+click,
+  which nothing on screen tells you, and the chosen row renders in the
+  browser's grey so it reads as disabled rather than selected. A checkbox is
+  one click, obvious, and reachable from the keyboard.
 
-  Deliberately not auto-submitting on change: with a multi-select that would
-  fire the moment the first option is clicked, before the second is chosen.
-  The Apply button is the control, and it is always visible.
+  Several values of one filter mean "either"; different filters still combine
+  with "and".
 
   Sort lives here too, so one Apply button covers the whole "show me these
-  books, in this order" question.
+  books, in this order" question. Deliberately no auto-submit — with
+  checkboxes it would reload the page after every single tick.
 
   Expects: query, categories, authors, years, languages, action, hasFilters,
   clearUrl, and t.
@@ -26,69 +28,75 @@
   <% } %>
 
   <div class="filters__row">
-    <div class="filter">
-      <label class="filter__label" for="f-category"><%= t('search.filter.category') %></label>
-      <select id="f-category" name="category" multiple size="4">
+    <fieldset class="filter">
+      <legend class="filter__label"><%= t('search.filter.category') %></legend>
+      <div class="filter__options">
         <% categories.forEach(function (category) { %>
-          <option value="<%= category.id %>"
-                  <%= query.category.includes(category.id) ? 'selected' : '' %>>
-            <%= category.name %> (<%= category.book_count %>)
-          </option>
+          <label class="filter__option">
+            <input type="checkbox" name="category" value="<%= category.id %>"
+                   <%= query.category.includes(category.id) ? 'checked' : '' %>>
+            <span class="filter__option-name"><%= category.name %></span>
+            <span class="filter__option-count"><%= category.book_count %></span>
+          </label>
         <% }); %>
-      </select>
-    </div>
+      </div>
+    </fieldset>
 
-    <div class="filter">
-      <label class="filter__label" for="f-author"><%= t('search.filter.author') %></label>
-      <select id="f-author" name="author" multiple size="4">
+    <fieldset class="filter">
+      <legend class="filter__label"><%= t('search.filter.author') %></legend>
+      <div class="filter__options">
         <% authors.forEach(function (author) { %>
-          <option value="<%= author.id %>"
-                  <%= query.author.includes(author.id) ? 'selected' : '' %>>
-            <%= author.name %> (<%= author.book_count %>)
-          </option>
+          <label class="filter__option">
+            <input type="checkbox" name="author" value="<%= author.id %>"
+                   <%= query.author.includes(author.id) ? 'checked' : '' %>>
+            <span class="filter__option-name"><%= author.name %></span>
+            <span class="filter__option-count"><%= author.book_count %></span>
+          </label>
         <% }); %>
-      </select>
-    </div>
+      </div>
+    </fieldset>
 
     <% if (years.length > 0) { %>
-      <div class="filter filter--narrow">
-        <label class="filter__label" for="f-year"><%= t('search.filter.year') %></label>
-        <select id="f-year" name="year" multiple size="4">
+      <fieldset class="filter filter--narrow">
+        <legend class="filter__label"><%= t('search.filter.year') %></legend>
+        <div class="filter__options">
           <% years.forEach(function (year) { %>
-            <option value="<%= year %>" <%= query.year.includes(year) ? 'selected' : '' %>>
-              <%= year %>
+            <label class="filter__option">
+              <input type="checkbox" name="year" value="<%= year %>"
+                     <%= query.year.includes(year) ? 'checked' : '' %>>
+              <span class="filter__option-name"><%= year %></span>
+            </label>
+          <% }); %>
+        </div>
+      </fieldset>
+    <% } %>
+
+    <%# Language and sort are genuinely one-of-many, so they stay as menus. -%>
+    <div class="filter filter--stack">
+      <% if (languages.length > 1) { %>
+        <div>
+          <label class="filter__label" for="f-language"><%= t('search.filter.language') %></label>
+          <select id="f-language" name="language">
+            <option value=""><%= t('search.filter.allLanguages') %></option>
+            <% languages.forEach(function (code) { %>
+              <option value="<%= code %>" <%= query.language === code ? 'selected' : '' %>>
+                <%= code %>
+              </option>
+            <% }); %>
+          </select>
+        </div>
+      <% } %>
+
+      <div>
+        <label class="filter__label" for="f-sort"><%= t('search.sort.label') %></label>
+        <select id="f-sort" name="sort">
+          <% ['title', 'title_desc', 'author', 'newest', 'year_desc', 'year'].forEach(function (option) { %>
+            <option value="<%= option %>" <%= (query.sort || 'title') === option ? 'selected' : '' %>>
+              <%= t('search.sort.' + option) %>
             </option>
           <% }); %>
         </select>
       </div>
-    <% } %>
-
-    <% if (languages.length > 1) { %>
-      <div class="filter filter--narrow">
-        <label class="filter__label" for="f-language"><%= t('search.filter.language') %></label>
-        <select id="f-language" name="language">
-          <option value=""><%= t('search.filter.allLanguages') %></option>
-          <% languages.forEach(function (code) { %>
-            <option value="<%= code %>" <%= query.language === code ? 'selected' : '' %>>
-              <%= code %>
-            </option>
-          <% }); %>
-        </select>
-      </div>
-    <% } %>
-
-    <%# Sort belongs here rather than in a form of its own: narrowing a list
-        and ordering it are the same task, and two separate Apply buttons on
-        one screen is a puzzle, not a feature. -%>
-    <div class="filter filter--narrow">
-      <label class="filter__label" for="f-sort"><%= t('search.sort.label') %></label>
-      <select id="f-sort" name="sort">
-        <% ['title', 'title_desc', 'author', 'newest', 'year_desc', 'year'].forEach(function (option) { %>
-          <option value="<%= option %>" <%= (query.sort || 'title') === option ? 'selected' : '' %>>
-            <%= t('search.sort.' + option) %>
-          </option>
-        <% }); %>
-      </select>
     </div>
   </div>
 
@@ -98,8 +106,6 @@
              <%= query.available ? 'checked' : '' %>>
       <label for="f-available"><%= t('search.filter.availableOnly') %></label>
     </div>
-
-    <p class="filter__hint"><%= t('search.filter.multiHint') %></p>
 
     <div class="button-row">
       <button class="button button--small" type="submit">

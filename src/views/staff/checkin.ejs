@@ -4,13 +4,13 @@
 -%>
 <div class="container stack-lg">
 
-  <div class="section-head">
-    <h1 class="mt-0"><%= t('staff.loans.checkin') %></h1>
-    <div class="button-row">
-      <a class="button button--secondary" href="/staff/loans/checkout"><%= t('staff.loans.checkout') %></a>
-      <a class="button button--quiet" href="/staff/loans"><%= t('staff.loans.title') %></a>
-    </div>
-  </div>
+  <%- include('../partials/page-header', {
+        t: t,
+        trail: [{ href: '/staff/loans', label: t('staff.loans.title') }],
+        heading: t('staff.loans.checkin'),
+        actions: `<a class="button button--secondary button--small" href="/staff/loans/checkout">`
+                 + `${t('staff.loans.checkout')}</a>`,
+      }) %>
 
   <section class="card">
     <form method="post" action="/staff/loans/checkin">

@@ -1,9 +1,11 @@
 <div class="container stack-lg">
 
-  <div class="section-head">
-    <h1 class="mt-0"><%= borrower.display_name %></h1>
-    <a class="button button--quiet" href="/staff/borrowers"><%= t('staff.borrowers.title') %></a>
-  </div>
+  <%- include('../partials/page-header', {
+        t: t,
+        trail: [{ href: '/staff/borrowers', label: t('staff.borrowers.title') }],
+        heading: borrower.display_name,
+        meta: borrower.school_class || null,
+      }) %>
 
   <% if (borrower.is_anonymized) { %>
     <div class="flash flash--info" role="status">

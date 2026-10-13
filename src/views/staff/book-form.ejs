@@ -5,20 +5,24 @@
 -%>
 <div class="container stack-lg">
 
-  <div class="section-head">
-    <h1 class="mt-0"><%= book ? t('staff.books.edit') : t('staff.books.new') %></h1>
-    <div class="button-row">
-      <a class="button button--quiet" href="/staff/books"><%= t('staff.books.title') %></a>
-      <% if (book) { %>
-        <a class="button button--secondary" href="/staff/books/<%= book.id %>/copies">
-          <%= t('staff.books.manageCopies') %> (<%= book.copies_total %>)
-        </a>
-        <% if (!book.archived_at) { %>
-          <a class="button button--quiet" href="/books/<%= book.id %>"><%= t('staff.books.viewPublic') %></a>
-        <% } %>
-      <% } %>
-    </div>
-  </div>
+  <%
+    // The record's own name is the heading. "Edit title" was generic enough
+    // that a glance did not say which book you had open.
+    const headerActions = book
+      ? `<a class="button button--secondary button--small" href="/staff/books/${book.id}/copies">`
+        + `${t('staff.books.manageCopies')} (${book.copies_total})</a>`
+        + (book.archived_at ? '' :
+            `<a class="button button--quiet button--small" href="/books/${book.id}">`
+            + `${t('staff.books.viewPublic')}</a>`)
+      : '';
+  %>
+  <%- include('../partials/page-header', {
+        t: t,
+        trail: [{ href: '/staff/books', label: t('staff.books.title') }],
+        kicker: book ? t('staff.books.edit') : null,
+        heading: book ? book.title : t('staff.books.new'),
+        actions: headerActions,
+      }) %>
 
   <% if (book && book.archived_at) { %>
     <div class="flash flash--warning" role="status">

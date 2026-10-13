@@ -8,21 +8,22 @@
 -%>
 <div class="container stack-lg">
 
-  <div class="section-head">
-    <div>
-      <h1 class="mt-0"><%= book.title %></h1>
-      <p class="muted small">
-        <%= t('staff.copies.availability') %>:
-        <%= book.copies_available %>/<%= book.copies_total %>
-      </p>
-    </div>
-    <div class="button-row">
-      <a class="button button--quiet" href="/staff/books/<%= book.id %>"><%= t('staff.books.edit') %></a>
-      <% if (!book.archived_at) { %>
-        <a class="button button--quiet" href="/books/<%= book.id %>"><%= t('staff.books.viewPublic') %></a>
-      <% } %>
-    </div>
-  </div>
+  <%- include('../partials/page-header', {
+        t: t,
+        trail: [
+          { href: '/staff/books', label: t('staff.books.title') },
+          { href: '/staff/books/' + book.id, label: book.title },
+        ],
+        // No kicker: the last breadcrumb step already says which page this
+        // is, and repeating it directly underneath is noise.
+        crumb: t('staff.books.manageCopies'),
+        heading: book.title,
+        meta: t('staff.copies.availability') + ': '
+              + book.copies_available + '/' + book.copies_total,
+        actions: book.archived_at ? '' :
+          `<a class="button button--quiet button--small" href="/books/${book.id}">`
+          + `${t('staff.books.viewPublic')}</a>`,
+      }) %>
 
   <% if (copies.length === 0) { %>
     <div class="state state--empty">

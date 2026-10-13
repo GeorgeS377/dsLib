@@ -1,0 +1,55 @@
+<%#
+  The top of a staff page: where you are, what this record is, and what you
+  can do with it.
+
+  Three problems this solves, all reported as the staff area "not feeling
+  smooth":
+
+    * the heading named the action ("Edit title") rather than the record, so
+      a glance did not tell you which book you had open;
+    * going back was a plain link sitting in a row with forward actions, all
+      styled alike, so leaving looked the same as going deeper;
+    * a deep page like a title's copies had no trail at all.
+
+  Expects:
+    trail    [{ href, label }] ancestors, nearest last. Optional.
+    heading  the record's own name — what this page is about.
+    crumb    what the final breadcrumb step says. Defaults to `heading`; pass
+             it when the heading repeats an ancestor, as on a title's copies
+             page where the parent crumb is already the title.
+    kicker   a short label above it, e.g. "Edit title". Optional.
+    meta     a line under it, e.g. availability. Optional.
+    actions  rendered to the right. Optional.
+-%>
+<div class="page-header">
+  <% if (typeof trail !== 'undefined' && trail && trail.length > 0) { %>
+    <nav class="breadcrumb" aria-label="<%= t('nav.breadcrumb') %>">
+      <ol>
+        <% trail.forEach(function (step) { %>
+          <li>
+            <a href="<%= step.href %>"><%= step.label %></a>
+          </li>
+        <% }); %>
+        <li aria-current="page">
+          <%= typeof crumb !== 'undefined' && crumb ? crumb : heading %>
+        </li>
+      </ol>
+    </nav>
+  <% } %>
+
+  <div class="page-header__main">
+    <div class="page-header__text">
+      <% if (typeof kicker !== 'undefined' && kicker) { %>
+        <p class="page-header__kicker"><%= kicker %></p>
+      <% } %>
+      <h1 class="page-header__title"><%= heading %></h1>
+      <% if (typeof meta !== 'undefined' && meta) { %>
+        <p class="page-header__meta"><%= meta %></p>
+      <% } %>
+    </div>
+
+    <% if (typeof actions !== 'undefined' && actions) { %>
+      <div class="page-header__actions"><%- actions %></div>
+    <% } %>
+  </div>
+</div>

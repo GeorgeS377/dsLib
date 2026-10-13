@@ -42,6 +42,7 @@
       <% } %>
 
       <div class="site-header__end">
+        <a class="site-header__staff" href="/staff"><%= t('nav.staff') %></a>
         <%- include('../partials/theme-toggle', { theme: theme, themeUrl: themeUrl, t: t }) %>
         <div class="lang-switch" role="group" aria-label="<%= t('lang.label') %>">
           <% supportedLangs.forEach(function (code) { %>
@@ -66,9 +67,7 @@
         <a href="/authors"><%= t('nav.authors') %></a>
       </nav>
 
-      <%# Staff sign-in sits on the right, apart from the browse links: it is
-          for one or two people, not for the students the rest serves. -%>
-      <p class="site-footer__staff"><a href="/staff"><%= t('nav.staff') %></a></p>
+      <p class="site-footer__name"><%= libraryName %></p>
     </div>
   </footer>
 

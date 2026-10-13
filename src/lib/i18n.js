@@ -28,6 +28,7 @@ const el = {
   'footer.catalogue': 'Κατάλογος σχολικής βιβλιοθήκης',
   'nav.catalogue': 'Κατάλογος',
   'nav.browseBy': 'Περιήγηση ανά',
+  'nav.breadcrumb': 'Διαδρομή',
 
   // --- Shared controls ---
   'common.search': 'Αναζήτηση',
@@ -499,6 +500,7 @@ const en = {
   'footer.catalogue': 'School library catalogue',
   'nav.catalogue': 'Catalogue',
   'nav.browseBy': 'Browse by',
+  'nav.breadcrumb': 'Breadcrumb',
 
   // --- Shared controls ---
   'common.search': 'Search',
