@@ -24,6 +24,12 @@ import {
   translatorFor,
 } from './lib/i18n.js';
 import { SqliteSessionStore } from './lib/session-store.js';
+import {
+  UI_COOKIE,
+  resolveFlavour,
+  resolveTemplate,
+  stylesheetFor,
+} from './lib/ui-flavour.js';
 import healthRoutes from './routes/health.js';
 import publicRoutes from './routes/public/index.js';
 import staffRoutes from './routes/staff/index.js';
@@ -196,9 +202,10 @@ export async function buildApp({ config = defaultConfig, logger, db, onRoute } =
   });
 
   // --- Templates ----------------------------------------------------------
+  const viewsRoot = path.join(config.projectRoot, 'src', 'views');
   await app.register(fastifyView, {
     engine: { ejs },
-    root: path.join(config.projectRoot, 'src', 'views'),
+    root: viewsRoot,
     viewExt: 'ejs',
     // EJS caches compiled templates; disable in development so edits show up.
     production: config.isProduction,
@@ -239,7 +246,22 @@ export async function buildApp({ config = defaultConfig, logger, db, onRoute } =
   // One hook sets the language for every request, so no route can forget it.
   app.decorateRequest('lang', null);
   app.decorateRequest('theme', 'light');
+  app.decorateRequest('uiFlavour', 'classic');
   app.addHook('onRequest', async (request, reply) => {
+    // Which of the two interfaces this visitor sees. Settled here rather than
+    // in each route, so no route can forget it or disagree with another.
+    const ui = resolveFlavour(request);
+    request.uiFlavour = ui.flavour;
+    if (ui.fromQuery) {
+      reply.setCookie(UI_COOKIE, ui.flavour, {
+        path: '/',
+        httpOnly: true,
+        sameSite: 'lax',
+        secure: config.isProduction,
+        maxAge: ONE_YEAR_SECONDS,
+      });
+    }
+
     // Theme: light unless the visitor chose otherwise. The OS preference is
     // deliberately not consulted — a school library is used in daylight on
     // shared machines, and inheriting a laptop's dark setting surprised the
@@ -284,6 +306,8 @@ export async function buildApp({ config = defaultConfig, logger, db, onRoute } =
       hasT: hasTranslation,
       lang: request.lang,
       theme: request.theme,
+      uiFlavour: request.uiFlavour,
+      stylesheet: stylesheetFor(request.uiFlavour),
       supportedLangs: SUPPORTED_LANGS,
       libraryName: config.libraryName,
       currentPath: request.url,
@@ -300,8 +324,17 @@ export async function buildApp({ config = defaultConfig, logger, db, onRoute } =
    * this rather than reply.view so that a new page cannot miss `t` or `lang`.
    */
   app.decorateReply('render', function render(template, data = {}, layout = 'layouts/public.ejs') {
-    return this.view(template, { ...this.locals, ...data }, { layout });
+    const flavour = this.request.uiFlavour;
+    return this.view(
+      resolveTemplate(flavour, template, { viewsRoot }),
+      { ...this.locals, ...data },
+      { layout: resolveTemplate(flavour, layout, { viewsRoot }) },
+    );
   });
+
+  // Routes resolve their own template names through the same rule, so a page
+  // rendered outside the decorators still lands in the right interface.
+  app.decorate('viewsRoot', viewsRoot);
 
   // --- Routes -------------------------------------------------------------
   await app.register(healthRoutes);

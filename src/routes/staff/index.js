@@ -11,6 +11,7 @@
 //   /staff/users/*          additionally requires the admin role
 import { requireAdmin, requireStaff } from '../../lib/auth.js';
 import { takeFlash } from '../../lib/flash.js';
+import { resolveTemplate } from '../../lib/ui-flavour.js';
 import authRoutes, { logoutRoutes } from './auth.js';
 import staffBookRoutes from './books.js';
 import staffBorrowerRoutes from './borrowers.js';
@@ -47,7 +48,14 @@ export default async function staffRoutes(app) {
 
     // Render inside the staff layout rather than the public one.
     protectedScope.decorateReply('renderStaff', function renderStaff(template, data = {}) {
-      return this.view(template, { ...this.locals, ...data }, { layout: 'layouts/staff.ejs' });
+      const flavour = this.request.uiFlavour;
+      const resolve = (name) =>
+        resolveTemplate(flavour, name, { viewsRoot: protectedScope.viewsRoot });
+      return this.view(
+        resolve(template),
+        { ...this.locals, ...data },
+        { layout: resolve('layouts/staff.ejs') },
+      );
     });
 
     protectedScope.decorate('requireAdmin', requireAdmin);

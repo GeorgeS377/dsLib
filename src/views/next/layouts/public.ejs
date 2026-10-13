@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<%#
+  Public shell for the second interface.
+
+  data-theme is written server-side from a cookie rather than by script on
+  load, for the same reason as the first interface: setting it in JavaScript
+  repaints after first paint and flashes the light palette at someone who
+  chose dark.
+-%>
+<html lang="<%= lang %>"<% if (theme === 'dark') { %> data-theme="dark"<% } %>>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title><%= typeof title !== 'undefined' && title ? title + ' · ' + libraryName : libraryName %></title>
+  <meta name="description" content="<%= typeof metaDescription !== 'undefined' ? metaDescription : t('footer.catalogue') %>">
+  <link rel="stylesheet" href="<%= stylesheet %>">
+  <link rel="icon" href="/assets/icon.svg" type="image/svg+xml">
+</head>
+<body>
+  <a class="skip-link" href="#main"><%= t('nav.skip') %></a>
+
+  <main id="main">
+    <%- body %>
+  </main>
+</body>
+</html>
