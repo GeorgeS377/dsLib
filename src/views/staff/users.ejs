@@ -11,7 +11,7 @@
       <thead>
         <tr>
           <th scope="col"><%= t('staff.account.username') %></th>
-          <th scope="col"><%= t('staff.field.title') %></th>
+          <th scope="col"><%= t('staff.field.personName') %></th>
           <th scope="col"><%= t('staff.account.role') %></th>
           <th scope="col"><%= t('staff.field.status') %></th>
           <th scope="col"><%= t('staff.account.lastLogin') %></th>
@@ -92,7 +92,7 @@
       </div>
 
       <div class="field">
-        <label class="field__label" for="display_name"><%= t('staff.field.title') %></label>
+        <label class="field__label" for="display_name"><%= t('staff.field.personName') %></label>
         <input type="text" id="display_name" name="display_name" value="<%= values.display_name %>"
                required maxlength="200">
       </div>

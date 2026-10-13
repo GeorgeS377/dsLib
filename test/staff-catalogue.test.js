@@ -463,7 +463,7 @@ describe('copy management (acceptance 5)', () => {
 
     const confirmPage = await session.get(`/staff/copies/${copy.id}/delete`);
     assert.equal(confirmPage.statusCode, 200);
-    assert.ok(confirmPage.body.includes('αποσυρμένο'), 'withdrawal was not offered');
+    assert.ok(confirmPage.body.includes('Απόσυρση'), 'withdrawal was not offered');
 
     const response = await session.post(
       `/staff/copies/${copy.id}/delete`,

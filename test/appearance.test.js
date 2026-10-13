@@ -426,6 +426,6 @@ describe('lending without a barcode', () => {
       { tokenFrom: `/staff/loans/checkout?copy=${copy.id}` },
     );
     assert.equal(response.statusCode, 422);
-    assert.ok(response.body.includes('παρελθόν'), 'the reason was not shown');
+    assert.ok(response.body.includes('έχει ήδη περάσει'), 'the reason was not shown');
   });
 });

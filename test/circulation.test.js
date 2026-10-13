@@ -235,7 +235,7 @@ describe('due dates', () => {
       { tokenFrom: '/staff/loans/checkout?barcode=T-0004' },
     );
     assert.equal(response.statusCode, 422);
-    assert.ok(response.body.includes('παρελθόν'));
+    assert.ok(response.body.includes('έχει ήδη περάσει'));
   });
 
   it('flags an overdue loan on the dashboard and the loan list', async () => {
@@ -671,7 +671,7 @@ describe('changing your own password', () => {
       { tokenFrom: '/staff/account' },
     );
     assert.equal(response.statusCode, 422);
-    assert.ok(response.body.includes('τρέχων κωδικός'));
+    assert.ok(response.body.includes('παλιός κωδικός'));
   });
 
   it('requires the confirmation to match', async () => {

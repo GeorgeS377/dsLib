@@ -10,7 +10,7 @@
       <dt><%= t('staff.field.shelf') %></dt>
       <dd><%= copy.shelf_location || '—' %></dd>
       <dt><%= t('staff.field.status') %></dt>
-      <dd><%= t('status.' + copy.status) %></dd>
+      <dd><%= t('condition.' + copy.status) %></dd>
     </dl>
 
     <% if (!deletability.deletable) { %>

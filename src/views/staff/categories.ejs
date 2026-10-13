@@ -12,7 +12,7 @@
       <table>
         <thead>
           <tr>
-            <th scope="col"><%= t('staff.field.title') %></th>
+            <th scope="col"><%= t('staff.field.name') %></th>
             <th scope="col"><%= t('staff.categories.slug') %></th>
             <th scope="col" class="num"><%= t('staff.authors.bookCount') %></th>
             <th scope="col"></th>
@@ -60,7 +60,7 @@
       <input type="hidden" name="_csrf" value="<%= csrfToken %>">
 
       <div class="field">
-        <label class="field__label" for="cat-name"><%= t('staff.field.title') %></label>
+        <label class="field__label" for="cat-name"><%= t('staff.field.name') %></label>
         <input type="text" id="cat-name" name="name" value="<%= values.name %>"
                required maxlength="200" <%- errors.name ? 'aria-invalid="true"' : '' %>>
       </div>

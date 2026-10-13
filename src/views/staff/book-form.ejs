@@ -172,25 +172,32 @@
         </datalist>
       </div>
 
-      <div class="field">
-        <label class="field__label" for="field-categories"><%= t('staff.field.categories') %>
+      <%# Checkboxes, not a multiple-select. A <select multiple> needs
+          Ctrl+click to pick a second entry, which almost nobody discovers,
+          and it draws the chosen rows in the same grey it uses for disabled
+          ones. The public filters were changed for the same reason. -%>
+      <fieldset class="fieldset" id="field-categories">
+        <legend class="fieldset__legend"><%= t('staff.field.categories') %>
           <span class="field__optional"><%= t('common.optional') %></span>
-        </label>
-        <span class="field__hint"><%= t('staff.field.categoriesHint') %></span>
-        <select id="field-categories" name="categories" multiple size="6">
-          <% categories.forEach(function (category) { %>
-            <option value="<%= category.id %>"
-                    <%= values.categories.includes(category.id) ? 'selected' : '' %>>
-              <%= category.name %>
-            </option>
-          <% }); %>
-        </select>
+        </legend>
         <% if (categories.length === 0) { %>
-          <span class="field__hint">
+          <p class="field__hint">
             <a href="/staff/categories"><%= t('staff.categories.add') %></a>
-          </span>
+          </p>
+        <% } else { %>
+          <p class="field__hint"><%= t('staff.field.categoriesHint') %></p>
+          <ul class="filter__options">
+            <% categories.forEach(function (category) { %>
+              <li class="filter__option">
+                <input type="checkbox" id="cat-<%= category.id %>" name="categories"
+                       value="<%= category.id %>"
+                       <%= values.categories.includes(category.id) ? 'checked' : '' %>>
+                <label for="cat-<%= category.id %>"><%= category.name %></label>
+              </li>
+            <% }); %>
+          </ul>
         <% } %>
-      </div>
+      </fieldset>
 
       <div class="field">
         <label class="field__label" for="field-description"><%= t('staff.field.description') %>

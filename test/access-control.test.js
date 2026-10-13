@@ -9,6 +9,7 @@
 import assert from 'node:assert/strict';
 import { after, before, describe, it } from 'node:test';
 import { buildApp } from '../src/app.js';
+import { translate } from '../src/lib/i18n.js';
 import { cleanupDir, makeTestDb, seedTestCatalogue, testConfig } from './helpers.js';
 import { TEST_PASSWORD, cookieHeader, csrfFrom, login, makeStaffUser } from './staff-helpers.js';
 
@@ -418,7 +419,9 @@ describe('login behaviour', () => {
     assert.equal(wrongPassword.statusCode, 401);
 
     // Identical wording, so the response cannot be used to enumerate accounts.
-    const message = 'Λανθασμένο όνομα χρήστη ή κωδικός πρόσβασης.';
+    // Read from the dictionary: the test is about the two being the same, not
+    // about any particular sentence, and it used to break on a reword.
+    const message = translate('el', 'login.error.invalid');
     assert.ok(unknownUser.body.includes(message));
     assert.ok(wrongPassword.body.includes(message));
     assert.ok(!unknownUser.body.includes('δεν βρέθηκε'));

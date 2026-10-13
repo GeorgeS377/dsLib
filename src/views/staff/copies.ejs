@@ -53,7 +53,7 @@
               <th scope="col"><%= t('staff.field.barcode') %></th>
               <th scope="col"><%= t('staff.field.shelf') %></th>
               <th scope="col"><%= t('staff.field.status') %></th>
-              <th scope="col"><%= t('staff.copies.availability') %></th>
+              <th scope="col"><%= t('staff.copies.whereIsIt') %></th>
               <th scope="col"></th>
             </tr>
           </thead>
@@ -85,7 +85,7 @@
                   <select id="status-<%= copy.id %>" name="status_<%= copy.id %>">
                     <% statuses.forEach(function (status) { %>
                       <option value="<%= status %>" <%= copy.status === status ? 'selected' : '' %>>
-                        <%= t('status.' + status) %>
+                        <%= t('condition.' + status) %>
                       </option>
                     <% }); %>
                   </select>
@@ -160,7 +160,7 @@
           <select id="new-status" name="status">
             <% statuses.forEach(function (status) { %>
               <option value="<%= status %>" <%= values.status === status ? 'selected' : '' %>>
-                <%= t('status.' + status) %>
+                <%= t('condition.' + status) %>
               </option>
             <% }); %>
           </select>
