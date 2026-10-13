@@ -299,17 +299,6 @@ kbd,
   border-color: var(--color-border-strong);
 }
 
-.staff-identity .theme-toggle {
-  border-color: currentcolor;
-  color: inherit;
-  opacity: 0.7;
-}
-
-.staff-identity .theme-toggle:hover {
-  opacity: 1;
-  background: rgb(255 255 255 / 12%);
-}
-
 /* The header's right-hand cluster: theme, then language. */
 .site-header__end {
   display: flex;
@@ -541,6 +530,9 @@ kbd,
 /* Staff sign-in sits with the other account-level controls at the top right,
    where someone who works here looks for it — not buried in the footer. */
 .site-header__staff {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
   font-size: 0.875rem;
   color: var(--color-text-muted);
   text-decoration: none;
@@ -730,6 +722,32 @@ kbd,
   background: var(--color-danger);
   border-color: var(--color-danger);
   color: var(--color-surface);
+}
+
+/* Sign out is destructive in the sense that matters at a shared desk: it
+   ends the session. Solid red so it is unmistakable, and legible against the
+   dark staff bar. */
+.button--danger-solid {
+  background: var(--color-danger);
+  border-color: var(--color-danger);
+  color: #fff;
+}
+
+.button--danger-solid:hover {
+  background: #8c1d14;
+  border-color: #8c1d14;
+  color: #fff;
+}
+
+:root[data-theme="dark"] .button--danger-solid {
+  background: #a8352b;
+  border-color: #a8352b;
+  color: #fff;
+}
+
+:root[data-theme="dark"] .button--danger-solid:hover {
+  background: #c2443a;
+  border-color: #c2443a;
 }
 
 .button--small {
@@ -1356,34 +1374,34 @@ tbody tr:hover {
 
 /* ------------------------------------------------------------ 13. Staff shell */
 
-.staff-header {
-  background: var(--color-surface);
-  border-bottom: 1px solid var(--color-border);
-}
-
-/* Band 1: who you are, and how to leave. Dark so the staff area is instantly
-   distinguishable from the public site at a glance. */
-.staff-identity {
+/* One bar, carrying everything: where you are, where you can go, who you are
+   and the way out. It was two stacked bands, which read as two separate top
+   bars. Dark, so the staff area is unmistakable at a glance. */
+.staff-bar {
   background: var(--color-text);
   color: var(--color-bg);
+  border-bottom: 3px solid var(--color-accent);
 }
 
-:root[data-theme="dark"] .staff-identity {
+:root[data-theme="dark"] .staff-bar {
   background: #000;
   color: var(--color-text);
 }
 
-.staff-identity__inner {
+/* The bar spans the window rather than the 72rem content column. Capped to
+   the column it had less room than the screen offered and wrapped into what
+   looked like two bars again on a wide display. */
+.staff-bar__inner {
+  max-width: none;
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  justify-content: space-between;
-  gap: var(--space-2) var(--space-4);
+  gap: var(--space-1) var(--space-3);
   padding-block: var(--space-2);
-  min-height: 2.75rem;
+  min-height: 3rem;
 }
 
-.staff-identity a {
+.staff-bar a {
   color: inherit;
 }
 
@@ -1394,100 +1412,127 @@ tbody tr:hover {
   font-weight: 650;
   font-size: 0.9375rem;
   text-decoration: none;
+  white-space: nowrap;
 }
 
-/* Pinned right: the user and the way out, where people reach for them. */
-.staff-identity__right {
-  display: flex;
-  align-items: center;
-  gap: var(--space-3);
-  font-size: 0.875rem;
-  margin-inline-start: auto;
-}
-
-.staff-identity__user {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-  text-decoration: none;
-  opacity: 0.85;
-}
-
-.staff-identity__user:hover {
-  opacity: 1;
-  text-decoration: underline;
-}
-
-.staff-identity__role {
-  font-size: 0.75rem;
-  padding: 0.1rem 0.4rem;
-  border: 1px solid currentcolor;
-  border-radius: var(--radius-sm);
-  opacity: 0.7;
-}
-
-.staff-identity .lang-switch__link {
-  border-color: currentcolor;
-  opacity: 0.7;
-}
-
-.staff-identity .lang-switch__link:hover {
-  opacity: 1;
-  background: rgb(255 255 255 / 12%);
-  color: inherit;
-}
-
-/* Band 2: the sections, as tabs. */
+/* Tabs, inline in the same bar. */
 .staff-tabs {
-  background: var(--color-surface);
-  border-bottom: 1px solid var(--color-border);
-  overflow-x: auto;
-}
-
-.staff-tabs__inner {
   display: flex;
-  gap: var(--space-1);
-  align-items: stretch;
+  overflow-x: auto;
 }
 
 .staff-tabs__tab {
   display: flex;
   align-items: center;
-  padding: var(--space-3) var(--space-4);
-  color: var(--color-text-muted);
+  padding: var(--space-2) 0.6rem;
   text-decoration: none;
-  font-weight: 500;
   font-size: 0.9375rem;
   white-space: nowrap;
-  /* A transparent border of the same width as the active one, so the label
-     does not shift by a pixel when a tab becomes current. */
-  border-bottom: 2px solid transparent;
+  opacity: 0.75;
+  border-radius: var(--radius-sm);
 }
 
 .staff-tabs__tab:hover {
-  color: var(--color-text);
-  background: var(--color-surface-sunken);
+  opacity: 1;
+  background: rgb(255 255 255 / 12%);
 }
 
 .staff-tabs__tab[aria-current="page"] {
-  color: var(--color-accent);
-  border-bottom-color: var(--color-accent);
+  opacity: 1;
   font-weight: 650;
+  background: rgb(255 255 255 / 14%);
 }
 
-/* Settings sits apart from the day-to-day sections. */
-.staff-tabs__tab--end {
+.staff-bar__end {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
   margin-inline-start: auto;
+  font-size: 0.875rem;
 }
 
-@media (max-width: 48rem) {
-  .staff-tabs__tab--end {
-    margin-inline-start: 0;
+/* Below a comfortable desktop width the bar would wrap into what looks like
+   two bars again — the very thing this layout exists to avoid. The labels
+   that can be inferred from an icon or from context drop out first. */
+@media (max-width: 68rem) {
+  .staff-bar__public span,
+  .staff-bar__user-role {
+    display: none;
   }
 }
 
-/* A <ul>, so `list-style: none` is required — without it the browser draws a
-   bullet beside every tile. */
+/* Always available, signed in or not — leaving should not mean hunting in
+   the footer. */
+.staff-bar__public {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-sm);
+  text-decoration: none;
+  opacity: 0.75;
+  white-space: nowrap;
+}
+
+.staff-bar__public:hover {
+  opacity: 1;
+  background: rgb(255 255 255 / 12%);
+}
+
+/* Who you are, as a label rather than a control. It was a bordered pill,
+   which made it look like a button that did something. */
+.staff-bar__user {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-2);
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-sm);
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.staff-bar__user:hover {
+  background: rgb(255 255 255 / 12%);
+}
+
+.staff-bar__user-name {
+  opacity: 0.9;
+}
+
+.staff-bar__user-role {
+  font-size: 0.75rem;
+  opacity: 0.55;
+}
+
+.staff-bar .lang-switch__link,
+.staff-bar .theme-toggle {
+  border-color: currentcolor;
+  color: inherit;
+  opacity: 0.7;
+}
+
+.staff-bar .lang-switch__link:hover,
+.staff-bar .theme-toggle:hover {
+  opacity: 1;
+  background: rgb(255 255 255 / 12%);
+  color: inherit;
+}
+
+@media (max-width: 62rem) {
+  /* The tabs take their own line rather than being squeezed, and the bar
+     still reads as one thing. */
+  .staff-tabs {
+    order: 3;
+    flex-basis: 100%;
+    margin-inline: calc(var(--space-2) * -1);
+  }
+
+  .staff-bar__end {
+    order: 2;
+  }
+}
+
+
 .stat-grid {
   display: grid;
   gap: var(--space-3);
@@ -1627,7 +1672,7 @@ tbody tr:hover {
 @media print {
   .site-header,
   .site-footer,
-  .staff-header,
+  .staff-bar,
   .pagination,
   .filters {
     display: none;

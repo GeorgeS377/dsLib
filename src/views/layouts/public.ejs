@@ -42,7 +42,10 @@
       <% } %>
 
       <div class="site-header__end">
-        <a class="site-header__staff" href="/staff"><%= t('nav.staff') %></a>
+        <a class="site-header__staff" href="/staff">
+          <%- include('../partials/icon', { name: 'login', size: 16 }) %>
+          <span><%= t('nav.staff') %></span>
+        </a>
         <%- include('../partials/theme-toggle', { theme: theme, themeUrl: themeUrl, t: t }) %>
         <div class="lang-switch" role="group" aria-label="<%= t('lang.label') %>">
           <% supportedLangs.forEach(function (code) { %>

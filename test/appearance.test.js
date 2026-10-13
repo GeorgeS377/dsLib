@@ -171,18 +171,61 @@ describe('header and footer layout', () => {
     );
   });
 
-  it('puts the staff sign-out control in the top band', async () => {
+  it('gives the staff area one top bar, not two stacked ones', async () => {
     const session = await login(app);
     const body = (await session.get('/staff')).body;
-    const identity = body.slice(
-      body.indexOf('staff-identity__inner'),
-      body.indexOf('staff-tabs'),
-    );
-    assert.ok(identity.includes('/staff/logout'), 'sign out is not in the identity band');
+
+    const bars = body.match(/<header\b/g) ?? [];
+    assert.equal(bars.length, 1, `the staff page renders ${bars.length} bars`);
+
+    const bar = body.slice(body.indexOf('<header'), body.indexOf('</header>'));
+    // Everything lives in that one bar, in reading order.
+    assert.ok(bar.includes('staff-brand'), 'no brand');
+    assert.ok(bar.includes('staff-tabs'), 'the tabs are outside the bar');
+    assert.ok(bar.includes('/staff/logout'), 'sign out is outside the bar');
     assert.ok(
-      identity.indexOf('staff-brand') < identity.indexOf('staff-identity__right'),
-      'the brand is not first in the identity band',
+      bar.indexOf('staff-brand') < bar.indexOf('staff-tabs'),
+      'the tabs come before the brand',
     );
+    assert.ok(
+      bar.indexOf('staff-tabs') < bar.indexOf('staff-bar__end'),
+      'the user controls come before the tabs',
+    );
+  });
+
+  it('marks sign out as destructive', async () => {
+    const session = await login(app);
+    const body = (await session.get('/staff')).body;
+    const form = body.slice(body.indexOf('action="/staff/logout"'));
+    assert.match(
+      form.slice(0, 400),
+      /button--danger-solid/,
+      'sign out is not styled as a destructive action',
+    );
+  });
+
+  it('offers a way back to the public catalogue, signed in or not', async () => {
+    // Including on the sign-in page, which previously had no bar at all —
+    // arriving there from the public site left only a footer link.
+    const anonymous = await get('/staff/login');
+    const anonBar = anonymous.body.slice(0, anonymous.body.indexOf('</header>'));
+    assert.ok(anonBar.includes('staff-bar__public'), 'the sign-in page has no way back');
+    assert.ok(!anonBar.includes('/staff/logout'), 'the sign-in page offers sign out');
+    assert.ok(!anonBar.includes('staff-tabs'), 'the sign-in page shows the staff tabs');
+
+    const session = await login(app);
+    const signedIn = await session.get('/staff');
+    const bar = signedIn.body.slice(0, signedIn.body.indexOf('</header>'));
+    assert.ok(bar.includes('staff-bar__public'), 'no way back when signed in');
+  });
+
+  it('gives the public staff link an icon', async () => {
+    const body = (await get('/books')).body;
+    const link = body.slice(
+      body.indexOf('site-header__staff'),
+      body.indexOf('</a>', body.indexOf('site-header__staff')),
+    );
+    assert.match(link, /<svg class="icon/, 'the staff sign-in link has no icon');
   });
 });
 

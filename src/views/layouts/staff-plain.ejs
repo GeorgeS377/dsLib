@@ -1,7 +1,10 @@
 <%#
-  A bare layout for the login page: no navigation, no session controls, no
-  links into the staff area. Nothing here hints at what the staff area
-  contains, and there is no logged-in user to render.
+  The sign-in page.
+
+  It carries the same top bar as the rest of the staff area, minus the parts
+  that need an account: no tabs, no user, no sign-out. Previously this page
+  had no bar at all, so arriving from the public site left no obvious way
+  back — only a link in the footer.
 -%>
 <!DOCTYPE html>
 <html lang="<%= lang %>"<% if (theme === 'dark') { %> data-theme="dark"<% } %>>
@@ -14,15 +17,23 @@
   <link rel="icon" href="/assets/icon.svg" type="image/svg+xml">
 </head>
 <body>
+  <a class="skip-link" href="#main"><%= t('nav.skip') %></a>
+
+  <%- include('../partials/staff-topbar', {
+        t: t, lang: lang, supportedLangs: supportedLangs, langUrl: langUrl,
+        theme: theme, themeUrl: themeUrl, currentPath: currentPath,
+        signedIn: false }) %>
+
   <main id="main" class="site-main">
     <%- body %>
   </main>
 
   <footer class="site-footer">
     <div class="container site-footer__inner">
-      <p class="small"><a href="/"><%= t('staff.viewPublicSite') %></a></p>
       <p class="small faint"><%= libraryName %></p>
     </div>
   </footer>
+
+  <script src="/assets/js/app.js" defer></script>
 </body>
 </html>
