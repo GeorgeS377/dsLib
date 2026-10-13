@@ -35,7 +35,7 @@
           <label class="filter__option">
             <input type="checkbox" name="category" value="<%= category.id %>"
                    <%= query.category.includes(category.id) ? 'checked' : '' %>>
-            <span class="filter__option-name"><%= category.name %></span>
+            <span class="filter__option-name" title="<%= category.name %>"><%= category.name %></span>
             <span class="filter__option-count"><%= category.book_count %></span>
           </label>
         <% }); %>
@@ -49,7 +49,7 @@
           <label class="filter__option">
             <input type="checkbox" name="author" value="<%= author.id %>"
                    <%= query.author.includes(author.id) ? 'checked' : '' %>>
-            <span class="filter__option-name"><%= author.name %></span>
+            <span class="filter__option-name" title="<%= author.name %>"><%= author.name %></span>
             <span class="filter__option-count"><%= author.book_count %></span>
           </label>
         <% }); %>

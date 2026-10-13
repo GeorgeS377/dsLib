@@ -458,16 +458,22 @@ kbd,
   border: 1px solid var(--color-border);
   border-radius: var(--radius-sm);
   background: var(--color-bg);
-  max-height: 8.5rem;
+  max-height: 11rem;
   overflow-y: auto;
-  padding: var(--space-1);
+  overflow-x: hidden;
+  padding: var(--space-2);
+  display: grid;
+  /* minmax(0, 1fr), not 1fr: a grid item's minimum is its content by default,
+     so a long author name made the whole list scroll sideways. */
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-1);
 }
 
 .filter__option {
   display: flex;
   align-items: center;
   gap: var(--space-2);
-  padding: 0.25rem var(--space-2);
+  padding: var(--space-2);
   border-radius: var(--radius-sm);
   font-size: 0.9375rem;
   cursor: pointer;
@@ -514,7 +520,8 @@ kbd,
   flex-wrap: wrap;
   align-items: center;
   gap: var(--space-3) var(--space-5);
-  padding-top: var(--space-3);
+  padding-top: var(--space-4);
+  margin-top: var(--space-1);
   border-top: 1px solid var(--color-border);
 }
 
@@ -783,19 +790,31 @@ kbd,
   margin-top: var(--space-4);
 }
 
+/* Only when something visible precedes it: a hidden input is still an
+   element, so an inline form of hidden fields plus a button would otherwise
+   have pushed the button down a row inside its table cell. */
+form > *:not([type="hidden"]):not([hidden]) + .button,
+form > *:not([type="hidden"]):not([hidden]) + .button-row,
+form > *:not([type="hidden"]):not([hidden]) + .form-actions {
+  margin-top: var(--space-5);
+}
+
 .field__label,
 .fieldset__legend {
   display: block;
   font-weight: 600;
   font-size: 0.9375rem;
-  margin-bottom: var(--space-1);
+  margin-bottom: var(--space-2);
 }
 
 .field__hint {
   display: block;
   font-size: 0.875rem;
   color: var(--color-text-muted);
-  margin-bottom: var(--space-1);
+  /* Sits between the label and the control, so it closes up against the
+     label it explains and keeps the control's own breathing room. */
+  margin-top: calc(var(--space-2) * -1 + var(--space-1));
+  margin-bottom: var(--space-2);
 }
 
 .field__optional {
@@ -856,7 +875,21 @@ textarea[aria-invalid="true"] {
 .fieldset {
   border: 1px solid var(--color-border);
   border-radius: var(--radius);
-  padding: var(--space-4);
+  padding: var(--space-4) var(--space-5) var(--space-5);
+}
+
+/* A hint explains the fields under it, so it stays closer to them than the
+   default stacking distance. */
+.fieldset > .field__hint + * {
+  margin-top: var(--space-3);
+}
+
+/* A legend renders on the fieldset's border, so the box's own top padding
+   already separates it from what follows. Stacking a margin on top of that
+   left the hint floating in the middle of the gap. */
+.fieldset > legend + .field__hint,
+.fieldset > legend + * {
+  margin-top: 0;
 }
 
 .checkbox-row,
@@ -927,6 +960,17 @@ textarea[aria-invalid="true"] {
   border-radius: var(--radius-lg);
   padding: var(--space-5);
   box-shadow: var(--shadow-sm);
+}
+
+/* Everything stacked inside a card is separated by default.
+   The reset zeroes every margin, so without a rule like this each gap has to
+   be remembered pair by pair — and the pairs nobody remembered are exactly
+   the ones that read as cramped: a heading flush against its form, an
+   explanation flush against the buttons it explains. Sibling margins
+   collapse, so rules that set their own larger spacing still win. */
+.card > * + *,
+.fieldset > * + * {
+  margin-top: var(--space-4);
 }
 
 .card--flush {
@@ -1076,8 +1120,7 @@ textarea[aria-invalid="true"] {
 
 .meta-list {
   display: grid;
-  gap: var(--space-2) var(--space-4);
-  margin: 0;
+  gap: var(--space-3) var(--space-5);
 }
 
 @media (min-width: 30rem) {
@@ -1544,14 +1587,13 @@ tbody tr:hover {
   grid-template-columns: repeat(auto-fit, minmax(8rem, 1fr));
   list-style: none;
   padding: 0;
-  margin: 0;
 }
 
 .stat {
   background: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: var(--radius);
-  padding: var(--space-3) var(--space-4);
+  padding: var(--space-4);
   box-shadow: var(--shadow-sm);
 }
 
@@ -1581,7 +1623,6 @@ tbody tr:hover {
   grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
   list-style: none;
   padding: 0;
-  margin: 0;
 }
 
 .settings-card {
