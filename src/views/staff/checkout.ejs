@@ -1,13 +1,23 @@
 <%#
-  Check a copy out. Two steps: find the copy, then say who is taking it.
+  Check copies out. Two steps: gather the copies, then say who is taking them.
 
-  Finding it works two ways, because a barcode is optional on a copy and
+  Several copies at once, because a student arriving with three books is one
+  transaction at the desk, not three. The selection lives in the query string,
+  so it survives a new search with no JavaScript.
+
+  Finding a copy works two ways, because a barcode is optional on a copy and
   typing one is slower than typing a title even when it exists:
 
     * search by title or author — the everyday path, and the only one that
       works for a copy that was never labelled;
     * barcode — one field, so a scanner that types and presses Enter still
       lands straight on the copy.
+-%>
+<%
+  const selectedIds = selected.map(function (copy) { return copy.id; });
+  const lendable = selected.filter(function (copy) {
+    return copy.is_available && !copy.open_loan;
+  });
 -%>
 <div class="container stack">
 
@@ -19,146 +29,122 @@
                  + `${t('staff.loans.checkin')}</a>`,
       }) %>
 
-  <% if (!copy) { %>
-    <section class="card">
-      <%# Both lookups are GET forms, so a scanner's Enter keypress works with
-          no JavaScript at all. -%>
-      <div class="lookup">
-        <form class="lookup__search" method="get" action="/staff/loans/checkout" role="search">
-          <label class="field__label" for="find-book"><%= t('staff.loans.findByTitle') %></label>
-          <span class="field__hint"><%= t('staff.loans.findByTitleHint') %></span>
-          <div class="search-form">
-            <input class="search-form__input" type="search" id="find-book" name="q"
-                   value="<%= searchTerm %>" autocomplete="off"
-                   <%- searchTerm || barcode ? '' : 'autofocus' %>>
-            <button class="button" type="submit"><%= t('common.search') %></button>
-          </div>
-        </form>
+  <section class="card">
+    <%# Both lookups are GET forms, so a scanner's Enter keypress works with
+        no JavaScript at all. The selection rides along in hidden fields. -%>
+    <div class="lookup">
+      <form class="lookup__search" method="get" action="/staff/loans/checkout" role="search">
+        <% selectedIds.forEach(function (id) { %>
+          <input type="hidden" name="copy" value="<%= id %>">
+        <% }); %>
+        <label class="field__label" for="find-book"><%= t('staff.loans.findByTitle') %></label>
+        <span class="field__hint"><%= t('staff.loans.findByTitleHint') %></span>
+        <div class="search-form">
+          <input class="search-form__input" type="search" id="find-book" name="q"
+                 value="<%= searchTerm %>" autocomplete="off"
+                 <%- searchTerm || barcode ? '' : 'autofocus' %>>
+          <button class="button" type="submit"><%= t('common.search') %></button>
+        </div>
+      </form>
 
-        <form class="lookup__barcode" method="get" action="/staff/loans/checkout">
-          <label class="field__label" for="scan"><%= t('staff.loans.scanBarcode') %></label>
-          <span class="field__hint"><%= t('staff.loans.scanHint') %></span>
-          <div class="search-form">
-            <input class="search-form__input" type="text" id="scan" name="barcode"
-                   value="<%= barcode %>" autocomplete="off" autocapitalize="none"
-                   spellcheck="false">
-            <button class="button button--secondary" type="submit"><%= t('staff.loans.findCopy') %></button>
-          </div>
-          <% if (errors.barcode) { %>
-            <span class="field__error"><%= t('staff.loans.error.' + errors.barcode) %></span>
-          <% } %>
-        </form>
-      </div>
-    </section>
-
-    <% if (searchTerm) { %>
-      <section>
-        <% if (matches.length === 0) { %>
-          <div class="state state--empty">
-            <p class="state__icon"><%- include('../partials/icon', { name: 'search', size: 32 }) %></p>
-            <h2 class="state__title"><%= t('search.empty.title') %></h2>
-            <p class="state__body"><%= t('search.empty.withQuery', { query: searchTerm }) %></p>
-          </div>
-        <% } else { %>
-          <h2><%= t('staff.loans.matches') %></h2>
-          <div class="table-wrap">
-            <table>
-              <thead>
-                <tr>
-                  <th scope="col"><%= t('staff.loan.book') %></th>
-                  <th scope="col"><%= t('staff.field.barcode') %></th>
-                  <th scope="col"><%= t('staff.field.shelf') %></th>
-                  <th scope="col"><%= t('staff.field.status') %></th>
-                  <th scope="col"></th>
-                </tr>
-              </thead>
-              <tbody>
-                <% matches.forEach(function (match) { %>
-                  <tr>
-                    <td>
-                      <%= match.book_title %>
-                      <% if (match.authors) { %>
-                        <br><span class="small faint"><%= match.authors %></span>
-                      <% } %>
-                    </td>
-                    <td class="mono small"><%= match.barcode || '—' %></td>
-                    <td class="small"><%= match.shelf_location || '—' %></td>
-                    <td class="nowrap">
-                      <% if (match.is_available) { %>
-                        <span class="badge badge--available"><%= t('status.available') %></span>
-                      <% } else if (match.open_loan_due_at) { %>
-                        <span class="badge badge--loaned">
-                          <%= t('staff.copies.onLoanTo', { date: match.open_loan_due_at.slice(0, 10) }) %>
-                        </span>
-                      <% } else { %>
-                        <span class="badge badge--<%= match.status %>"><%= t('status.' + match.status) %></span>
-                      <% } %>
-                    </td>
-                    <td class="nowrap">
-                      <% if (match.is_available) { %>
-                        <a class="button button--small" href="/staff/loans/checkout?copy=<%= match.id %>">
-                          <%= t('staff.loans.chooseCopy') %>
-                        </a>
-                      <% } %>
-                    </td>
-                  </tr>
-                <% }); %>
-              </tbody>
-            </table>
-          </div>
+      <form class="lookup__barcode" method="get" action="/staff/loans/checkout">
+        <% selectedIds.forEach(function (id) { %>
+          <input type="hidden" name="copy" value="<%= id %>">
+        <% }); %>
+        <label class="field__label" for="scan"><%= t('staff.loans.scanBarcode') %></label>
+        <span class="field__hint"><%= t('staff.loans.scanHint') %></span>
+        <div class="search-form">
+          <input class="search-form__input" type="text" id="scan" name="barcode"
+                 value="<%= barcode %>" autocomplete="off" autocapitalize="none"
+                 spellcheck="false">
+          <button class="button button--secondary" type="submit"><%= t('staff.loans.findCopy') %></button>
+        </div>
+        <% if (errors.barcode) { %>
+          <span class="field__error"><%= t('staff.loans.error.' + errors.barcode) %></span>
         <% } %>
-      </section>
-    <% } %>
-  <% } %>
+      </form>
+    </div>
+  </section>
 
-  <% if (copy) { %>
+  <%# The basket comes before the results: after pressing Add, what was
+      gathered has to be visible without scrolling past the search. -%>
+  <% if (selected.length > 0) { %>
     <section class="card">
       <div class="section-head">
-        <h2 class="mt-0"><%= t('staff.loans.copyFound') %></h2>
+        <h2 class="mt-0"><%= t('staff.loans.selected', { count: selected.length }) %></h2>
         <a class="button button--quiet button--small" href="/staff/loans/checkout">
-          <%= t('staff.loans.chooseDifferent') %>
+          <%= t('staff.loans.clearSelection') %>
         </a>
       </div>
 
-      <dl class="meta-list">
-        <dt><%= t('staff.book.title') %></dt>
-        <dd><a href="/staff/books/<%= copy.book_id %>"><%= copy.book_title %></a></dd>
-        <dt><%= t('staff.field.barcode') %></dt>
-        <dd class="mono"><%= copy.barcode || '—' %></dd>
-        <dt><%= t('staff.field.shelf') %></dt>
-        <dd><%= copy.shelf_location || '—' %></dd>
-        <dt><%= t('staff.field.status') %></dt>
-        <dd>
-          <% if (openLoan) { %>
-            <span class="badge badge--loaned"><%= t('status.on_loan') %></span>
-          <% } else if (copy.is_available) { %>
-            <span class="badge badge--available"><%= t('status.available') %></span>
-          <% } else { %>
-            <span class="badge badge--<%= copy.status %>"><%= t('status.' + copy.status) %></span>
-          <% } %>
-        </dd>
-      </dl>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th scope="col"><%= t('staff.loan.book') %></th>
+              <th scope="col"><%= t('staff.field.barcode') %></th>
+              <th scope="col"><%= t('staff.field.shelf') %></th>
+              <th scope="col"><%= t('staff.field.status') %></th>
+              <th scope="col"></th>
+            </tr>
+          </thead>
+          <tbody>
+            <% selected.forEach(function (copy) { %>
+              <tr>
+                <td><a href="/staff/books/<%= copy.book_id %>"><%= copy.book_title %></a></td>
+                <td class="mono small"><%= copy.barcode || '—' %></td>
+                <td class="small"><%= copy.shelf_location || '—' %></td>
+                <td class="nowrap">
+                  <% if (copy.open_loan) { %>
+                    <span class="badge badge--loaned"><%= t('status.on_loan') %></span>
+                  <% } else if (copy.is_available) { %>
+                    <span class="badge badge--available"><%= t('status.available') %></span>
+                  <% } else { %>
+                    <span class="badge badge--<%= copy.status %>"><%= t('status.' + copy.status) %></span>
+                  <% } %>
+                </td>
+                <td class="nowrap">
+                  <a class="small" href="<%= selectionUrl({
+                       copy: selectedIds.filter(function (id) { return id !== copy.id; }) }) %>">
+                    <%= t('staff.loans.removeCopy') %>
+                  </a>
+                </td>
+              </tr>
 
-      <% if (openLoan) { %>
-        <%# Already out. Offer the return rather than a checkout that would
-            be refused. -%>
-        <div class="flash flash--warning mt-4" role="status">
-          <span>
-            <%= t('staff.loans.error.already_on_loan') %>
-            <%= openLoan.borrower_name %><% if (openLoan.school_class) { %> (<%= openLoan.school_class %>)<% } %>,
-            <%= t('staff.loan.due') %> <%= openLoan.due_at.slice(0, 10) %>
-          </span>
-        </div>
-        <form method="post" action="/staff/loans/checkin">
-          <input type="hidden" name="_csrf" value="<%= csrfToken %>">
-          <input type="hidden" name="loan_id" value="<%= openLoan.id %>">
-          <button class="button" type="submit"><%= t('staff.loans.checkin') %></button>
-        </form>
-      <% } else if (!copy.is_available) { %>
-        <div class="flash flash--error mt-4" role="alert">
-          <span><%= t('staff.loans.error.copy_not_available') %></span>
-        </div>
-      <% } else { %>
+              <%# A copy in the pile that cannot go out says so here, next to
+                  itself, and offers the return instead of a refusal later. -%>
+              <% if (copy.open_loan) { %>
+                <tr class="row-note">
+                  <td colspan="5">
+                    <div class="flash flash--warning" role="status">
+                      <span>
+                        <%= t('staff.loans.error.already_on_loan') %>
+                        <%= copy.open_loan.borrower_name %><% if (copy.open_loan.school_class) { %> (<%= copy.open_loan.school_class %>)<% } %>,
+                        <%= t('staff.loan.due') %> <%= copy.open_loan.due_at.slice(0, 10) %>
+                      </span>
+                    </div>
+                    <form method="post" action="/staff/loans/checkin">
+                      <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                      <input type="hidden" name="loan_id" value="<%= copy.open_loan.id %>">
+                      <button class="button button--small" type="submit"><%= t('staff.loans.checkin') %></button>
+                    </form>
+                  </td>
+                </tr>
+              <% } else if (!copy.is_available) { %>
+                <tr class="row-note">
+                  <td colspan="5">
+                    <div class="flash flash--error" role="alert">
+                      <span><%= t('staff.loans.error.copy_not_available') %></span>
+                    </div>
+                  </td>
+                </tr>
+              <% } %>
+            <% }); %>
+          </tbody>
+        </table>
+      </div>
+
+      <% if (lendable.length > 0) { %>
         <% if (errors.checkout) { %>
           <div class="flash flash--error mt-4" role="alert">
             <span><%= t('staff.loans.error.' + errors.checkout) %></span>
@@ -169,8 +155,9 @@
             just a name and a class. -%>
         <form method="post" action="/staff/loans/checkout" class="mt-6">
           <input type="hidden" name="_csrf" value="<%= csrfToken %>">
-          <input type="hidden" name="copy_id" value="<%= copy.id %>">
-          <input type="hidden" name="barcode" value="<%= copy.barcode || '' %>">
+          <% lendable.forEach(function (copy) { %>
+            <input type="hidden" name="copy_id" value="<%= copy.id %>">
+          <% }); %>
 
           <fieldset class="fieldset">
             <legend class="fieldset__legend"><%= t('staff.loans.borrowerNew') %></legend>
@@ -219,8 +206,85 @@
             <%- include('../partials/field-error', { hasT: hasT, code: errors.due_date, t: t }) %>
           </div>
 
-          <button class="button" type="submit"><%= t('staff.loans.checkout') %></button>
+          <button class="button" type="submit">
+            <% if (lendable.length === 1) { %>
+              <%= t('staff.loans.checkout') %>
+            <% } else { %>
+              <%= t('staff.loans.lendCount', { count: lendable.length }) %>
+            <% } %>
+          </button>
         </form>
+      <% } %>
+    </section>
+  <% } %>
+
+  <% if (searchTerm) { %>
+    <section>
+      <% if (matches.length === 0) { %>
+        <div class="state state--empty">
+          <p class="state__icon"><%- include('../partials/icon', { name: 'search', size: 32 }) %></p>
+          <h2 class="state__title"><%= t('search.empty.title') %></h2>
+          <p class="state__body"><%= t('search.empty.withQuery', { query: searchTerm }) %></p>
+        </div>
+      <% } else { %>
+        <%# One row per title, not per copy. A class set of sixty identical
+            copies filled the screen with rows that said the same thing and
+            gave the librarian nothing to choose between. Add takes the next
+            free copy; the barcode field above is how a specific item is
+            asked for. -%>
+        <h2><%= t('staff.loans.matches') %></h2>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th scope="col"><%= t('staff.loan.book') %></th>
+                <th scope="col"><%= t('staff.field.shelf') %></th>
+                <th scope="col"><%= t('staff.copies.availability') %></th>
+                <th scope="col"></th>
+              </tr>
+            </thead>
+            <tbody>
+              <% matches.forEach(function (match) { %>
+                <% const free = match.available_ids.filter(function (id) {
+                     return !selectedIds.includes(id);
+                   }); %>
+                <tr>
+                  <td>
+                    <a href="/staff/books/<%= match.book_id %>"><%= match.book_title %></a>
+                    <% if (match.authors) { %>
+                      <br><span class="small faint"><%= match.authors %></span>
+                    <% } %>
+                    <% if (match.barcodes.length > 0) { %>
+                      <br><span class="mono small faint"><%= match.barcodes.join(', ') %></span>
+                    <% } %>
+                  </td>
+                  <td class="small"><%= match.shelves.join(', ') || '—' %></td>
+                  <td class="nowrap">
+                    <%# The count either way: "none of the four are in" is a
+                        different fact from "none exist", and the colour still
+                        answers the yes/no at a glance. -%>
+                    <span class="badge badge--<%= match.available_count > 0 ? 'available' : 'unavailable' %>">
+                      <%= t('staff.loans.availableOf', {
+                            available: match.available_count, total: match.copy_count }) %>
+                    </span>
+                  </td>
+                  <td class="nowrap">
+                    <%# Nothing free to add says so, rather than offering an
+                        action that would be refused. -%>
+                    <% if (free.length > 0) { %>
+                      <a class="button button--small"
+                         href="<%= selectionUrl({ copy: selectedIds.concat(free[0]) }) %>">
+                        <%= t('staff.loans.addCopy') %>
+                      </a>
+                    <% } else if (match.available_count > 0) { %>
+                      <span class="small faint"><%= t('staff.loans.allSelected') %></span>
+                    <% } %>
+                  </td>
+                </tr>
+              <% }); %>
+            </tbody>
+          </table>
+        </div>
       <% } %>
     </section>
   <% } %>

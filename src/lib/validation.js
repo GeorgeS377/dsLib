@@ -276,7 +276,9 @@ export const borrowerFormSchema = z.object({
 // -------------------------------------------------------------- staff: loan
 
 export const checkoutSchema = z.object({
-  copy_id: z.coerce.number().int().min(1).optional(),
+  // A list, because a student handing over three books should be one
+  // transaction at the desk rather than three.
+  copy_id: manyIds,
   barcode: trimmed(64),
   borrower_id: z.coerce.number().int().min(1).optional(),
   new_borrower_name: trimmed(200),
@@ -290,6 +292,10 @@ export const checkoutSchema = z.object({
 export const checkinSchema = z.object({
   barcode: trimmed(64),
   loan_id: z.coerce.number().int().min(1).optional(),
+  // Where to go afterwards, so returning a book from a borrower's page lands
+  // back on that page. Confined to staff paths in the route, so it cannot be
+  // turned into an open redirect.
+  redirect_to: trimmed(200),
 });
 
 // -------------------------------------------------- staff: accounts, misc.

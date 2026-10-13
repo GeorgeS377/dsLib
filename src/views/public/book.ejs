@@ -54,25 +54,25 @@
           </div>
         <% } %>
 
-        <%# Availability summary, derived from copy status and open loans. -%>
+        <%# Availability summary, derived from copy status and open loans.
+            The badge and the count sit on one line: the colour answers "can I
+            borrow it", the numbers answer "how many", and the title's total
+            is deliberately not repeated in the detail list below. -%>
         <div class="card mt-4">
           <h2 class="small muted mt-0"><%= t('book.availability') %></h2>
           <% if (book.copies_total === 0) { %>
             <p class="muted"><%= t('book.noCopies') %></p>
-          <% } else if (book.copies_available > 0) { %>
-            <p>
-              <span class="badge badge--available"><%= t('book.allAvailable') %></span>
-            </p>
-            <p class="small muted">
-              <%= t('book.availableCount', {
-                    available: book.copies_available, total: book.copies_total }) %>
-            </p>
           <% } else { %>
-            <p>
-              <span class="badge badge--unavailable"><%= t('book.noneAvailable') %></span>
-            </p>
-            <p class="small muted">
-              <%= t('book.availableCount', { available: 0, total: book.copies_total }) %>
+            <p class="availability">
+              <% if (book.copies_available > 0) { %>
+                <span class="badge badge--available"><%= t('book.allAvailable') %></span>
+              <% } else { %>
+                <span class="badge badge--unavailable"><%= t('book.noneAvailable') %></span>
+              <% } %>
+              <span class="small muted">
+                <%= t('book.availableCount', {
+                      available: book.copies_available, total: book.copies_total }) %>
+              </span>
             </p>
           <% } %>
         </div>
@@ -100,10 +100,8 @@
             <dt><%= t('book.language') %></dt>
             <dd><%= book.language %></dd>
           <% } %>
-          <% if (book.copies_total > 0) { %>
-            <dt><%= t('book.copies') %></dt>
-            <dd><%= book.copies_total %></dd>
-          <% } %>
+          <%# No copy count here: the availability card beside this list states
+              it with the part a reader actually needs, how many are in. -%>
         </dl>
 
         <% if (book.description) { %>
@@ -118,39 +116,18 @@
           </section>
         <% } %>
 
-        <%# Per-copy table: shelf location helps a student find the book on the
-            shelf. Status is the physical state or 'on loan' — never who has it. -%>
-        <% if (book.copies.length > 0) { %>
+        <%# Where to find it, not an inventory of every item.
+          A reader needs two facts: how many are on the shelf, and which shelf.
+          Listing one row per copy turned a title with forty copies into a
+          forty-row table that said the same thing forty times. -%>
+        <% if (shelfLocations.length > 0) { %>
           <section class="mt-6">
-            <h2><%= t('book.copiesTable') %></h2>
-            <div class="table-wrap">
-              <table>
-                <thead>
-                  <tr>
-                    <th scope="col"><%= t('book.copyNumber') %></th>
-                    <th scope="col"><%= t('book.shelf') %></th>
-                    <th scope="col"><%= t('book.status') %></th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <% book.copies.forEach(function (copy, index) { %>
-                    <tr>
-                      <td><%= index + 1 %></td>
-                      <td><%= copy.shelf_location || '—' %></td>
-                      <td>
-                        <% if (copy.is_available) { %>
-                          <span class="badge badge--available"><%= t('status.available') %></span>
-                        <% } else if (copy.open_loan_id) { %>
-                          <span class="badge badge--loaned"><%= t('status.on_loan') %></span>
-                        <% } else { %>
-                          <span class="badge badge--<%= copy.status %>"><%= t('status.' + copy.status) %></span>
-                        <% } %>
-                      </td>
-                    </tr>
-                  <% }); %>
-                </tbody>
-              </table>
-            </div>
+            <h2><%= t('book.shelf') %></h2>
+            <ul class="chip-list">
+              <% shelfLocations.forEach(function (shelf) { %>
+                <li><span class="chip chip--static"><%= shelf %></span></li>
+              <% }); %>
+            </ul>
           </section>
         <% } %>
       </div>

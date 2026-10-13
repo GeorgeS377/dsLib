@@ -44,11 +44,15 @@ describe('theme', () => {
   });
 
   it('ignores the operating system preference', async () => {
-    // A machine set to dark must still get light. The stylesheet carries no
-    // prefers-color-scheme rule at all, so the OS cannot decide this.
+    // A machine set to dark must still get light. Which theme the OS asks for
+    // is decided in the stylesheet and nowhere else, so the served stylesheet
+    // is the only place this can be observed from here — a browser would be
+    // needed to watch it take effect. Matched against the declarations rather
+    // than the raw text, so reformatting cannot hide one.
     const css = await get('/assets/css/app.css');
+    const declarations = css.body.toLowerCase().replace(/\s+/g, '');
     assert.ok(
-      !css.body.includes('prefers-color-scheme'),
+      !declarations.includes('prefers-color-scheme'),
       'the stylesheet still switches on the OS preference',
     );
   });
@@ -164,11 +168,19 @@ describe('header and footer layout', () => {
   });
 
   it('sets no label in all caps, which would strip Greek accents', async () => {
+    // ΠΡΟΘΕΣΜΊΑ loses its accent when a browser upper-cases ΠΡΟΘΕΣΜΙΑ, and
+    // that happens in the stylesheet, so this is asserted against the served
+    // CSS. Whitespace and case are normalized first: 'text-transform:UPPERCASE'
+    // is the same defect and a substring match on the pretty-printed form
+    // would have missed it.
     const css = await get('/assets/css/app.css');
-    assert.ok(
-      !css.body.includes('text-transform: uppercase'),
-      'an uppercase transform renders Greek without its accents',
-    );
+    const declarations = css.body.toLowerCase().replace(/\s+/g, '');
+    for (const banned of ['text-transform:uppercase', 'text-transform:capitalize']) {
+      assert.ok(
+        !declarations.includes(banned),
+        `${banned} renders Greek without its accents`,
+      );
+    }
   });
 
   it('gives the staff area one top bar, not two stacked ones', async () => {
@@ -374,9 +386,19 @@ describe('lending without a barcode', () => {
     );
 
     const response = await session.get(`/staff/loans/checkout?q=${encodeURIComponent('ιλιαδα')}`);
-    // The row still appears with its status, but without a way to lend it.
-    assert.ok(response.body.includes('T-0003'));
-    assert.ok(!response.body.includes(`/staff/loans/checkout?copy=${copy.id}"`));
+    // The title still appears with its availability, but with no way to lend
+    // it. Matched on the parameter rather than a whole URL, so the assertion
+    // cannot be satisfied by the link merely being spelled differently.
+    assert.ok(response.body.includes('Ιλιάδα'));
+    const total = db.value('SELECT COUNT(*) FROM copy WHERE book_id = ?', fixtures.books.iliad);
+    assert.ok(
+      response.body.includes(`0 από ${total} διαθέσιμα`),
+      'the title looks lendable although every copy is out',
+    );
+    assert.ok(
+      !new RegExp(`copy=${copy.id}\\b`).test(response.body),
+      'the copy that is already out is still offered',
+    );
   });
 
   it('still accepts a scanned barcode', async () => {

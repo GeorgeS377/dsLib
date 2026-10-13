@@ -85,7 +85,6 @@ describe('checking a book out and back in', () => {
 
     const page = await app.inject({ method: 'GET', url: `/books/${fixtures.books.odyssey}` });
     assert.ok(page.body.includes('1 από 2 διαθέσιμα'));
-    assert.ok(page.body.includes('Σε δανεισμό'));
   });
 
   it('shows the loan on the dashboard', async () => {
@@ -141,7 +140,7 @@ describe('checking a book out and back in', () => {
   it('restores public availability on return (acceptance 6)', async () => {
     const page = await app.inject({ method: 'GET', url: `/books/${fixtures.books.odyssey}` });
     assert.ok(page.body.includes('2 από 2 διαθέσιμα'));
-    assert.ok(!page.body.includes('Σε δανεισμό'));
+    assert.ok(page.body.includes('2 από 2 διαθέσιμα'), 'the returned copy is available again');
   });
 
   it('reports a barcode that is not on loan', async () => {

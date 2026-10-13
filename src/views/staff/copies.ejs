@@ -1,12 +1,18 @@
 <%#
-  Copy management for one title. Each copy is its own small form, so a
-  librarian can correct a barcode or move a book to another shelf without
-  touching the others.
+  Copy management for one title.
+
+  The whole table is one form with one Save. It used to be a form per row,
+  which meant editing three rows and pressing one Save silently discarded the
+  other two — the kind of data loss nobody notices until a barcode is wrong.
+
+  Long lists are paginated: a title bought as a class set can have scores of
+  copies, and rendering every one as an editable row made the page heavy
+  enough to stall the browser.
 
   The availability column is derived, not stored: a copy is available when its
   status is 'available' and it has no open loan.
 -%>
-<div class="container stack-lg">
+<div class="container stack">
 
   <%- include('../partials/page-header', {
         t: t,
@@ -14,8 +20,6 @@
           { href: '/staff/books', label: t('staff.books.title') },
           { href: '/staff/books/' + book.id, label: book.title },
         ],
-        // No kicker: the last breadcrumb step already says which page this
-        // is, and repeating it directly underneath is noise.
         crumb: t('staff.books.manageCopies'),
         heading: book.title,
         meta: t('staff.copies.availability') + ': '
@@ -25,82 +29,100 @@
           + `${t('staff.books.viewPublic')}</a>`,
       }) %>
 
-  <% if (copies.length === 0) { %>
+  <% if (copies.total === 0) { %>
     <div class="state state--empty">
-      <p class="state__icon" aria-hidden="true"><%- include('../partials/icon', { name: 'book' }) %></p>
+      <p class="state__icon"><%- include('../partials/icon', { name: 'book', size: 32 }) %></p>
       <h2 class="state__title"><%= t('staff.copies.empty') %></h2>
       <p class="state__body"><%= t('staff.copies.emptyHint') %></p>
     </div>
   <% } else { %>
-    <div class="table-wrap">
-      <table>
-        <caption><%= t('book.copiesTable') %></caption>
-        <thead>
-          <tr>
-            <th scope="col"><%= t('staff.field.barcode') %></th>
-            <th scope="col"><%= t('staff.field.shelf') %></th>
-            <th scope="col"><%= t('staff.field.status') %></th>
-            <th scope="col"><%= t('staff.copies.availability') %></th>
-            <th scope="col"></th>
-          </tr>
-        </thead>
-        <tbody>
-          <% copies.forEach(function (copy) { %>
-            <tr>
-              <form method="post" action="/staff/copies/<%= copy.id %>" id="copy-<%= copy.id %>">
-                <input type="hidden" name="_csrf" value="<%= csrfToken %>">
-              </form>
+    <form method="post" action="/staff/books/<%= book.id %>/copies/save">
+      <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+      <input type="hidden" name="page" value="<%= copies.page %>">
 
-              <td>
-                <label class="visually-hidden" for="barcode-<%= copy.id %>">
-                  <%= t('staff.field.barcode') %>
-                </label>
-                <input type="text" id="barcode-<%= copy.id %>" form="copy-<%= copy.id %>"
-                       name="barcode" value="<%= copy.barcode || '' %>" maxlength="64"
-                       autocomplete="off">
-              </td>
-              <td>
-                <label class="visually-hidden" for="shelf-<%= copy.id %>">
-                  <%= t('staff.field.shelf') %>
-                </label>
-                <input type="text" id="shelf-<%= copy.id %>" form="copy-<%= copy.id %>"
-                       name="shelf_location" value="<%= copy.shelf_location || '' %>"
-                       maxlength="100" autocomplete="off">
-              </td>
-              <td>
-                <label class="visually-hidden" for="status-<%= copy.id %>">
-                  <%= t('staff.field.status') %>
-                </label>
-                <select id="status-<%= copy.id %>" form="copy-<%= copy.id %>" name="status">
-                  <% statuses.forEach(function (status) { %>
-                    <option value="<%= status %>" <%= copy.status === status ? 'selected' : '' %>>
-                      <%= t('status.' + status) %>
-                    </option>
-                  <% }); %>
-                </select>
-              </td>
-              <td class="nowrap">
-                <% if (copy.open_loan_id) { %>
-                  <span class="badge badge--loaned"><%= t('status.on_loan') %></span>
-                  <span class="small faint">
-                    <%= t('staff.copies.onLoanTo', { date: copy.open_loan_due_at.slice(0, 10) }) %>
-                  </span>
-                <% } else if (copy.is_available) { %>
-                  <span class="badge badge--available"><%= t('status.available') %></span>
-                <% } else { %>
-                  <span class="badge badge--<%= copy.status %>"><%= t('status.' + copy.status) %></span>
-                <% } %>
-              </td>
-              <td class="nowrap">
-                <button class="button button--secondary button--small" type="submit"
-                        form="copy-<%= copy.id %>"><%= t('common.save') %></button>
-                <a class="small" href="/staff/copies/<%= copy.id %>/delete"><%= t('common.delete') %></a>
-              </td>
+      <div class="table-wrap">
+        <table class="copies-table">
+          <caption>
+            <%= t('search.showing', {
+                  from: (copies.page - 1) * copies.perPage + 1,
+                  to: Math.min(copies.page * copies.perPage, copies.total),
+                  total: copies.total }) %>
+          </caption>
+          <thead>
+            <tr>
+              <th scope="col"><%= t('staff.field.barcode') %></th>
+              <th scope="col"><%= t('staff.field.shelf') %></th>
+              <th scope="col"><%= t('staff.field.status') %></th>
+              <th scope="col"><%= t('staff.copies.availability') %></th>
+              <th scope="col"></th>
             </tr>
-          <% }); %>
-        </tbody>
-      </table>
-    </div>
+          </thead>
+          <tbody>
+            <% copies.rows.forEach(function (copy) { %>
+              <tr>
+                <%# Every row's id travels with the form, so the handler knows
+                    which rows to apply. -%>
+                <td>
+                  <input type="hidden" name="copy_id" value="<%= copy.id %>">
+                  <label class="visually-hidden" for="barcode-<%= copy.id %>">
+                    <%= t('staff.field.barcode') %>
+                  </label>
+                  <input type="text" id="barcode-<%= copy.id %>" name="barcode_<%= copy.id %>"
+                         value="<%= copy.barcode || '' %>" maxlength="64" autocomplete="off">
+                </td>
+                <td>
+                  <label class="visually-hidden" for="shelf-<%= copy.id %>">
+                    <%= t('staff.field.shelf') %>
+                  </label>
+                  <input type="text" id="shelf-<%= copy.id %>" name="shelf_<%= copy.id %>"
+                         value="<%= copy.shelf_location || '' %>" maxlength="100"
+                         autocomplete="off">
+                </td>
+                <td>
+                  <label class="visually-hidden" for="status-<%= copy.id %>">
+                    <%= t('staff.field.status') %>
+                  </label>
+                  <select id="status-<%= copy.id %>" name="status_<%= copy.id %>">
+                    <% statuses.forEach(function (status) { %>
+                      <option value="<%= status %>" <%= copy.status === status ? 'selected' : '' %>>
+                        <%= t('status.' + status) %>
+                      </option>
+                    <% }); %>
+                  </select>
+                </td>
+                <td class="nowrap">
+                  <% if (copy.open_loan_id) { %>
+                    <span class="badge badge--loaned"><%= t('status.on_loan') %></span>
+                    <span class="small faint">
+                      <%= copy.open_loan_due_at.slice(0, 10) %>
+                    </span>
+                  <% } else if (copy.is_available) { %>
+                    <span class="badge badge--available"><%= t('status.available') %></span>
+                  <% } else { %>
+                    <span class="badge badge--<%= copy.status %>"><%= t('status.' + copy.status) %></span>
+                  <% } %>
+                </td>
+                <td class="nowrap">
+                  <a class="small" href="/staff/copies/<%= copy.id %>/delete"><%= t('common.delete') %></a>
+                </td>
+              </tr>
+            <% }); %>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="button-row mt-4">
+        <button class="button" type="submit"><%= t('staff.copies.saveAll') %></button>
+        <%# The page links below leave this form, so unsaved edits would go with
+            them. Said out loud rather than discovered. -%>
+        <% if (copies.totalPages > 1) { %>
+          <span class="small muted"><%= t('staff.copies.saveBeforePaging') %></span>
+        <% } %>
+      </div>
+    </form>
+
+    <%- include('../partials/pagination', {
+          results: copies, pages: pages, pageUrl: pageUrl, t: t }) %>
   <% } %>
 
   <div class="stack-lg">

@@ -1115,6 +1115,11 @@ textarea[aria-invalid="true"] {
   color: var(--color-text);
 }
 
+.chip--static {
+  color: var(--color-text-muted);
+  cursor: default;
+}
+
 .chip:hover {
   background: var(--color-accent-soft);
   border-color: var(--color-accent);
@@ -1614,6 +1619,31 @@ tbody tr:hover {
   /* Wide enough that the Greek heading does not wrap onto two lines. */
   max-width: 28rem;
   margin: var(--space-7) auto;
+}
+
+.availability {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+/* Confirmations explain a consequence and often list what is affected, so they
+   need more room than the sign-in panel they used to borrow their width from. */
+.confirm-shell {
+  max-width: 44rem;
+  margin: var(--space-6) auto;
+}
+
+/* The copies table is editable, so its inputs set the column widths. The
+   status column is sized to its longest option: at a narrower width the
+   select clipped "Διαθέσιμο" to "Διαθέ…". */
+.copies-table input[type='text'] {
+  min-width: 8rem;
+}
+
+.copies-table select {
+  min-width: 11rem;
 }
 
 /* ------------------------------------------------------------- 14. Utilities */

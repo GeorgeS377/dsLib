@@ -6,6 +6,8 @@
         heading: borrower.display_name,
         meta: borrower.school_class || null,
       }) %>
+  <%# The class sits in the header beside the name, so it is deliberately not
+      repeated in the detail list below. -%>
 
   <% if (borrower.is_anonymized) { %>
     <div class="flash flash--info" role="status">
@@ -14,8 +16,6 @@
   <% } %>
 
   <dl class="meta-list">
-    <dt><%= t('staff.borrowers.class') %></dt>
-    <dd><%= borrower.school_class || '—' %></dd>
     <dt><%= t('staff.borrowers.openLoans') %></dt>
     <dd><%= borrower.open_loans %></dd>
     <dt><%= t('staff.borrowers.totalLoans') %></dt>
@@ -73,6 +73,7 @@
               <th scope="col"><%= t('staff.loans.loaned') %></th>
               <th scope="col"><%= t('staff.loan.due') %></th>
               <th scope="col"><%= t('staff.loans.returnedAt') %></th>
+              <th scope="col"></th>
             </tr>
           </thead>
           <tbody>
@@ -94,6 +95,21 @@
                     <span class="badge badge--loaned"><%= t('status.on_loan') %></span>
                   <% } %>
                 </td>
+                <td class="nowrap">
+                  <%# Taking the book back is the likeliest thing to do from
+                      here, so it does not require navigating away to find it. -%>
+                  <% if (!loan.returned_at) { %>
+                    <form method="post" action="/staff/loans/checkin">
+                      <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                      <input type="hidden" name="loan_id" value="<%= loan.id %>">
+                      <input type="hidden" name="redirect_to"
+                             value="/staff/borrowers/<%= borrower.id %>">
+                      <button class="button button--small button--secondary" type="submit">
+                        <%= t('staff.loans.checkin') %>
+                      </button>
+                    </form>
+                  <% } %>
+                </td>
               </tr>
             <% }); %>
           </tbody>
@@ -111,16 +127,23 @@
         <%= t('staff.borrowers.anonymizeExplain', {
               placeholder: anonymizedName, count: borrower.total_loans }) %>
       </p>
-      <div class="button-row">
-        <a class="button button--secondary" href="/staff/borrowers/<%= borrower.id %>/anonymize">
-          <%= t('staff.borrowers.anonymize') %>
-        </a>
-        <% if (borrower.total_loans === 0) { %>
-          <a class="button button--danger" href="/staff/borrowers/<%= borrower.id %>/delete">
-            <%= t('common.delete') %>
+      <%# A borrower who still has books out cannot be anonymized: the loans
+          have to be closed first. Saying so here beats a live button that
+          leads to a confirmation page and only then refuses. -%>
+      <% if (borrower.open_loans > 0) { %>
+        <p class="field__hint"><%= t('staff.borrowers.anonymizeBlocked') %></p>
+      <% } else { %>
+        <div class="button-row">
+          <a class="button button--secondary" href="/staff/borrowers/<%= borrower.id %>/anonymize">
+            <%= t('staff.borrowers.anonymize') %>
           </a>
-        <% } %>
-      </div>
+          <% if (borrower.total_loans === 0) { %>
+            <a class="button button--danger" href="/staff/borrowers/<%= borrower.id %>/delete">
+              <%= t('common.delete') %>
+            </a>
+          <% } %>
+        </div>
+      <% } %>
     </section>
   <% } %>
 

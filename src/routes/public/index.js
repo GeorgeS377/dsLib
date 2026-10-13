@@ -96,10 +96,21 @@ export default async function publicRoutes(app) {
         )
       : [];
 
+    // Distinct shelf locations, in order. A reader wants to know which shelf
+    // to walk to, not how many copies sit on each.
+    const shelfLocations = [
+      ...new Set(
+        book.copies
+          .filter((copy) => copy.is_available && copy.shelf_location)
+          .map((copy) => copy.shelf_location),
+      ),
+    ].sort();
+
     return reply.render('public/book', {
       title: book.title,
       metaDescription: (book.description ?? '').slice(0, 160) || undefined,
       book,
+      shelfLocations,
       related: related.slice(0, 5),
       backUrl: refererSearchUrl(request),
     });

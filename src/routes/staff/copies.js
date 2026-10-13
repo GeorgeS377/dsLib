@@ -14,10 +14,12 @@ import {
   describeCopyDeletability,
   getCopyById,
   listCopiesForBook,
+  updateCopies,
   updateCopy,
 } from '../../db/queries/copies.js';
 import { listLoans } from '../../db/queries/loans.js';
 import { addFlash } from '../../lib/flash.js';
+import { buildUrl, pageWindow } from '../../lib/urls.js';
 import { bulkCopySchema, copyFormSchema, parseForm } from '../../lib/validation.js';
 
 export default async function staffCopyRoutes(app) {
@@ -29,14 +31,73 @@ export default async function staffCopyRoutes(app) {
     const book = loadBook(db, request.params.id);
     if (!book) return reply.callNotFound();
 
+    const page = Number(request.query?.page) || 1;
+    const copies = listCopiesForBook(db, book.id, { page });
+
     return reply.renderStaff('staff/copies', {
       title: reply.locals.t('staff.copies.title', { title: book.title }),
       book,
-      copies: listCopiesForBook(db, book.id),
+      copies,
+      pages: pageWindow(copies.page, copies.totalPages),
+      pageUrl: (p) =>
+        buildUrl(`/staff/books/${book.id}/copies`, { page: p > 1 ? p : undefined }),
       statuses: COPY_STATUSES,
       values: { barcode: '', shelf_location: '', status: 'available', notes: '' },
       errors: {},
     });
+  });
+
+  // ------------------------------------------------- save the whole table
+  // One form for every row. A form per row meant editing three rows and
+  // pressing one Save silently discarded the other two.
+  app.post('/staff/books/:id/copies/save', csrf, async (request, reply) => {
+    const book = loadBook(db, request.params.id);
+    if (!book) return reply.callNotFound();
+
+    const body = request.body ?? {};
+    // Only this title's copies: the ids come from the form, so a posted id
+    // belonging to another book would otherwise be edited from a page that
+    // never showed it.
+    const ownIds = new Set(
+      db.all('SELECT id FROM copy WHERE book_id = ?', book.id).map((row) => row.id),
+    );
+    const ids = []
+      .concat(body.copy_id ?? [])
+      .map(Number)
+      .filter((id) => Number.isInteger(id) && ownIds.has(id));
+
+    const edits = ids.map((id) => ({
+      id,
+      barcode: body[`barcode_${id}`] ?? '',
+      shelfLocation: body[`shelf_${id}`] ?? '',
+      status: COPY_STATUSES.includes(body[`status_${id}`]) ? body[`status_${id}`] : undefined,
+    }));
+
+    const { saved, failures } = updateCopies(db, edits);
+
+    if (saved > 0) {
+      logAction(db, {
+        actor: request.staffUser,
+        action: 'copy.update.bulk',
+        entity: 'book',
+        entityId: book.id,
+        detail: { saved, failed: failures.length },
+      });
+      addFlash(request, 'success', 'staff.copies.savedMany', { count: saved });
+    }
+
+    // Each refusal is named, so nothing is lost silently.
+    for (const failure of failures) {
+      addFlash(request, 'error', `staff.copies.rowFailed.${failure.reason}`, {
+        barcode: failure.barcode ?? String(failure.id),
+      });
+    }
+
+    const page = Number(body.page) || 1;
+    return reply.redirect(
+      buildUrl(`/staff/books/${book.id}/copies`, { page: page > 1 ? page : undefined }),
+      302,
+    );
   });
 
   // --------------------------------------------------------- add one copy
@@ -181,6 +242,8 @@ export default async function staffCopyRoutes(app) {
       title: reply.locals.t('staff.copies.title', { title: book.title }),
       book,
       copies: listCopiesForBook(db, book.id),
+      pages: pageWindow(1, 1),
+      pageUrl: (p) => buildUrl(`/staff/books/${book.id}/copies`, { page: p > 1 ? p : undefined }),
       statuses: COPY_STATUSES,
       values: {
         barcode: body?.barcode ?? '',

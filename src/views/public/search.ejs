@@ -39,8 +39,14 @@
           <%= t('search.empty.catalogue') %>
         <% } %>
       </p>
+      <%# The label names what is actually set: offering to clear "filters"
+          after a plain search pointed at something the reader never applied. -%>
       <% if (query.q || hasFilters) { %>
-        <p><a class="button button--secondary" href="/books"><%= t('search.clearFilters') %></a></p>
+        <p>
+          <a class="button button--secondary" href="/books">
+            <%= hasFilters ? t('search.clearFilters') : t('search.clearSearch') %>
+          </a>
+        </p>
       <% } %>
     </div>
   <% } else { %>

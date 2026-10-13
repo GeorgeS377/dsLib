@@ -90,7 +90,9 @@
                   </form>
                   <form class="inline-form" method="post" action="/staff/loans/<%= loan.id %>/renew">
                     <input type="hidden" name="_csrf" value="<%= csrfToken %>">
-                    <button class="button button--quiet button--small" type="submit">
+                    <%# Outlined like the Return beside it: a borderless button
+                        in a table of actions reads as plain text. -%>
+                    <button class="button button--secondary button--small" type="submit">
                       <%= t('staff.loans.renew') %>
                     </button>
                   </form>

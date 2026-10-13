@@ -9,7 +9,7 @@ import {
   getBorrowerById,
   suggestBorrowers,
 } from '../../db/queries/borrowers.js';
-import { findLendableCopies, getCopyByBarcode, getCopyById } from '../../db/queries/copies.js';
+import { findLendableTitles, getCopyByBarcode, getCopyById } from '../../db/queries/copies.js';
 import {
   checkIn,
   checkInByBarcode,
@@ -18,6 +18,7 @@ import {
   listLoans,
   renewLoan,
 } from '../../db/queries/loans.js';
+import { safeRedirect } from '../../lib/auth.js';
 import { addFlash } from '../../lib/flash.js';
 import { buildUrl, pageWindow, resultRange, withParams } from '../../lib/urls.js';
 import { checkinSchema, checkoutSchema, parseForm } from '../../lib/validation.js';
@@ -52,33 +53,38 @@ export default async function staffLoanRoutes(app) {
   });
 
   // -------------------------------------------------------------- checkout
+  //
+  // The desk builds up a selection of copies and then says who is taking
+  // them, because a student arriving with three books is one transaction, not
+  // three. Copies accumulate in the query string (?copy=1&copy=2), so the
+  // selection survives a new search and needs no JavaScript.
   app.get('/staff/loans/checkout', async (request, reply) => {
-    // Three ways to land on a copy, in the order a desk actually uses them:
+    // Three ways to add a copy, in the order a desk actually uses them:
     //   copy=<id>  picked from the search results below
     //   barcode=   typed or scanned
     //   q=         searched by title or author
     const barcode = typeof request.query?.barcode === 'string' ? request.query.barcode : '';
     const searchTerm = typeof request.query?.q === 'string' ? request.query.q.slice(0, 200) : '';
-    const copyId = Number(request.query?.copy);
 
-    let copy;
-    if (Number.isInteger(copyId) && copyId > 0) {
-      copy = getCopyById(db, copyId);
-    } else if (barcode) {
-      copy = getCopyByBarcode(db, barcode);
+    const ids = idsFrom(request.query?.copy);
+    if (barcode) {
+      const scanned = getCopyByBarcode(db, barcode);
+      if (scanned) ids.push(scanned.id);
     }
 
-    // Search only when no copy is settled on yet, so choosing one clears the
-    // list rather than leaving it underneath.
-    const matches = !copy && searchTerm ? findLendableCopies(db, { q: searchTerm }) : [];
+    const selected = loadSelection(db, ids);
+    // The search stays up while copies are selected, so the next book can be
+    // added without starting over.
+    const matches = searchTerm ? findLendableTitles(db, { q: searchTerm }) : [];
 
     return reply.renderStaff('staff/checkout', {
       title: reply.locals.t('staff.loans.checkout'),
       barcode,
       searchTerm,
       matches,
-      copy,
-      openLoan: copy ? getOpenLoan(db, copy.id) : null,
+      selected,
+      selectionUrl: (changes) =>
+        buildUrl('/staff/loans/checkout', { q: searchTerm || undefined, ...changes }),
       suggestions: [],
       values: {
         barcode,
@@ -99,14 +105,15 @@ export default async function staffLoanRoutes(app) {
 
     const data = parsed.data;
 
-    // Identify the copy, by id or by barcode.
-    const copy = data.copy_id
-      ? getCopyById(db, data.copy_id)
-      : data.barcode
-        ? getCopyByBarcode(db, data.barcode)
-        : undefined;
+    // Identify the copies: selected by id, or the single one just scanned.
+    const ids = [...data.copy_id];
+    if (ids.length === 0 && data.barcode) {
+      const scanned = getCopyByBarcode(db, data.barcode);
+      if (scanned) ids.push(scanned.id);
+    }
 
-    if (!copy) {
+    const copies = loadSelection(db, ids);
+    if (copies.length === 0) {
       return rerenderCheckout(reply, request.body, { barcode: 'copy_not_found' });
     }
 
@@ -115,50 +122,79 @@ export default async function staffLoanRoutes(app) {
     let borrowerId = data.borrower_id;
     if (!borrowerId) {
       if (!data.new_borrower_name) {
-        return rerenderCheckout(reply, request.body, { borrower_id: 'borrower_required' }, copy);
+        return rerenderCheckout(reply, request.body, { borrower_id: 'borrower_required' });
       }
       const created = findOrCreateBorrower(db, {
         displayName: data.new_borrower_name,
         schoolClass: data.new_borrower_class,
       });
       if (!created.ok) {
-        return rerenderCheckout(reply, request.body, { new_borrower_name: 'required' }, copy);
+        return rerenderCheckout(reply, request.body, { new_borrower_name: 'required' });
       }
       borrowerId = created.id;
     }
 
-    const result = checkOut(db, {
-      copyId: copy.id,
-      borrowerId,
-      loanDays: app.config.defaultLoanDays,
-      dueAt: data.due_date,
-      staffUserId: request.staffUser.id,
-    });
+    // Each copy is lent independently: one copy someone else took in the
+    // meantime must not cancel the rest of the student's pile.
+    const lent = [];
+    const refused = [];
+    for (const copy of copies) {
+      const result = checkOut(db, {
+        copyId: copy.id,
+        borrowerId,
+        loanDays: app.config.defaultLoanDays,
+        dueAt: data.due_date,
+        staffUserId: request.staffUser.id,
+      });
 
-    if (!result.ok) {
-      // Reported against the checkout itself: by this point a copy is chosen,
-      // so the barcode lookup field is no longer on screen and an error
-      // attached to it would never be seen.
-      return rerenderCheckout(reply, request.body, { checkout: result.reason }, copy);
+      if (result.ok) {
+        lent.push({ copy, result });
+        logAction(db, {
+          actor: request.staffUser,
+          action: 'loan.checkout',
+          entity: 'loan',
+          entityId: result.id,
+          // The borrower id is enough to trace this; the name is not logged.
+          detail: { copyId: copy.id, borrowerId, dueAt: result.dueAt },
+        });
+      } else {
+        refused.push({ copy, reason: result.reason });
+      }
     }
 
-    logAction(db, {
-      actor: request.staffUser,
-      action: 'loan.checkout',
-      entity: 'loan',
-      entityId: result.id,
-      // The borrower id is enough to trace this; the name is not logged.
-      detail: { copyId: copy.id, borrowerId, dueAt: result.dueAt },
-    });
+    // Nothing went out: no part of this happened, so it can still be
+    // corrected in place. The reason goes on the checkout itself — by now a
+    // copy is chosen and the barcode lookup field is off screen, so an error
+    // attached to it would never be seen.
+    if (lent.length === 0) {
+      return rerenderCheckout(reply, request.body, { checkout: refused[0].reason });
+    }
 
     const borrower = getBorrowerById(db, borrowerId);
-    addFlash(request, 'success', 'staff.loans.checkedOut', {
-      title: copy.book_title,
-      borrower: borrower.display_name,
-      date: result.dueAt.slice(0, 10),
-    });
 
-    // Back to an empty form, ready for the next book in the queue.
+    if (lent.length === 1) {
+      addFlash(request, 'success', 'staff.loans.checkedOut', {
+        title: lent[0].copy.book_title,
+        borrower: borrower.display_name,
+        date: lent[0].result.dueAt.slice(0, 10),
+      });
+    } else {
+      addFlash(request, 'success', 'staff.loans.checkedOutMany', {
+        count: lent.length,
+        borrower: borrower.display_name,
+        date: lent[0].result.dueAt.slice(0, 10),
+      });
+    }
+
+    // Part of it went out, so the refusals cannot be shown as form errors.
+    // Each one is named instead, so nothing disappears silently.
+    for (const { copy, reason } of refused) {
+      addFlash(request, 'error', `staff.loans.refused.${reason}`, {
+        copy: copy.barcode || copy.book_title,
+      });
+    }
+
+    // Back to an empty form, ready for the next reader in the queue.
     return reply.redirect('/staff/loans/checkout', 302);
   });
 
@@ -185,10 +221,19 @@ export default async function staffLoanRoutes(app) {
       ? checkIn(db, { loanId, staffUserId: request.staffUser.id })
       : checkInByBarcode(db, { barcode, staffUserId: request.staffUser.id });
 
+    // A return started from a borrower's page comes back to that page rather
+    // than dumping the librarian on the loan list. Through safeRedirect, so
+    // the field is held to the same rules as the post-login redirect and
+    // cannot be turned into an open redirect or a header injection.
+    const back = safeRedirect(parsed.data.redirect_to);
+
     if (!result.ok) {
       addFlash(request, 'error', `staff.loans.error.${result.reason}`);
       return reply.redirect(
-        loanId ? '/staff/loans' : `/staff/loans/checkin?barcode=${encodeURIComponent(barcode ?? '')}`,
+        back ??
+          (loanId
+            ? '/staff/loans'
+            : `/staff/loans/checkin?barcode=${encodeURIComponent(barcode ?? '')}`),
         302,
       );
     }
@@ -209,7 +254,7 @@ export default async function staffLoanRoutes(app) {
       { title: loan?.book_title ?? '' },
     );
 
-    return reply.redirect(loanId ? '/staff/loans' : '/staff/loans/checkin', 302);
+    return reply.redirect(back ?? (loanId ? '/staff/loans' : '/staff/loans/checkin'), 302);
   });
 
   // ------------------------------------------------------------------ renew
@@ -235,25 +280,25 @@ export default async function staffLoanRoutes(app) {
   });
 
   // --------------------------------------------------------------- helpers
-  function rerenderCheckout(reply, body, errors, copy) {
+  // Re-render the desk with the selection intact, so a rejected submission
+  // never costs the librarian the pile of books they had already gathered.
+  function rerenderCheckout(reply, body, errors) {
     reply.code(422);
     const barcode = body?.barcode ?? '';
-    const submittedCopyId = Number(body?.copy_id);
-    const resolvedCopy =
-      copy ??
-      (Number.isInteger(submittedCopyId) && submittedCopyId > 0
-        ? getCopyById(db, submittedCopyId)
-        : barcode
-          ? getCopyByBarcode(db, barcode)
-          : undefined);
+
+    const ids = idsFrom(body?.copy_id);
+    if (ids.length === 0 && barcode) {
+      const scanned = getCopyByBarcode(db, barcode);
+      if (scanned) ids.push(scanned.id);
+    }
 
     return reply.renderStaff('staff/checkout', {
       title: reply.locals.t('staff.loans.checkout'),
       barcode,
       searchTerm: '',
       matches: [],
-      copy: resolvedCopy,
-      openLoan: resolvedCopy ? getOpenLoan(db, resolvedCopy.id) : null,
+      selected: loadSelection(db, ids),
+      selectionUrl: (changes) => buildUrl('/staff/loans/checkout', changes),
       suggestions: body?.new_borrower_name
         ? suggestBorrowers(db, body.new_borrower_name, 5)
         : [],
@@ -267,6 +312,33 @@ export default async function staffLoanRoutes(app) {
       errors,
     });
   }
+}
+
+/** Copy ids from a query or form value that may be absent, single, or a list. */
+function idsFrom(value) {
+  return []
+    .concat(value ?? [])
+    .map(Number)
+    .filter((id) => Number.isInteger(id) && id > 0);
+}
+
+/**
+ * The selected copies, deduplicated, in the order they were added, each with
+ * its current loan — so the desk sees straight away which of them is a
+ * problem before naming a borrower.
+ */
+function loadSelection(db, ids) {
+  const selection = [];
+  const seen = new Set();
+
+  for (const id of ids) {
+    if (seen.has(id)) continue;
+    seen.add(id);
+    const copy = getCopyById(db, id);
+    if (copy) selection.push({ ...copy, open_loan: getOpenLoan(db, copy.id) });
+  }
+
+  return selection;
 }
 
 function getOpenLoan(db, copyId) {

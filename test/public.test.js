@@ -273,7 +273,9 @@ describe('book detail page', () => {
 
     const during = await get(`/books/${fixtures.books.odyssey}`);
     assert.ok(during.body.includes('1 από 2 διαθέσιμα'));
-    assert.ok(during.body.includes('Σε δανεισμό'), 'the loaned copy is marked');
+    // The public page states a count rather than a row per copy, so the loan
+    // shows up as one fewer available — not as a per-copy badge.
+    assert.ok(!during.body.includes('2 από 2 διαθέσιμα'));
 
     checkIn(db, { loanId: loan.id });
     const after = await get(`/books/${fixtures.books.odyssey}`);
@@ -283,7 +285,8 @@ describe('book detail page', () => {
   it('shows a copy that is away for repair as unavailable', async () => {
     const response = await get(`/books/${fixtures.books.austen}`);
     assert.ok(response.body.includes('Μη διαθέσιμο'));
-    assert.ok(response.body.includes('Σε επισκευή'));
+    // Its one copy is in for repair, so none of them counts as available.
+    assert.ok(response.body.includes('0 από 1 διαθέσιμα'));
   });
 
   it('returns 404 for an archived, unknown or malformed id', async () => {
@@ -472,9 +475,10 @@ describe('what public pages must never expose (acceptance 8)', () => {
 
   it('shows no due dates on the public book page', async () => {
     const response = await get(`/books/${fixtures.books.iliad}`);
-    // The copy is marked as on loan, but without saying when it is back.
-    assert.ok(response.body.includes('Σε δανεισμό'));
+    // The copy counts as unavailable, but the page never says when it is back.
+    assert.ok(response.body.includes('0 από 1 διαθέσιμα'));
     assert.ok(!/\d{4}-\d{2}-\d{2}T/.test(response.body), 'a timestamp leaked onto the page');
+    assert.ok(!/\d{4}-\d{2}-\d{2}/.test(response.body), 'a due date leaked onto the page');
   });
 
   it('exposes no barcodes publicly', async () => {

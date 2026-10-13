@@ -94,6 +94,7 @@ const el = {
   'search.empty.withFilters': 'Κανένα βιβλίο δεν ταιριάζει με τα φίλτρα που επιλέξατε.',
   'search.empty.catalogue': 'Ο κατάλογος είναι ακόμη άδειος.',
   'search.clearFilters': 'Καθαρισμός φίλτρων',
+  'search.clearSearch': 'Καθαρισμός αναζήτησης',
   'search.filter.category': 'Κατηγορία',
   'search.filter.author': 'Συγγραφέας',
   'search.filter.year': 'Έτος έκδοσης',
@@ -315,6 +316,14 @@ const el = {
   'staff.copies.added': 'Το αντίτυπο προστέθηκε.',
   'staff.copies.addedMany': 'Προστέθηκαν {count} αντίτυπα.',
   'staff.copies.saved': 'Το αντίτυπο αποθηκεύτηκε.',
+  'staff.copies.saveAll': 'Αποθήκευση αλλαγών',
+  'staff.copies.saveBeforePaging': 'Αποθηκεύστε πριν αλλάξετε σελίδα.',
+  'staff.copies.savedMany': 'Αποθηκεύτηκαν {count} αντίτυπα.',
+  'staff.copies.rowFailed.duplicate_barcode':
+    'Το αντίτυπο «{barcode}» δεν αποθηκεύτηκε: το barcode χρησιμοποιείται ήδη.',
+  'staff.copies.rowFailed.on_loan':
+    'Το αντίτυπο «{barcode}» δεν αποθηκεύτηκε: είναι σε δανεισμό.',
+  'staff.copies.rowFailed.not_found': 'Ένα αντίτυπο δεν βρέθηκε και δεν αποθηκεύτηκε.',
   'staff.copies.deleted': 'Το αντίτυπο διαγράφηκε.',
   'staff.copies.deleteTitle': 'Διαγραφή αντιτύπου',
   'staff.copies.empty': 'Δεν υπάρχουν αντίτυπα',
@@ -374,7 +383,8 @@ const el = {
   'staff.loans.returnedAt': 'Ημ. επιστροφής',
   'staff.loans.renew': 'Παράταση',
   'staff.loans.renewed': 'Η λήξη μετατέθηκε στις {date}.',
-  'staff.loans.checkedOut': 'Το «{title}» δανείστηκε στον/στην {borrower} έως {date}.',
+  'staff.loans.checkedOut':
+    'Το «{title}» δανείστηκε έως {date}. Αναγνώστης: {borrower}.',
   'staff.loans.returned': 'Το «{title}» επιστράφηκε.',
   'staff.loans.returnedLate': 'Το «{title}» επιστράφηκε εκπρόθεσμα.',
   'staff.loans.findByTitle': 'Αναζήτηση βιβλίου',
@@ -394,6 +404,27 @@ const el = {
     'Καταχωρίζονται μόνο όνομα και τμήμα — τίποτε άλλο.',
   'staff.loans.chooseBorrower': 'Επιλέξτε αναγνώστη',
   'staff.loans.recentReturns': 'Πρόσφατες επιστροφές',
+  'staff.loans.selected': 'Επιλεγμένα αντίτυπα ({count})',
+  'staff.loans.addCopy': 'Προσθήκη',
+  'staff.loans.alreadySelected': 'Επιλεγμένο',
+  'staff.loans.allSelected': 'Όλα επιλεγμένα',
+  'staff.loans.availableOf': '{available} από {total} διαθέσιμα',
+  'staff.loans.removeCopy': 'Αφαίρεση',
+  'staff.loans.clearSelection': 'Καθαρισμός επιλογής',
+  'staff.loans.lendCount': 'Δανεισμός {count} αντιτύπων',
+  'staff.loans.checkedOutMany':
+    'Δανείστηκαν {count} αντίτυπα έως {date}. Αναγνώστης: {borrower}.',
+  'staff.loans.refused.already_on_loan':
+    'Το αντίτυπο «{copy}» δεν δανείστηκε: είναι ήδη σε δανεισμό.',
+  'staff.loans.refused.copy_not_available':
+    'Το αντίτυπο «{copy}» δεν δανείστηκε: δεν είναι διαθέσιμο.',
+  'staff.loans.refused.copy_not_found': 'Ένα αντίτυπο δεν βρέθηκε και δεν δανείστηκε.',
+  'staff.loans.refused.due_date_in_past':
+    'Το αντίτυπο «{copy}» δεν δανείστηκε: η προθεσμία είναι στο παρελθόν.',
+  'staff.loans.refused.borrower_not_found':
+    'Το αντίτυπο «{copy}» δεν δανείστηκε: ο αναγνώστης δεν βρέθηκε.',
+  'staff.loans.refused.borrower_anonymized':
+    'Το αντίτυπο «{copy}» δεν δανείστηκε: η εγγραφή του αναγνώστη έχει ανωνυμοποιηθεί.',
   'staff.loans.error.copy_not_found': 'Δεν βρέθηκε αντίτυπο με αυτό το barcode.',
   'staff.loans.error.copy_not_available': 'Το αντίτυπο δεν είναι διαθέσιμο για δανεισμό.',
   'staff.loans.error.already_on_loan': 'Το αντίτυπο είναι ήδη σε δανεισμό.',
@@ -427,6 +458,9 @@ const el = {
   'staff.borrowers.anonymize': 'Ανωνυμοποίηση',
   'staff.borrowers.anonymizeTitle': 'Ανωνυμοποίηση αναγνώστη',
   'staff.borrowers.anonymizeConfirm': 'Ανωνυμοποίηση της εγγραφής «{name}»;',
+  'staff.borrowers.anonymizeBlocked':
+    'Η ανωνυμοποίηση δεν είναι διαθέσιμη όσο ο αναγνώστης έχει βιβλία σε δανεισμό. '
+    + 'Κλείστε πρώτα τους δανεισμούς.',
   'staff.borrowers.anonymizeExplain':
     'Το όνομα και το τμήμα αντικαθίστανται με «{placeholder}». Οι {count} δανεισμοί διατηρούνται ως ανώνυμες εγγραφές, ώστε οι αριθμοί να παραμείνουν σωστοί. Η ενέργεια δεν αναιρείται.',
   'staff.borrowers.anonymized': 'Η εγγραφή ανωνυμοποιήθηκε.',
@@ -565,6 +599,7 @@ const en = {
   'search.empty.withFilters': 'No books match the filters you selected.',
   'search.empty.catalogue': 'The catalogue is still empty.',
   'search.clearFilters': 'Clear filters',
+  'search.clearSearch': 'Clear search',
   'search.filter.category': 'Category',
   'search.filter.author': 'Author',
   'search.filter.year': 'Publication year',
@@ -784,6 +819,13 @@ const en = {
   'staff.copies.added': 'Copy added.',
   'staff.copies.addedMany': '{count} copies added.',
   'staff.copies.saved': 'Copy saved.',
+  'staff.copies.saveAll': 'Save changes',
+  'staff.copies.saveBeforePaging': 'Save before changing page.',
+  'staff.copies.savedMany': '{count} copies saved.',
+  'staff.copies.rowFailed.duplicate_barcode':
+    'Copy “{barcode}” was not saved: that barcode is already in use.',
+  'staff.copies.rowFailed.on_loan': 'Copy “{barcode}” was not saved: it is on loan.',
+  'staff.copies.rowFailed.not_found': 'One copy was not found and was not saved.',
   'staff.copies.deleted': 'Copy deleted.',
   'staff.copies.deleteTitle': 'Delete copy',
   'staff.copies.empty': 'No copies yet',
@@ -860,6 +902,26 @@ const en = {
   'staff.loans.borrowerNewHint': 'Only a name and a class are recorded — nothing else.',
   'staff.loans.chooseBorrower': 'Choose a borrower',
   'staff.loans.recentReturns': 'Recent returns',
+  'staff.loans.selected': 'Selected copies ({count})',
+  'staff.loans.addCopy': 'Add',
+  'staff.loans.alreadySelected': 'Selected',
+  'staff.loans.allSelected': 'All selected',
+  'staff.loans.availableOf': '{available} of {total} available',
+  'staff.loans.removeCopy': 'Remove',
+  'staff.loans.clearSelection': 'Clear selection',
+  'staff.loans.lendCount': 'Lend {count} copies',
+  'staff.loans.checkedOutMany': '{count} copies lent to {borrower}, due {date}.',
+  'staff.loans.refused.already_on_loan':
+    'Copy “{copy}” was not lent: it is already on loan.',
+  'staff.loans.refused.copy_not_available':
+    'Copy “{copy}” was not lent: it is not available.',
+  'staff.loans.refused.copy_not_found': 'One copy was not found and was not lent.',
+  'staff.loans.refused.due_date_in_past':
+    'Copy “{copy}” was not lent: the due date is in the past.',
+  'staff.loans.refused.borrower_not_found':
+    'Copy “{copy}” was not lent: the borrower was not found.',
+  'staff.loans.refused.borrower_anonymized':
+    'Copy “{copy}” was not lent: that borrower record has been anonymized.',
   'staff.loans.error.copy_not_found': 'No copy was found with that barcode.',
   'staff.loans.error.copy_not_available': 'That copy is not available to lend.',
   'staff.loans.error.already_on_loan': 'That copy is already on loan.',
@@ -893,6 +955,9 @@ const en = {
   'staff.borrowers.anonymize': 'Anonymize',
   'staff.borrowers.anonymizeTitle': 'Anonymize borrower',
   'staff.borrowers.anonymizeConfirm': 'Anonymize the record for “{name}”?',
+  'staff.borrowers.anonymizeBlocked':
+    'Anonymizing is unavailable while this borrower has books on loan. '
+    + 'Close the loans first.',
   'staff.borrowers.anonymizeExplain':
     'The name and class are replaced with “{placeholder}”. The {count} loans are kept as anonymous records so the figures stay correct. This cannot be undone.',
   'staff.borrowers.anonymized': 'The record has been anonymized.',

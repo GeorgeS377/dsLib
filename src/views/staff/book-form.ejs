@@ -38,10 +38,17 @@
       <strong><%= t('error.summary.title') %></strong>
       <ul>
         <% errorKeys.forEach(function (key) { %>
+          <%# The reason travels with the field name. A summary that only
+              listed "ISBN" left the actual problem further down a long form,
+              which is exactly the hunt the summary exists to prevent. -%>
           <li>
             <a href="#field-<%= key %>">
               <%= t('staff.field.' + key) !== 'staff.field.' + key ? t('staff.field.' + key) : key %>
             </a>
+            —
+            <%= hasT('error.field.' + errors[key])
+                  ? t('error.field.' + errors[key])
+                  : t('error.field.generic') %>
           </li>
         <% }); %>
       </ul>

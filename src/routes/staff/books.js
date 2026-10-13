@@ -374,7 +374,12 @@ function valuesFromBook(book) {
 
 /** Rebuild form values from a rejected submission. */
 function valuesFromBody(body = {}) {
-  const authors = body.authors === undefined ? [''] : [].concat(body.authors);
+  // Blank author rows are dropped before re-rendering. The form always adds
+  // one spare row, so echoing back the blank rows the browser posted made the
+  // form grow by a row on every rejected submission.
+  const authors = []
+    .concat(body.authors ?? [])
+    .filter((name) => String(name).trim() !== '');
   const categories = body.categories === undefined ? [] : [].concat(body.categories);
   return {
     title: body.title ?? '',
