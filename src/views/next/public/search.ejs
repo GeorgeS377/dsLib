@@ -1,0 +1,56 @@
+<%#
+  The catalogue. One search surface: the field at the top, the filters beneath
+  it, the results below. No second search box — the bar does not carry one in
+  this interface, so this page owns it.
+-%>
+<div class="stack-lg">
+
+  <div>
+    <h1>
+      <% if (query.q) { %><%= t('search.resultsFor', { query: query.q }) %>
+      <% } else { %><%= t('search.title') %><% } %>
+    </h1>
+  </div>
+
+  <form class="search search--wide" method="get" action="/books" role="search">
+    <label class="visually-hidden" for="q"><%= t('common.searchLabel') %></label>
+    <input type="search" id="q" name="q" value="<%= query.q || '' %>"
+           placeholder="<%= t('common.searchPlaceholder') %>" autocomplete="off">
+    <button class="btn" type="submit">
+      <%- include('../../partials/icon', { name: 'search', size: 17 }) %>
+      <%= t('common.search') %>
+    </button>
+  </form>
+
+  <%- include('../partials/filters', {
+        query: query, categories: categories, authors: authors, years: years,
+        languages: languages, action: '/books', hasFilters: hasFilters,
+        clearUrl: clearUrl, t: t }) %>
+
+  <% if (results.total === 0) { %>
+    <div class="state">
+      <h2 class="state__title"><%= t('search.empty.title') %></h2>
+      <p>
+        <% if (query.q) { %><%= t('search.empty.withQuery', { query: query.q }) %>
+        <% } else if (hasFilters) { %><%= t('search.empty.withFilters') %>
+        <% } else { %><%= t('search.empty.catalogue') %><% } %>
+      </p>
+      <% if (query.q || hasFilters) { %>
+        <p style="margin-top:var(--s-4)">
+          <a class="btn btn--ghost" href="/books">
+            <%= hasFilters ? t('search.clearFilters') : t('search.clearSearch') %>
+          </a>
+        </p>
+      <% } %>
+    </div>
+  <% } else { %>
+    <section>
+      <%- include('../partials/results', {
+            results: results, range: range, viewMode: viewMode, viewUrl: viewUrl, t: t }) %>
+    </section>
+
+    <%- include('../partials/pagination', {
+          results: results, pages: pages, pageUrl: pageUrl, t: t }) %>
+  <% } %>
+
+</div>

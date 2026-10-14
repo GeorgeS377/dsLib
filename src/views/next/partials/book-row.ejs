@@ -1,0 +1,27 @@
+<%#
+  One title as a row: cover, title, author, subject, shelf, availability.
+
+  The default view, because most titles have no cover image yet and a grid of
+  placeholders says less than a row of words does.
+-%>
+<div class="list__item">
+  <a class="cover" href="/books/<%= book.id %>" aria-hidden="true" tabindex="-1">
+    <% if (book.cover_path) { %>
+      <img src="/covers/<%= book.cover_path %>" alt="" width="36" height="50">
+    <% } else { %>
+      <%- include('../../partials/icon', { name: 'shelf', size: 18 }) %>
+    <% } %>
+  </a>
+  <div class="list__grow">
+    <a class="list__title list__link" href="/books/<%= book.id %>"><%= book.title %></a>
+    <div class="list__meta">
+      <% if (book.authors) { %><%= book.authors %><% } %>
+      <% if (book.categories) { %> · <%= book.categories %><% } %>
+      <% if (book.shelf_locations) { %> · <%= book.shelf_locations %><% } %>
+    </div>
+  </div>
+  <span class="pill <%= book.copies_available > 0 ? '' : 'pill--warn' %>">
+    <%= t('book.availableCount', {
+          available: book.copies_available, total: book.copies_total }) %>
+  </span>
+</div>

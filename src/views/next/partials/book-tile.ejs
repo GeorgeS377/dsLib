@@ -1,0 +1,21 @@
+<%#
+  One title as a tile, for the grid. Worth switching to once the shelf has
+  covers; until then the row says more.
+-%>
+<li class="tile">
+  <a class="tile__cover" href="/books/<%= book.id %>" aria-hidden="true" tabindex="-1">
+    <% if (book.cover_path) { %>
+      <img src="/covers/<%= book.cover_path %>" alt="" width="150" height="225" loading="lazy">
+    <% } else { %>
+      <%- include('../../partials/icon', { name: 'shelf', size: 28 }) %>
+    <% } %>
+  </a>
+  <div class="tile__body">
+    <a class="tile__title list__link" href="/books/<%= book.id %>"><%= book.title %></a>
+    <% if (book.authors) { %><p class="tile__author"><%= book.authors %></p><% } %>
+    <span class="pill <%= book.copies_available > 0 ? '' : 'pill--warn' %>">
+      <%= t('book.availableCount', {
+            available: book.copies_available, total: book.copies_total }) %>
+    </span>
+  </div>
+</li>

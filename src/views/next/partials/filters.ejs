@@ -1,0 +1,92 @@
+<%#
+  The filter bar.
+
+  Checkboxes, not a multiple-select: a <select multiple> needs Ctrl+click to
+  pick a second entry, which almost nobody discovers, and draws the chosen
+  rows in the same grey it uses for disabled ones. Nothing auto-submits —
+  the reader ticks what they want and presses Apply once.
+-%>
+<form class="panel" method="get" action="<%= action %>">
+  <% if (query.q) { %><input type="hidden" name="q" value="<%= query.q %>"><% } %>
+
+  <div class="filter-grid">
+    <fieldset class="filter">
+      <legend class="field__label"><%= t('search.filter.category') %></legend>
+      <div class="filter__options">
+        <% categories.forEach(function (category) { %>
+          <label class="filter__option">
+            <input type="checkbox" name="category" value="<%= category.id %>"
+                   <%= query.category.includes(category.id) ? 'checked' : '' %>>
+            <span class="filter__name" title="<%= category.name %>"><%= category.name %></span>
+            <span class="faint small"><%= category.book_count %></span>
+          </label>
+        <% }); %>
+      </div>
+    </fieldset>
+
+    <fieldset class="filter">
+      <legend class="field__label"><%= t('search.filter.author') %></legend>
+      <div class="filter__options">
+        <% authors.forEach(function (author) { %>
+          <label class="filter__option">
+            <input type="checkbox" name="author" value="<%= author.id %>"
+                   <%= query.author.includes(author.id) ? 'checked' : '' %>>
+            <span class="filter__name" title="<%= author.name %>"><%= author.name %></span>
+            <span class="faint small"><%= author.book_count %></span>
+          </label>
+        <% }); %>
+      </div>
+    </fieldset>
+
+    <% if (years.length > 0) { %>
+      <fieldset class="filter">
+        <legend class="field__label"><%= t('search.filter.year') %></legend>
+        <div class="filter__options">
+          <% years.forEach(function (year) { %>
+            <label class="filter__option">
+              <input type="checkbox" name="year" value="<%= year %>"
+                     <%= query.year.includes(year) ? 'checked' : '' %>>
+              <span class="filter__name"><%= year %></span>
+            </label>
+          <% }); %>
+        </div>
+      </fieldset>
+    <% } %>
+
+    <% if (languages.length > 0) { %>
+      <div>
+        <label class="field__label" for="f-language"><%= t('search.filter.language') %></label>
+        <select id="f-language" name="language">
+          <option value=""><%= t('search.filter.allLanguages') %></option>
+          <% languages.forEach(function (code) { %>
+            <option value="<%= code %>" <%= query.language === code ? 'selected' : '' %>><%= code %></option>
+          <% }); %>
+        </select>
+      </div>
+    <% } %>
+
+    <div>
+      <label class="field__label" for="f-sort"><%= t('search.sort.label') %></label>
+      <select id="f-sort" name="sort">
+        <% ['title', 'title_desc', 'author', 'newest', 'year_desc', 'year'].forEach(function (option) { %>
+          <option value="<%= option %>" <%= (query.sort || 'title') === option ? 'selected' : '' %>>
+            <%= t('search.sort.' + option) %>
+          </option>
+        <% }); %>
+      </select>
+    </div>
+  </div>
+
+  <div class="filter-actions">
+    <label class="filter__option" style="flex:none">
+      <input type="checkbox" name="available" value="1" <%= query.available ? 'checked' : '' %>>
+      <span><%= t('search.filter.availableOnly') %></span>
+    </label>
+    <div class="btn-row push">
+      <% if (hasFilters) { %>
+        <a class="btn btn--quiet btn--small" href="<%= clearUrl %>"><%= t('search.clearFilters') %></a>
+      <% } %>
+      <button class="btn btn--small" type="submit"><%= t('common.apply') %></button>
+    </div>
+  </div>
+</form>

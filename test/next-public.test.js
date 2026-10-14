@@ -1,0 +1,115 @@
+// The public catalogue in the second interface.
+//
+// Most books have no cover image yet, so a grid of covers today is a wall of
+// grey placeholders. The list is the default and the grid is a switch, which
+// means the design does not have to be redone once covers exist.
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import path from 'node:path';
+import { after, before, describe, it } from 'node:test';
+import { buildApp } from '../src/app.js';
+import { createBorrower } from '../src/db/queries/borrowers.js';
+import { checkOut } from '../src/db/queries/loans.js';
+import { cleanupDir, cookieValue, makeTestDb, seedTestCatalogue, testConfig } from './helpers.js';
+import { makeStaffUser } from './staff-helpers.js';
+
+let app;
+let db;
+let dir;
+let fixtures;
+
+const NEXT = { cookie: 'ui=next' };
+
+before(async () => {
+  const setup = testConfig();
+  dir = setup.dir;
+  db = makeTestDb();
+  fixtures = seedTestCatalogue(db);
+  const staff = await makeStaffUser(db);
+  const borrower = createBorrower(db, { displayName: 'Κωνσταντίνα Ιδιωτική', schoolClass: 'Γ1' }).id;
+  const copy = db.get("SELECT id FROM copy WHERE barcode = 'T-0001'");
+  checkOut(db, { copyId: copy.id, borrowerId: borrower, loanDays: 14, staffUserId: staff.id });
+  app = await buildApp({ config: setup.config, logger: false, db });
+  await app.ready();
+});
+
+after(async () => {
+  await app.close();
+  db.close();
+  cleanupDir(dir);
+});
+
+const get = (url, headers = NEXT) => app.inject({ method: 'GET', url, headers });
+
+describe('every public page in the second interface', () => {
+  it('has a template of its own', () => {
+    const root = path.join(process.cwd(), 'src', 'views');
+    const classic = fs.readdirSync(path.join(root, 'public')).filter((f) => f.endsWith('.ejs'));
+    const next = new Set(fs.readdirSync(path.join(root, 'next', 'public')));
+    const missing = classic.filter((file) => !next.has(file));
+    assert.deepEqual(missing, [], `public pages with no second-interface template: ${missing}`);
+  });
+
+  it('renders', async () => {
+    for (const url of [
+      '/',
+      '/books',
+      `/books/${fixtures.books.odyssey}`,
+      '/categories',
+      '/authors',
+      `/authors/${db.get('SELECT id FROM author LIMIT 1').id}`,
+    ]) {
+      const response = await get(url);
+      assert.equal(response.statusCode, 200, `${url} returned ${response.statusCode}`);
+      assert.ok(response.body.includes('next.css'), `${url} is not in the second interface`);
+    }
+  });
+});
+
+describe('list or grid', () => {
+  it('shows a list by default', async () => {
+    const response = await get('/books');
+    assert.match(response.body, /class="[^"]*\bbook-list\b/, 'not the list');
+    assert.ok(!/class="[^"]*\bbook-grid\b/.test(response.body), 'the grid showed without being asked');
+  });
+
+  it('switches to the grid and remembers it', async () => {
+    const chosen = await get('/books?view=grid');
+    assert.match(chosen.body, /class="[^"]*\bbook-grid\b/, 'the grid did not appear');
+    assert.equal(cookieValue(chosen, 'view'), 'grid');
+
+    const later = await get('/books', { cookie: 'ui=next; view=grid' });
+    assert.match(later.body, /class="[^"]*\bbook-grid\b/, 'the choice was forgotten');
+  });
+
+  it('ignores a view that is not one of the two', async () => {
+    const response = await get('/books?view=banana');
+    assert.match(response.body, /class="[^"]*\bbook-list\b/);
+    assert.equal(cookieValue(response, 'view'), undefined, 'an unknown view was remembered');
+  });
+
+  it('keeps the search and filters when switching', async () => {
+    const response = await get(`/books?q=${encodeURIComponent('ομηρος')}&available=1`);
+    const link = response.body.match(/href="([^"]*view=grid[^"]*)"/)?.[1];
+    assert.ok(link, 'no way to switch to the grid');
+    assert.ok(link.includes('q='), 'the switch drops the search');
+    assert.ok(link.includes('available=1'), 'the switch drops the filters');
+  });
+});
+
+describe('what a public page must never show', () => {
+  it('names no borrower, due date or barcode', async () => {
+    for (const url of ['/', '/books', `/books/${fixtures.books.odyssey}`]) {
+      const response = await get(url);
+      assert.ok(!response.body.includes('Ιδιωτική'), `${url} leaked a borrower name`);
+      assert.ok(!response.body.includes('T-0001'), `${url} leaked a barcode`);
+      assert.ok(!/\d{4}-\d{2}-\d{2}/.test(response.body), `${url} leaked a date`);
+    }
+  });
+
+  it('counts the copies rather than listing them', async () => {
+    const response = await get(`/books/${fixtures.books.odyssey}`);
+    assert.ok(response.body.includes('1 από 2 διαθέσιμα'), 'no availability count');
+    assert.equal(response.body.match(/<tbody>/g), null, 'a per-copy table is back');
+  });
+});

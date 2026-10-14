@@ -64,3 +64,30 @@ export function resolveTemplate(flavour, template, { viewsRoot }) {
 export function stylesheetFor(flavour) {
   return flavour === 'next' ? '/assets/css/next.css' : '/assets/css/app.css';
 }
+
+// --------------------------------------------------------- catalogue view
+
+export const VIEW_COOKIE = 'view';
+export const VIEW_MODES = ['list', 'grid'];
+
+// The list leads: most titles have no cover image yet, so a grid today is a
+// wall of grey placeholders. The switch means the page does not have to be
+// redesigned once the covers exist.
+export const DEFAULT_VIEW = 'list';
+
+/**
+ * How the catalogue is laid out for this visitor. Same shape as the flavour:
+ * an explicit choice wins and is remembered, and anything not on the list is
+ * not a choice.
+ *
+ * @returns {{ mode: string, fromQuery: boolean }}
+ */
+export function resolveViewMode(request) {
+  const requested = request?.query?.view;
+  if (VIEW_MODES.includes(requested)) return { mode: requested, fromQuery: true };
+
+  const saved = request?.cookies?.[VIEW_COOKIE];
+  if (VIEW_MODES.includes(saved)) return { mode: saved, fromQuery: false };
+
+  return { mode: DEFAULT_VIEW, fromQuery: false };
+}

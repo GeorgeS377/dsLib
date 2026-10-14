@@ -1,0 +1,34 @@
+<%# Every subject in the catalogue. -%>
+<div class="stack-lg">
+
+  <div>
+    <h1><%= t('categories.title') %></h1>
+    <p class="muted" style="margin-top:var(--s-2)"><%= t('categories.lead') %></p>
+  </div>
+
+  <% if (categories.length === 0) { %>
+    <div class="state"><h2 class="state__title"><%= t('categories.empty') %></h2></div>
+  <% } else { %>
+    <div class="list">
+      <% categories.forEach(function (category) { %>
+        <a class="list__item" href="/categories/<%= category.slug %>" style="text-decoration:none">
+          <span class="initials" aria-hidden="true">
+            <%- include('../../partials/icon', { name: 'tag', size: 17 }) %>
+          </span>
+          <span class="list__grow">
+            <span class="list__title"><%= category.name %></span>
+            <% if (category.description) { %>
+              <span class="list__meta"><%= category.description %></span>
+            <% } %>
+          </span>
+          <span class="pill pill--quiet">
+            <%= category.book_count === 1
+                  ? t('categories.bookCountOne')
+                  : t('categories.bookCount', { count: category.book_count }) %>
+          </span>
+        </a>
+      <% }); %>
+    </div>
+  <% } %>
+
+</div>

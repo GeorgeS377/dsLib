@@ -1,0 +1,126 @@
+<%#
+  One title.
+
+  Nothing here comes from the loan or borrower tables beyond a derived count:
+  no name, no due date, no barcode. A count of what is in, and which shelves
+  to look on — listing one row per copy turned a class set into a table that
+  said the same thing sixty times.
+-%>
+<div class="stack-lg">
+
+  <% if (backUrl) { %>
+    <p class="small"><a href="<%= backUrl %>"><%= t('book.backToResults') %></a></p>
+  <% } %>
+
+  <article class="stack-lg">
+    <header>
+      <h1><%= book.title %></h1>
+      <% if (book.subtitle) { %>
+        <p class="muted" style="margin-top:var(--s-2)"><%= book.subtitle %></p>
+      <% } %>
+      <% if (book.authors.length > 0) { %>
+        <p style="margin-top:var(--s-2)">
+          <% book.authors.forEach(function (author, index) { %><%
+            %><a href="/authors/<%= author.id %>"><%= author.name %></a><%
+            %><%= index < book.authors.length - 1 ? ', ' : '' %><%
+          %><% }); %>
+        </p>
+      <% } %>
+      <% if (book.categories.length > 0) { %>
+        <div class="btn-row" style="margin-top:var(--s-3)">
+          <% book.categories.forEach(function (category) { %>
+            <a class="btn btn--ghost btn--small" href="/categories/<%= category.slug %>"><%= category.name %></a>
+          <% }); %>
+        </div>
+      <% } %>
+    </header>
+
+    <div class="book-detail">
+      <div class="stack">
+        <div class="cover cover--large">
+          <% if (book.cover_path) { %>
+            <img src="/covers/<%= book.cover_path %>"
+                 alt="<%= t('book.coverAlt', { title: book.title }) %>" width="300" height="450">
+          <% } else { %>
+            <span role="img" aria-label="<%= t('book.noCover') %>">
+              <%- include('../../partials/icon', { name: 'shelf', size: 40 }) %>
+            </span>
+          <% } %>
+        </div>
+
+        <div class="panel">
+          <h2 class="label"><%= t('book.availability') %></h2>
+          <% if (book.copies_total === 0) { %>
+            <p class="muted"><%= t('book.noCopies') %></p>
+          <% } else { %>
+            <p class="row">
+              <span class="pill <%= book.copies_available > 0 ? '' : 'pill--warn' %>">
+                <%= book.copies_available > 0 ? t('book.allAvailable') : t('book.noneAvailable') %>
+              </span>
+              <span class="small muted">
+                <%= t('book.availableCount', {
+                      available: book.copies_available, total: book.copies_total }) %>
+              </span>
+            </p>
+          <% } %>
+        </div>
+      </div>
+
+      <div class="stack-lg">
+        <dl class="meta">
+          <% if (book.isbn13 || book.isbn10) { %>
+            <dt><%= t('book.isbn') %></dt><dd class="mono"><%= book.isbn13 || book.isbn10 %></dd>
+          <% } %>
+          <% if (book.publisher) { %>
+            <dt><%= t('book.publisher') %></dt><dd><%= book.publisher %></dd>
+          <% } %>
+          <% if (book.publication_year) { %>
+            <dt><%= t('book.year') %></dt><dd><%= book.publication_year %></dd>
+          <% } %>
+          <% if (book.edition) { %>
+            <dt><%= t('book.edition') %></dt><dd><%= book.edition %></dd>
+          <% } %>
+          <% if (book.language) { %>
+            <dt><%= t('book.language') %></dt><dd><%= book.language %></dd>
+          <% } %>
+        </dl>
+
+        <% if (book.description) { %>
+          <section>
+            <h2 class="label"><%= t('book.description') %></h2>
+            <%# Escaped text with paragraph breaks kept, never raw HTML — a
+                librarian's description must not inject markup here. -%>
+            <div class="stack" style="margin-top:var(--s-3)">
+              <% book.description.split(/\n\s*\n/).forEach(function (paragraph) { %>
+                <p><%= paragraph.trim() %></p>
+              <% }); %>
+            </div>
+          </section>
+        <% } %>
+
+        <% if (shelfLocations.length > 0) { %>
+          <section>
+            <h2 class="label"><%= t('book.shelf') %></h2>
+            <div class="btn-row" style="margin-top:var(--s-3)">
+              <% shelfLocations.forEach(function (shelf) { %>
+                <span class="pill pill--quiet"><%= shelf %></span>
+              <% }); %>
+            </div>
+          </section>
+        <% } %>
+      </div>
+    </div>
+  </article>
+
+  <% if (related.length > 0) { %>
+    <section>
+      <h2 class="label"><%= t('book.relatedByAuthor') %></h2>
+      <div class="book-list list" style="margin-top:var(--s-3)">
+        <% related.forEach(function (item) { %>
+          <%- include('../partials/book-row', { book: item, t: t }) %>
+        <% }); %>
+      </div>
+    </section>
+  <% } %>
+
+</div>

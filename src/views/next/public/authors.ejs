@@ -1,0 +1,41 @@
+<%# Every author in the catalogue, searchable by name. -%>
+<div class="stack-lg">
+
+  <div>
+    <h1><%= t('authors.title') %></h1>
+    <p class="muted" style="margin-top:var(--s-2)"><%= t('authors.lead') %></p>
+  </div>
+
+  <form class="search" method="get" action="/authors" role="search">
+    <label class="visually-hidden" for="author-q"><%= t('authors.findByName') %></label>
+    <input type="search" id="author-q" name="q" value="<%= q || '' %>"
+           placeholder="<%= t('authors.findByName') %>" autocomplete="off">
+    <button class="btn btn--ghost" type="submit"><%= t('common.search') %></button>
+  </form>
+
+  <% if (authors.length === 0) { %>
+    <div class="state">
+      <h2 class="state__title"><%= q ? t('search.empty.title') : t('authors.empty') %></h2>
+      <% if (q) { %>
+        <p><%= t('search.empty.withQuery', { query: q }) %></p>
+        <p style="margin-top:var(--s-4)">
+          <a class="btn btn--ghost" href="/authors"><%= t('common.clear') %></a>
+        </p>
+      <% } %>
+    </div>
+  <% } else { %>
+    <div class="list">
+      <% authors.forEach(function (author) { %>
+        <a class="list__item" href="/authors/<%= author.id %>" style="text-decoration:none">
+          <span class="initials" aria-hidden="true">
+            <%= String(author.name || '').split(/\s+/).filter(Boolean).slice(0, 2)
+                  .map(function (part) { return part[0]; }).join('').toUpperCase() %>
+          </span>
+          <span class="list__grow"><span class="list__title"><%= author.name %></span></span>
+          <span class="pill pill--quiet"><%= author.book_count %></span>
+        </a>
+      <% }); %>
+    </div>
+  <% } %>
+
+</div>

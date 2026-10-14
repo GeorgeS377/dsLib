@@ -1,0 +1,36 @@
+<%#
+  A page of results, as a list or a grid.
+
+  The switch is two links carrying the current search and filters, not a
+  control that needs scripting — and the choice is remembered in a cookie, so
+  it holds across pages.
+-%>
+<div class="row" style="justify-content:space-between">
+  <p class="muted small" role="status">
+    <%= t('search.showing', { from: range.from, to: range.to, total: range.total }) %>
+  </p>
+  <div class="row" role="group" aria-label="<%= t('search.view.label') %>">
+    <a class="btn btn--small <%= viewMode === 'list' ? '' : 'btn--ghost' %>"
+       href="<%= viewUrl('list') %>" <%- viewMode === 'list' ? 'aria-current="true"' : '' %>>
+      <%= t('search.view.list') %>
+    </a>
+    <a class="btn btn--small <%= viewMode === 'grid' ? '' : 'btn--ghost' %>"
+       href="<%= viewUrl('grid') %>" <%- viewMode === 'grid' ? 'aria-current="true"' : '' %>>
+      <%= t('search.view.grid') %>
+    </a>
+  </div>
+</div>
+
+<% if (viewMode === 'grid') { %>
+  <ul class="book-grid">
+    <% results.rows.forEach(function (book) { %>
+      <%- include('./book-tile', { book: book, t: t }) %>
+    <% }); %>
+  </ul>
+<% } else { %>
+  <div class="book-list list">
+    <% results.rows.forEach(function (book) { %>
+      <%- include('./book-row', { book: book, t: t }) %>
+    <% }); %>
+  </div>
+<% } %>

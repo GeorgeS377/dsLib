@@ -26,8 +26,10 @@ import {
 import { SqliteSessionStore } from './lib/session-store.js';
 import {
   UI_COOKIE,
+  VIEW_COOKIE,
   resolveFlavour,
   resolveTemplate,
+  resolveViewMode,
   stylesheetFor,
 } from './lib/ui-flavour.js';
 import healthRoutes from './routes/health.js';
@@ -247,6 +249,7 @@ export async function buildApp({ config = defaultConfig, logger, db, onRoute } =
   app.decorateRequest('lang', null);
   app.decorateRequest('theme', 'light');
   app.decorateRequest('uiFlavour', 'classic');
+  app.decorateRequest('viewMode', 'list');
   app.addHook('onRequest', async (request, reply) => {
     // Which of the two interfaces this visitor sees. Settled here rather than
     // in each route, so no route can forget it or disagree with another.
@@ -254,6 +257,20 @@ export async function buildApp({ config = defaultConfig, logger, db, onRoute } =
     request.uiFlavour = ui.flavour;
     if (ui.fromQuery) {
       reply.setCookie(UI_COOKIE, ui.flavour, {
+        path: '/',
+        httpOnly: true,
+        sameSite: 'lax',
+        secure: config.isProduction,
+        maxAge: ONE_YEAR_SECONDS,
+      });
+    }
+
+    // Whether the catalogue is drawn as a list or a grid, remembered the same
+    // way and validated against the same kind of allow-list.
+    const view = resolveViewMode(request);
+    request.viewMode = view.mode;
+    if (view.fromQuery) {
+      reply.setCookie(VIEW_COOKIE, view.mode, {
         path: '/',
         httpOnly: true,
         sameSite: 'lax',
@@ -307,6 +324,8 @@ export async function buildApp({ config = defaultConfig, logger, db, onRoute } =
       lang: request.lang,
       theme: request.theme,
       uiFlavour: request.uiFlavour,
+      viewMode: request.viewMode,
+      viewUrl: (target) => withQueryParam(request.url, 'view', target),
       stylesheet: stylesheetFor(request.uiFlavour),
       supportedLangs: SUPPORTED_LANGS,
       libraryName: config.libraryName,
