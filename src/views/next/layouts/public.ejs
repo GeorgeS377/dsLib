@@ -6,6 +6,10 @@
   load, for the same reason as the first interface: setting it in JavaScript
   repaints after first paint and flashes the light palette at someone who
   chose dark.
+
+  The bar holds the library name, the catalogue search, and the way in for
+  staff. Language and theme sit in the footer — on a phone the bar has room
+  for the name and one link, and the search matters more than either.
 -%>
 <html lang="<%= lang %>"<% if (theme === 'dark') { %> data-theme="dark"<% } %>>
 <head>
@@ -19,8 +23,55 @@
 <body>
   <a class="skip-link" href="#main"><%= t('nav.skip') %></a>
 
+  <header class="bar">
+    <div class="wrap bar__inner">
+      <a class="bar__brand" href="/">
+        <span class="bar__mark">
+          <%- include('../../partials/icon', { name: 'book', size: 15 }) %>
+        </span>
+        <span><%= libraryName %></span>
+      </a>
+
+      <nav class="bar__links" aria-label="<%= t('nav.browseBy') %>">
+        <a class="bar__link" href="/books"
+           <%- currentPath.split('?')[0] === '/books' ? 'aria-current="page"' : '' %>><%= t('nav.catalogue') %></a>
+        <a class="bar__link" href="/categories"
+           <%- currentPath.startsWith('/categories') ? 'aria-current="page"' : '' %>><%= t('nav.categories') %></a>
+        <a class="bar__link" href="/authors"
+           <%- currentPath.startsWith('/authors') ? 'aria-current="page"' : '' %>><%= t('nav.authors') %></a>
+      </nav>
+
+      <div class="bar__who">
+        <a class="bar__out" href="/staff/login" style="color:var(--blue-text)">
+          <%- include('../../partials/icon', { name: 'login', size: 15 }) %>
+          <%= t('nav.staff') %>
+        </a>
+      </div>
+    </div>
+  </header>
+
   <main id="main">
-    <%- body %>
+    <div class="wrap stack-lg">
+      <%- include('../partials/flash', { flash: flash, t: t }) %>
+      <%- body %>
+    </div>
   </main>
+
+  <footer class="foot">
+    <div class="wrap foot__inner">
+      <a href="/books"><%= t('nav.catalogue') %></a>
+      <a href="/categories"><%= t('nav.categories') %></a>
+      <a href="/authors"><%= t('nav.authors') %></a>
+      <a href="<%= themeUrl(theme === 'dark' ? 'light' : 'dark') %>">
+        <%= theme === 'dark' ? t('theme.switchToLight') : t('theme.switchToDark') %>
+      </a>
+      <% supportedLangs.forEach(function (code) { %>
+        <% if (code !== lang) { %>
+          <a href="<%= langUrl(code) %>"><%= t('lang.' + code) %></a>
+        <% } %>
+      <% }); %>
+      <span class="foot__spacer faint"><%= libraryName %></span>
+    </div>
+  </footer>
 </body>
 </html>

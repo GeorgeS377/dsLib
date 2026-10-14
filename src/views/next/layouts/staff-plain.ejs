@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<%#
+  The sign-in page, and anything else reached without an account.
+
+  Same bar as the rest of the staff area minus what needs an account: no page
+  links, no name, no sign-out — but the library name still links back to the
+  public catalogue, so arriving here from the public site is not a dead end.
+
+  No bottom bar either: its four destinations all require signing in.
+-%>
+<html lang="<%= lang %>"<% if (theme === 'dark') { %> data-theme="dark"<% } %>>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title><%= typeof title !== 'undefined' && title ? title + ' · ' : '' %><%= t('staff.area') %></title>
+  <meta name="robots" content="noindex, nofollow">
+  <link rel="stylesheet" href="<%= stylesheet %>">
+  <link rel="icon" href="/assets/icon.svg" type="image/svg+xml">
+</head>
+<body>
+  <a class="skip-link" href="#main"><%= t('nav.skip') %></a>
+
+  <header class="bar">
+    <div class="wrap bar__inner">
+      <a class="bar__brand" href="/">
+        <span class="bar__mark">
+          <%- include('../../partials/icon', { name: 'book', size: 15 }) %>
+        </span>
+        <span><%= t('staff.area') %></span>
+      </a>
+      <a class="bar__who" href="/" style="text-decoration:none">
+        <%- include('../../partials/icon', { name: 'chevron-left', size: 15 }) %>
+        <%= t('staff.viewPublicSite') %>
+      </a>
+    </div>
+  </header>
+
+  <main id="main">
+    <div class="wrap stack-lg">
+      <%- include('../partials/flash', { flash: flash, t: t }) %>
+      <%- body %>
+    </div>
+  </main>
+
+  <footer class="foot">
+    <div class="wrap foot__inner">
+      <a href="<%= themeUrl(theme === 'dark' ? 'light' : 'dark') %>">
+        <%= theme === 'dark' ? t('theme.switchToLight') : t('theme.switchToDark') %>
+      </a>
+      <% supportedLangs.forEach(function (code) { %>
+        <% if (code !== lang) { %>
+          <a href="<%= langUrl(code) %>"><%= t('lang.' + code) %></a>
+        <% } %>
+      <% }); %>
+    </div>
+  </footer>
+</body>
+</html>

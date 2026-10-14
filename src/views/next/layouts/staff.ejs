@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<%#
+  Staff shell for the second interface.
+
+  The navigation is computed here, once, from the path — so a page cannot
+  disagree with the bar about where it is, and adding a page means adding one
+  row below rather than editing every template.
+
+  On a wide screen the five links sit in the top bar. On a phone the four
+  everyday ones move to a bar at the bottom and Ρυθμίσεις is reached through
+  the account name, which keeps the whole interface free of dropdowns.
+-%>
+<%
+  const path = currentPath.split('?')[0];
+  const at = (prefix, exact) => (exact ? path === prefix : path.startsWith(prefix));
+
+  const navLinks = [
+    { href: '/staff', label: t('common.search'), icon: 'search', current: at('/staff', true) },
+    { href: '/staff/books', label: t('staff.nav.books'), icon: 'book', current: at('/staff/books') },
+    { href: '/staff/loans', label: t('staff.nav.loans'), icon: 'clock', current: at('/staff/loans') },
+    { href: '/staff/borrowers', label: t('staff.nav.borrowers'), icon: 'user', current: at('/staff/borrowers') },
+  ];
+  const settingsLink = {
+    href: '/staff/settings',
+    label: t('staff.nav.settings'),
+    icon: 'settings',
+    current: at('/staff/settings') || at('/staff/categories') || at('/staff/authors')
+      || at('/staff/users') || at('/staff/account'),
+  };
+
+  // Exactly one item may claim to be the current page. When a path matches
+  // nothing above (a confirmation page, say) none of them does, which is
+  // honest — the bar should not point at a page you are not on.
+  const barLinks = navLinks.concat(settingsLink);
+
+  const initials = (staffUser && staffUser.display_name ? staffUser.display_name : '')
+    .split(/\s+/).filter(Boolean).slice(0, 2).map((part) => part[0]).join('').toUpperCase();
+-%>
+<html lang="<%= lang %>"<% if (theme === 'dark') { %> data-theme="dark"<% } %>>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title><%= typeof title !== 'undefined' && title ? title + ' · ' + t('staff.area') : t('staff.area') %></title>
+  <meta name="robots" content="noindex, nofollow">
+  <link rel="stylesheet" href="<%= stylesheet %>">
+  <link rel="icon" href="/assets/icon.svg" type="image/svg+xml">
+</head>
+<body>
+  <a class="skip-link" href="#main"><%= t('nav.skip') %></a>
+
+  <%- include('../partials/topbar', {
+        t: t, staffUser: staffUser, libraryName: libraryName, csrfToken: csrfToken,
+        links: barLinks, initials: initials }) %>
+
+  <main id="main">
+    <div class="wrap stack-lg">
+      <%- include('../partials/flash', { flash: flash, t: t }) %>
+      <%- body %>
+    </div>
+  </main>
+
+  <footer class="foot">
+    <div class="wrap foot__inner">
+      <a href="/"><%= t('staff.viewPublicSite') %></a>
+      <a href="<%= themeUrl(theme === 'dark' ? 'light' : 'dark') %>">
+        <%= theme === 'dark' ? t('theme.switchToLight') : t('theme.switchToDark') %>
+      </a>
+      <% supportedLangs.forEach(function (code) { %>
+        <% if (code !== lang) { %>
+          <a href="<%= langUrl(code) %>"><%= t('lang.' + code) %></a>
+        <% } %>
+      <% }); %>
+    </div>
+  </footer>
+
+  <%- include('../partials/bottom-nav', { t: t, links: navLinks }) %>
+
+  <script src="/assets/js/app.js" defer></script>
+</body>
+</html>

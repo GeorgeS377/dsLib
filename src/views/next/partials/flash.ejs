@@ -1,0 +1,22 @@
+<%#
+  Flash messages carried over a redirect. Same contract as the first
+  interface: each is a translation key plus variables, so a message queued in
+  one language renders in whichever language it is read in.
+-%>
+<% if (flash && flash.length > 0) { %>
+  <ul class="stack" style="list-style:none;padding:0">
+    <% flash.forEach(function (message) { %>
+      <%
+        const flashIcon = message.type === 'success' ? 'check'
+          : message.type === 'error' ? 'close'
+          : message.type === 'warning' ? 'warning'
+          : 'tag';
+      %>
+      <li class="flash flash--<%= message.type %>"
+          role="<%= message.type === 'error' ? 'alert' : 'status' %>">
+        <%- include('../../partials/icon', { name: flashIcon, size: 18 }) %>
+        <span><%= t(message.key, message.vars || undefined) %></span>
+      </li>
+    <% }); %>
+  </ul>
+<% } %>

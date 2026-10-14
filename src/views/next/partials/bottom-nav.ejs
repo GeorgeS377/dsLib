@@ -1,0 +1,22 @@
+<%#
+  The four everyday pages, pinned to the bottom of a phone screen.
+
+  Not a menu button: a teacher who uses this a few times a term should not
+  have to discover that "Αναγνώστες" lives behind three lines. Hidden above
+  48rem, where the same links sit in the top bar.
+
+  Ρυθμίσεις is deliberately not here — it is reached through the account name,
+  which keeps this to the four things a shift actually needs and keeps the
+  whole interface free of dropdowns.
+
+  Expects: t, and `links` as a list of { href, label, icon, current }.
+-%>
+<nav class="tabbar" aria-label="<%= t('nav.menu') %>">
+  <% links.forEach(function (link) { %>
+    <a class="tabbar__item" href="<%= link.href %>"
+       <%- link.current ? 'aria-current="page"' : '' %>>
+      <%- include('../../partials/icon', { name: link.icon, size: 20 }) %>
+      <span><%= link.label %></span>
+    </a>
+  <% }); %>
+</nav>

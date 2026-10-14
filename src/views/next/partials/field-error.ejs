@@ -1,0 +1,14 @@
+<%#
+  One field-level error message.
+
+  Error codes come from the validation layer and are translated here, so no
+  message text is built in JavaScript. A code with its own `error.field.<code>`
+  entry gets that message; anything else falls back to a generic one.
+
+  Expects `code` and `hasT`.
+-%>
+<% if (code) { %>
+  <span class="field__error">
+    <%= hasT('error.field.' + code) ? t('error.field.' + code) : t('error.field.generic') %>
+  </span>
+<% } %>

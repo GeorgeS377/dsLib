@@ -1,0 +1,55 @@
+<%#
+  The bar across the top of every page.
+
+  Library name and mark hard left, the signed-in person and sign-out hard
+  right — the one thing the first interface already had right. Between them,
+  on a wide screen, the page links; on a phone those move to the bar at the
+  bottom, where they fall under a thumb and nothing is hidden.
+
+  Language and theme are deliberately absent: they are not desk-side
+  decisions and do not earn space on a narrow screen. The footer carries them.
+
+  Expects: t, staffUser, currentPath, libraryName. `links` is a list of
+  { href, label } or omitted on the public side.
+-%>
+<header class="bar">
+  <div class="wrap bar__inner">
+    <a class="bar__brand" href="<%= staffUser ? '/staff' : '/' %>">
+      <span class="bar__mark">
+        <%- include('../../partials/icon', { name: 'book', size: 15 }) %>
+      </span>
+      <span><%= staffUser ? t('staff.area') : libraryName %></span>
+    </a>
+
+    <% if (typeof links !== 'undefined' && links.length > 0) { %>
+      <nav class="bar__links" aria-label="<%= t('nav.menu') %>">
+        <% links.forEach(function (link) { %>
+          <a class="bar__link" href="<%= link.href %>"
+             <%- link.current ? 'aria-current="page"' : '' %>><%= link.label %></a>
+        <% }); %>
+      </nav>
+    <% } %>
+
+    <div class="bar__who">
+      <% if (staffUser) { %>
+        <a class="bar__who" href="/staff/account" style="gap:var(--s-2)">
+          <span class="bar__avatar" aria-hidden="true"><%= initials %></span>
+          <span class="bar__name"><%= staffUser.display_name %></span>
+        </a>
+        <form method="post" action="/staff/logout">
+          <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+          <button class="bar__out" type="submit"
+                  style="background:none;border:0;font:inherit;cursor:pointer">
+            <%- include('../../partials/icon', { name: 'logout', size: 15 }) %>
+            <%= t('staff.logout') %>
+          </button>
+        </form>
+      <% } else { %>
+        <a class="bar__out" href="/staff/login" style="color:var(--blue-text)">
+          <%- include('../../partials/icon', { name: 'login', size: 15 }) %>
+          <%= t('nav.staff') %>
+        </a>
+      <% } %>
+    </div>
+  </div>
+</header>

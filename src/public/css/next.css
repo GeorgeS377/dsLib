@@ -1,0 +1,803 @@
+/*
+  dsLib — second interface.
+  ==========================================================================
+
+  A plain, square interface for people who use it a few times a term. The
+  decisions it encodes, from the mockup session:
+
+    * Panels, lists and cards have square corners; only buttons and inputs
+      get 4px, enough to read as pressable.
+    * Blue leads — it carries everything clickable. Orange is the brand mark,
+      the rule under the current page, and anything needing attention. It is
+      rare enough that it still registers when it appears.
+    * Orange never sits behind white text: #fb6222 behind white is 3.1:1,
+      under the 4.5:1 a person needs to read it. It appears as a mark, a 2px
+      rule, and dark-on-pale badges.
+    * Nothing is hidden behind a control that has to be discovered. On a
+      phone the four everyday pages sit in a bar at the bottom.
+
+  Contents
+    1. Tokens
+    2. Reset and flow
+    3. Shell: bar, bottom nav, footer
+    4. Panels and lists
+    5. Forms and buttons
+    6. Pills, flashes and states
+    7. Tables
+    8. Utilities
+*/
+
+/* ------------------------------------------------------------- 1. Tokens */
+
+:root {
+  --blue: #0086d4;
+  --blue-text: #0071b3;
+  --blue-pale: #e4f1fa;
+  --blue-ink: #065a8c;
+
+  --orange: #fb6222;
+  --orange-pale: #feeee6;
+  --orange-ink: #9a3a06;
+
+  --red: #b42318;
+  --red-pale: #fdeceb;
+
+  --bg: #f7f7f9;
+  --surface: #ffffff;
+  --sunken: #f1f1f4;
+  --line: #e3e3e8;
+  --line-strong: #c9c9d2;
+
+  --ink: #1b1b1f;
+  --ink-muted: #55555f;
+  --ink-faint: #85858f;
+
+  --r-control: 4px;
+
+  --s-1: 4px;
+  --s-2: 8px;
+  --s-3: 12px;
+  --s-4: 16px;
+  --s-5: 24px;
+  --s-6: 32px;
+  --s-7: 48px;
+
+  --measure: 72rem;
+  --font: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial,
+    "Noto Sans", sans-serif;
+}
+
+:root[data-theme="dark"] {
+  --blue: #3aa8e8;
+  --blue-text: #6cc2f3;
+  --blue-pale: #10293a;
+  --blue-ink: #a9d9f5;
+
+  --orange: #ff7a42;
+  --orange-pale: #361a0e;
+  --orange-ink: #ffb894;
+
+  --red: #ff6b5e;
+  --red-pale: #3a1512;
+
+  --bg: #16161a;
+  --surface: #1e1e23;
+  --sunken: #26262c;
+  --line: #33333a;
+  --line-strong: #4a4a54;
+
+  --ink: #ececf0;
+  --ink-muted: #b4b4bf;
+  --ink-faint: #8a8a95;
+}
+
+/* --------------------------------------------------- 2. Reset and flow */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+* {
+  margin: 0;
+}
+
+/*
+  The reset above zeroes every margin, which is why the first interface ended
+  up with headings sitting flush against forms: each gap had to be remembered
+  one pair at a time, and the forgotten pairs were the cramped ones. These flow
+  rules give stacked content a default separation, so forgetting is no longer
+  possible. Sibling margins collapse, so a rule asking for more still wins.
+*/
+.stack > * + * {
+  margin-top: var(--s-4);
+}
+
+.stack-lg > * + * {
+  margin-top: var(--s-6);
+}
+
+.panel > * + *,
+fieldset > * + * {
+  margin-top: var(--s-4);
+}
+
+img,
+svg {
+  display: block;
+  max-width: 100%;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font);
+  font-size: 16px;
+  line-height: 1.5;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  /* Room for the bottom nav so it never covers the last row of a page. */
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+h1 {
+  font-size: 1.5rem;
+  line-height: 1.25;
+}
+
+h2 {
+  font-size: 1.1875rem;
+  line-height: 1.3;
+}
+
+h3 {
+  font-size: 1rem;
+}
+
+p {
+  text-wrap: pretty;
+}
+
+a {
+  color: var(--blue-text);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 2px;
+}
+
+a:hover {
+  color: var(--blue);
+}
+
+:focus-visible {
+  outline: 2px solid var(--blue);
+  outline-offset: 2px;
+}
+
+.skip-link {
+  position: absolute;
+  left: var(--s-4);
+  top: var(--s-2);
+  padding: var(--s-2) var(--s-4);
+  background: var(--surface);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--r-control);
+  transform: translateY(-200%);
+}
+
+.skip-link:focus {
+  transform: none;
+}
+
+.wrap {
+  width: 100%;
+  max-width: var(--measure);
+  margin-inline: auto;
+  padding-inline: var(--s-4);
+}
+
+main {
+  flex: 1;
+  padding-block: var(--s-5) var(--s-7);
+}
+
+/* --------------------------------------------------------- 3. The shell */
+
+.bar {
+  background: var(--surface);
+  border-bottom: 1px solid var(--line);
+}
+
+.bar__inner {
+  display: flex;
+  align-items: center;
+  gap: var(--s-4);
+  min-height: 52px;
+  padding-block: var(--s-2);
+}
+
+.bar__brand {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  font-weight: 700;
+  font-size: 0.9375rem;
+  color: var(--ink);
+  text-decoration: none;
+  flex: none;
+}
+
+.bar__mark {
+  width: 24px;
+  height: 24px;
+  border-radius: var(--r-control);
+  background: var(--orange);
+  color: #fff;
+  display: grid;
+  place-items: center;
+  flex: none;
+}
+
+.bar__links {
+  display: flex;
+  gap: var(--s-4);
+  margin-inline-start: var(--s-3);
+  font-size: 0.9375rem;
+}
+
+.bar__link {
+  color: var(--ink-muted);
+  text-decoration: none;
+  padding-block: var(--s-2);
+  border-bottom: 2px solid transparent;
+}
+
+.bar__link:hover {
+  color: var(--ink);
+}
+
+.bar__link[aria-current="page"] {
+  color: var(--blue-text);
+  font-weight: 600;
+  /* The one place orange appears in the chrome: it says where you are. */
+  border-bottom-color: var(--orange);
+}
+
+.bar__who {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  margin-inline-start: auto;
+  font-size: 0.875rem;
+  color: var(--ink-muted);
+  flex: none;
+}
+
+.bar__avatar {
+  width: 26px;
+  height: 26px;
+  border-radius: var(--r-control);
+  background: var(--blue-pale);
+  color: var(--blue-ink);
+  display: grid;
+  place-items: center;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  flex: none;
+}
+
+.bar__name {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 11rem;
+}
+
+.bar__out {
+  color: var(--red);
+  font-weight: 600;
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  gap: var(--s-1);
+}
+
+.bar__out:hover {
+  color: var(--red);
+  text-decoration: underline;
+}
+
+/* The four everyday pages, always visible, never behind a button that has to
+   be discovered. Phone only — above 48rem the links live in the bar. */
+.tabbar {
+  position: sticky;
+  bottom: 0;
+  display: flex;
+  background: var(--surface);
+  border-top: 1px solid var(--line);
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+.tabbar__item {
+  flex: 1;
+  display: grid;
+  justify-items: center;
+  gap: 2px;
+  padding: var(--s-2) var(--s-1) calc(var(--s-2) - 2px);
+  font-size: 0.6875rem;
+  color: var(--ink-muted);
+  text-decoration: none;
+  border-top: 2px solid transparent;
+  margin-top: -1px;
+}
+
+.tabbar__item[aria-current="page"] {
+  color: var(--blue-text);
+  font-weight: 650;
+  border-top-color: var(--orange);
+}
+
+@media (min-width: 48rem) {
+  .tabbar {
+    display: none;
+  }
+}
+
+@media (max-width: 47.99rem) {
+  .bar__links {
+    display: none;
+  }
+
+  .bar__name {
+    display: none;
+  }
+}
+
+.foot {
+  border-top: 1px solid var(--line);
+  padding-block: var(--s-4);
+  font-size: 0.875rem;
+  color: var(--ink-faint);
+}
+
+.foot__inner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s-3) var(--s-5);
+}
+
+.foot__spacer {
+  margin-inline-start: auto;
+}
+
+/* ------------------------------------------------- 4. Panels and lists */
+
+.panel {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  padding: var(--s-5);
+}
+
+.panel__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--s-3);
+}
+
+.label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--ink-muted);
+  letter-spacing: 0.03em;
+}
+
+.list {
+  background: var(--surface);
+  border: 1px solid var(--line);
+}
+
+.list__item {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  padding: var(--s-3) var(--s-4);
+  border-bottom: 1px solid var(--line);
+}
+
+.list__item:last-child {
+  border-bottom: 0;
+}
+
+.list__grow {
+  flex: 1;
+  min-width: 0;
+}
+
+.list__title {
+  font-size: 0.9375rem;
+  font-weight: 650;
+}
+
+.list__meta {
+  font-size: 0.8125rem;
+  color: var(--ink-muted);
+  margin-top: 2px;
+}
+
+.list__link {
+  color: var(--ink);
+  text-decoration: none;
+}
+
+.list__link:hover {
+  color: var(--blue-text);
+  text-decoration: underline;
+}
+
+.cover {
+  width: 36px;
+  height: 50px;
+  flex: none;
+  background: var(--sunken);
+  border-radius: var(--r-control);
+  display: grid;
+  place-items: center;
+  color: var(--ink-faint);
+  overflow: hidden;
+}
+
+.cover img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.initials {
+  width: 36px;
+  height: 36px;
+  flex: none;
+  border-radius: var(--r-control);
+  background: var(--blue-pale);
+  color: var(--blue-ink);
+  display: grid;
+  place-items: center;
+  font-size: 0.8125rem;
+  font-weight: 700;
+}
+
+/* --------------------------------------------- 5. Forms and buttons */
+
+.field__label {
+  display: block;
+  font-weight: 600;
+  font-size: 0.9375rem;
+  margin-bottom: var(--s-2);
+}
+
+.field__hint {
+  display: block;
+  font-size: 0.875rem;
+  color: var(--ink-muted);
+  margin-top: calc(var(--s-1) - var(--s-2));
+  margin-bottom: var(--s-2);
+}
+
+.field__optional {
+  font-weight: 400;
+  color: var(--ink-faint);
+  font-size: 0.875rem;
+}
+
+.field__error {
+  display: block;
+  font-size: 0.875rem;
+  color: var(--red);
+  margin-top: var(--s-1);
+}
+
+input[type="text"],
+input[type="search"],
+input[type="password"],
+input[type="number"],
+input[type="date"],
+input[type="email"],
+select,
+textarea {
+  width: 100%;
+  font: inherit;
+  font-size: 0.9375rem;
+  color: var(--ink);
+  background: var(--surface);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--r-control);
+  padding: 9px 11px;
+  min-height: 42px;
+}
+
+textarea {
+  min-height: 7rem;
+  resize: vertical;
+}
+
+input[aria-invalid="true"],
+select[aria-invalid="true"] {
+  border-color: var(--red);
+}
+
+fieldset {
+  border: 1px solid var(--line);
+  padding: var(--s-4) var(--s-5) var(--s-5);
+}
+
+legend {
+  font-weight: 600;
+  font-size: 0.9375rem;
+  padding-inline: var(--s-2);
+}
+
+fieldset > legend + * {
+  margin-top: 0;
+}
+
+/* A submit ends the form rather than continuing it, so it sits further from
+   the last field than the fields sit from each other. Only when something
+   visible precedes it — a hidden input is still an element. */
+form > *:not([type="hidden"]):not([hidden]) + .btn,
+form > *:not([type="hidden"]):not([hidden]) + .btn-row {
+  margin-top: var(--s-5);
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--s-2);
+  font: inherit;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  line-height: 1.2;
+  padding: 10px 16px;
+  min-height: 42px;
+  border: 1px solid var(--blue);
+  border-radius: var(--r-control);
+  background: var(--blue);
+  color: #fff;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.btn:hover {
+  background: var(--blue-text);
+  border-color: var(--blue-text);
+  color: #fff;
+}
+
+.btn--ghost {
+  background: var(--surface);
+  border-color: var(--line-strong);
+  color: var(--ink);
+}
+
+.btn--ghost:hover {
+  background: var(--sunken);
+  border-color: var(--line-strong);
+  color: var(--ink);
+}
+
+.btn--quiet {
+  background: transparent;
+  border-color: transparent;
+  color: var(--ink-muted);
+}
+
+.btn--quiet:hover {
+  background: var(--sunken);
+  border-color: transparent;
+  color: var(--ink);
+}
+
+.btn--danger {
+  background: var(--surface);
+  border-color: var(--red);
+  color: var(--red);
+}
+
+.btn--danger:hover {
+  background: var(--red);
+  border-color: var(--red);
+  color: #fff;
+}
+
+.btn--small {
+  font-size: 0.875rem;
+  padding: 7px 12px;
+  min-height: 36px;
+}
+
+.btn-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-3);
+  align-items: center;
+}
+
+/* One search field, capped. A full-bleed search box on a wide screen is the
+   specific thing that made the borrower page look wrong. */
+.search {
+  display: flex;
+  gap: var(--s-2);
+  max-width: 34rem;
+}
+
+.search--wide {
+  max-width: 48rem;
+}
+
+.search input {
+  flex: 1;
+  min-width: 0;
+}
+
+.search .btn {
+  flex: none;
+}
+
+/* ------------------------------------- 6. Pills, flashes and states */
+
+.pill {
+  display: inline-block;
+  font-size: 0.75rem;
+  font-weight: 650;
+  border-radius: var(--r-control);
+  padding: 3px 8px;
+  white-space: nowrap;
+  background: var(--blue-pale);
+  color: var(--blue-ink);
+}
+
+.pill--warn {
+  background: var(--orange-pale);
+  color: var(--orange-ink);
+}
+
+.pill--quiet {
+  background: var(--sunken);
+  color: var(--ink-muted);
+}
+
+.flash {
+  display: flex;
+  gap: var(--s-2);
+  align-items: flex-start;
+  padding: var(--s-3) var(--s-4);
+  border: 1px solid var(--line);
+  background: var(--surface);
+  font-size: 0.9375rem;
+}
+
+.flash--success {
+  border-color: var(--blue);
+  background: var(--blue-pale);
+  color: var(--blue-ink);
+}
+
+.flash--warning {
+  border-color: var(--orange);
+  background: var(--orange-pale);
+  color: var(--orange-ink);
+}
+
+.flash--error {
+  border-color: var(--red);
+  background: var(--red-pale);
+  color: var(--red);
+}
+
+.state {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  padding: var(--s-6) var(--s-5);
+  text-align: center;
+  color: var(--ink-muted);
+}
+
+.state__title {
+  color: var(--ink);
+  margin-bottom: var(--s-2);
+}
+
+/* ------------------------------------------------------------ 7. Tables */
+
+.table-wrap {
+  overflow-x: auto;
+  border: 1px solid var(--line);
+  background: var(--surface);
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9375rem;
+}
+
+caption {
+  text-align: start;
+  padding: var(--s-3) var(--s-4);
+  color: var(--ink-muted);
+  font-size: 0.875rem;
+}
+
+th,
+td {
+  padding: var(--s-3) var(--s-4);
+  text-align: start;
+  border-bottom: 1px solid var(--line);
+  vertical-align: middle;
+}
+
+thead th {
+  background: var(--sunken);
+  font-size: 0.8125rem;
+  color: var(--ink-muted);
+  /* No capitals: Greek loses its accents when upper-cased, so a header set in
+     caps is misspelled rather than merely loud. */
+  white-space: nowrap;
+}
+
+tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+/* --------------------------------------------------------- 8. Utilities */
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.muted {
+  color: var(--ink-muted);
+}
+
+.faint {
+  color: var(--ink-faint);
+}
+
+.small {
+  font-size: 0.875rem;
+}
+
+.mono {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.875em;
+}
+
+.nowrap {
+  white-space: nowrap;
+}
+
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-3);
+  align-items: center;
+}
+
+.push {
+  margin-inline-start: auto;
+}
