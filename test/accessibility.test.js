@@ -73,6 +73,7 @@ async function pages() {
     `/staff/categories/${category.id}/delete`,
     '/staff/authors',
     `/staff/authors/${author.id}`,
+    '/staff/search?q=' + encodeURIComponent('οδυσ'),
     '/staff/loans',
     '/staff/loans/checkout',
     '/staff/loans/checkout?barcode=T-0001',
@@ -93,6 +94,10 @@ async function pages() {
   for (const url of publicUrls) {
     const response = await app.inject({ method: 'GET', url });
     collected.push({ url, body: response.body });
+    // The second interface has its own markup for every page, so it has to
+    // meet the same bar rather than inherit the first one's result.
+    const next = await app.inject({ method: 'GET', url, headers: { cookie: 'ui=next' } });
+    collected.push({ url: `${url} (next)`, body: next.body });
     // Also check the English rendering of each public page.
     const english = await app.inject({
       method: 'GET',
@@ -107,6 +112,14 @@ async function pages() {
       `${url} returned ${response.statusCode} — fix the route before checking its markup`,
     );
     collected.push({ url, body: response.body });
+
+    const next = await app.inject({
+      method: 'GET',
+      url,
+      headers: { cookie: `${session.cookie}; ui=next` },
+    });
+    assert.ok(next.statusCode < 400, `${url} (next) returned ${next.statusCode}`);
+    collected.push({ url: `${url} (next)`, body: next.body });
   }
   return collected;
 }

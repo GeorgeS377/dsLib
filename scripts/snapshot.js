@@ -21,11 +21,15 @@ if (portAt !== -1) {
   args.splice(portAt, 2);
 }
 
-const [pagePath, outFile] = args;
-if (!pagePath || !outFile) {
-  console.error('usage: node scripts/snapshot.js [--port N] <path> <out.html>');
+// Pairs of path and output file. Several pairs in one run matters: signing in
+// once per page trips the login rate limiter after a handful, which is the
+// limiter working correctly rather than a bug to route around.
+if (args.length === 0 || args.length % 2 !== 0) {
+  console.error('usage: node scripts/snapshot.js [--port N] <path> <out.html> [<path> <out.html>…]');
   process.exit(1);
 }
+const jobs = [];
+for (let i = 0; i < args.length; i += 2) jobs.push({ path: args[i], out: args[i + 1] });
 
 const base = `http://localhost:${port}`;
 const USERNAME = 'maria';
@@ -64,18 +68,23 @@ const signedIn = await visit('/staff/login', {
 });
 if (signedIn.status !== 302) throw new Error(`sign-in failed: ${signedIn.status}`);
 
-const page = await visit(pagePath);
-const body = await page.text();
+for (const job of jobs) {
+  const page = await visit(job.path);
+  const body = await page.text();
 
-// Write the stylesheet beside the page and point at it relatively, so the
-// snapshot is self-contained and same-origin wherever it is served from.
-const sheet = body.match(/href="(\/assets\/css\/[^"]+)"/)?.[1];
-if (sheet) {
-  const css = await fetch(base + sheet).then((r) => r.text());
-  const name = sheet.split('/').pop();
-  fs.writeFileSync(path.join(path.dirname(outFile), name), css);
-  fs.writeFileSync(outFile, body.replaceAll(sheet, `./${name}`).replaceAll('"/assets/', `"${base}/assets/`));
-} else {
-  fs.writeFileSync(outFile, body.replaceAll('"/assets/', `"${base}/assets/`));
+  // Write the stylesheet beside the page and point at it relatively, so each
+  // snapshot is self-contained and same-origin wherever it is served from.
+  const sheet = body.match(/href="(\/assets\/css\/[^"]+)"/)?.[1];
+  if (sheet) {
+    const css = await fetch(base + sheet).then((r) => r.text());
+    const name = sheet.split('/').pop();
+    fs.writeFileSync(path.join(path.dirname(job.out), name), css);
+    fs.writeFileSync(
+      job.out,
+      body.replaceAll(sheet, `./${name}`).replaceAll('"/assets/', `"${base}/assets/`),
+    );
+  } else {
+    fs.writeFileSync(job.out, body.replaceAll('"/assets/', `"${base}/assets/`));
+  }
+  console.log(`${page.status}  ${job.path}  →  ${job.out}`);
 }
-console.log(`${page.status}  ${pagePath}  →  ${outFile}`);

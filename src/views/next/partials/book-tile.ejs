@@ -3,13 +3,14 @@
   covers; until then the row says more.
 -%>
 <li class="tile">
-  <a class="tile__cover" href="/books/<%= book.id %>" aria-hidden="true" tabindex="-1">
+  <%# Not a link, for the same reason as the row: the title carries it. -%>
+  <span class="tile__cover" aria-hidden="true">
     <% if (book.cover_path) { %>
       <img src="/covers/<%= book.cover_path %>" alt="" width="150" height="225" loading="lazy">
     <% } else { %>
       <%- include('../../partials/icon', { name: 'shelf', size: 28 }) %>
     <% } %>
-  </a>
+  </span>
   <div class="tile__body">
     <a class="tile__title list__link" href="/books/<%= book.id %>"><%= book.title %></a>
     <% if (book.authors) { %><p class="tile__author"><%= book.authors %></p><% } %>

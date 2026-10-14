@@ -119,7 +119,10 @@
 }
 
 .panel > * + *,
-fieldset > * + * {
+fieldset > * + *,
+/* Row-shaped forms lay themselves out; everything else stacks. Without this
+   a bare field div next to a fieldset had no gap at all. */
+form:not(.search):not(.btn-row) > * + * {
   margin-top: var(--s-4);
 }
 

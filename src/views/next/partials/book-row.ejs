@@ -5,13 +5,16 @@
   placeholders says less than a row of words does.
 -%>
 <div class="list__item">
-  <a class="cover" href="/books/<%= book.id %>" aria-hidden="true" tabindex="-1">
+  <%# Not a link: the title beside it goes to the same place, and a second
+      link with no text of its own is one more thing for a screen reader to
+      announce and a keyboard to stop at. -%>
+  <span class="cover" aria-hidden="true">
     <% if (book.cover_path) { %>
       <img src="/covers/<%= book.cover_path %>" alt="" width="36" height="50">
     <% } else { %>
       <%- include('../../partials/icon', { name: 'shelf', size: 18 }) %>
     <% } %>
-  </a>
+  </span>
   <div class="list__grow">
     <a class="list__title list__link" href="/books/<%= book.id %>"><%= book.title %></a>
     <div class="list__meta">

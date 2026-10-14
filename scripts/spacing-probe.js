@@ -17,13 +17,21 @@
 // tile's label with its number — in both cases the pair is one unit and its
 // internal gap is deliberately small.
 (async () => {
-  const URLS = [
+  const PATHS = [
     '/', '/books', '/books/1', '/categories', '/authors',
-    '/staff', '/staff/books', '/staff/books/new', '/staff/books/1',
-    '/staff/books/1/copies', '/staff/loans', '/staff/loans/checkout?q=a',
-    '/staff/loans/checkin', '/staff/borrowers', '/staff/categories',
-    '/staff/authors', '/staff/users', '/staff/settings', '/staff/account',
+    '/staff', '/staff/search?q=a', '/staff/books', '/staff/books/new',
+    '/staff/books/1', '/staff/books/1/copies', '/staff/loans',
+    '/staff/loans/checkout?q=a', '/staff/loans/checkin', '/staff/borrowers',
+    '/staff/categories', '/staff/authors', '/staff/users', '/staff/settings',
+    '/staff/account',
   ];
+
+  // Both interfaces: they have separate stylesheets, so a gap fixed in one
+  // says nothing about the other.
+  const URLS = PATHS.flatMap((path) => [
+    path,
+    path + (path.includes('?') ? '&' : '?') + 'ui=next',
+  ]);
 
   const name = (el) =>
     el.tagName.toLowerCase() +
@@ -34,7 +42,7 @@
   const probe = (root) => {
     const found = [];
     const containers = [...root.querySelectorAll(
-      '.card, .fieldset, .filters, .state, .stat, form, .container',
+      '.card, .fieldset, .filters, .state, .stat, form, .container, .panel, .wrap, fieldset',
     )].filter((el) => el.offsetHeight > 40);
 
     for (const box of containers) {
@@ -46,7 +54,10 @@
         const below = kids[i].getBoundingClientRect();
         const gap = Math.round(below.top - above.bottom);
         const heavy = (el) =>
-          el.matches('h1,h2,h3,table,.table-wrap,form,fieldset,.button,button,.button-row,section,.card,dl,ul');
+          el.matches(
+            'h1,h2,h3,table,.table-wrap,form,fieldset,.button,button,.btn,' +
+            '.button-row,.btn-row,section,.card,.panel,.list,dl,ul',
+          );
         if (gap >= 0 && gap < 12 && (heavy(kids[i]) || heavy(kids[i - 1]))) {
           found.push(`${name(box)}: ${name(kids[i - 1])} → ${name(kids[i])} = ${gap}px`);
         }
