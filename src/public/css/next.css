@@ -550,10 +550,16 @@ fieldset > legend + * {
 
 /* A submit ends the form rather than continuing it, so it sits further from
    the last field than the fields sit from each other. Only when something
-   visible precedes it — a hidden input is still an element. */
-form > *:not([type="hidden"]):not([hidden]) + .btn,
-form > *:not([type="hidden"]):not([hidden]) + .btn-row {
+   visible precedes it — a hidden input is still an element — and not in a
+   form that is itself a row, where the button belongs beside the field and
+   this rule would push it onto its own line. */
+form:not(.search):not(.btn-row) > *:not([type="hidden"]):not([hidden]) + .btn,
+form:not(.search):not(.btn-row) > *:not([type="hidden"]):not([hidden]) + .btn-row {
   margin-top: var(--s-5);
+}
+
+.search {
+  align-items: center;
 }
 
 .btn {

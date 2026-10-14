@@ -90,7 +90,10 @@ describe('the staff search page', () => {
     const response = await asStaff(`/staff/search?q=${encodeURIComponent('ιλιαδα')}`);
     assert.equal(response.statusCode, 200);
     assert.ok(response.body.includes('Ιλιάδα'));
-    assert.ok(!response.body.includes(translate('el', 'staff.search.readers')), 'an empty group was rendered');
+    // Scoped to the group heading: the word also names a page in the
+    // navigation, which is present on every page and proves nothing here.
+    const heading = `class="label">${translate('el', 'staff.search.readers')}`;
+    assert.ok(!response.body.includes(heading), 'an empty group was rendered');
   });
 
   it('offers to lend only when a copy is free', async () => {
