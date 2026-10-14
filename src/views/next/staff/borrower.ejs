@@ -1,0 +1,147 @@
+<%#
+  One reader.
+
+  The class sits beside the name in the heading and is not repeated below.
+  Each open loan carries its own Return, because taking the book back is the
+  likeliest reason anyone opened this page, and the return lands back here
+  rather than on the loan list.
+
+  Anonymising says inline when it cannot happen. A live button leading to a
+  page that explains the action in full and only then refuses is worse than
+  no button.
+-%>
+<div class="stack-lg">
+
+  <div>
+    <nav aria-label="<%= t('nav.breadcrumb') %>" class="small muted">
+      <a href="/staff/borrowers"><%= t('staff.borrowers.title') %></a>
+    </nav>
+    <h1 style="margin-top:var(--s-2)"><%= borrower.display_name %></h1>
+    <p class="muted small" style="margin-top:var(--s-1)">
+      <% if (borrower.school_class) { %><%= borrower.school_class %> · <% } %>
+      <%= borrower.open_loans > 0
+            ? t('staff.search.holding', { count: borrower.open_loans })
+            : t('staff.search.holdingNone') %>
+      · <%= t('staff.borrowers.totalLoans') %>: <%= borrower.total_loans %>
+    </p>
+  </div>
+
+  <% if (borrower.is_anonymized) { %>
+    <div class="flash" role="status">
+      <%- include('../../partials/icon', { name: 'lock', size: 18 }) %>
+      <span><%= t('staff.borrowers.isAnonymized') %></span>
+    </div>
+  <% } %>
+
+  <section>
+    <h2 class="label"><%= t('staff.borrowers.history') %></h2>
+    <% if (loans.total === 0) { %>
+      <p class="muted" style="margin-top:var(--s-3)"><%= t('staff.borrowers.noHistory') %></p>
+    <% } else { %>
+      <div class="table-wrap" style="margin-top:var(--s-3)">
+        <table>
+          <thead>
+            <tr>
+              <th scope="col"><%= t('staff.loan.book') %></th>
+              <th scope="col"><%= t('staff.loans.loaned') %></th>
+              <th scope="col"><%= t('staff.loan.due') %></th>
+              <th scope="col"><%= t('staff.loans.returnedAt') %></th>
+              <th scope="col"><span class="visually-hidden"><%= t('staff.action.checkin') %></span></th>
+            </tr>
+          </thead>
+          <tbody>
+            <% loans.rows.forEach(function (loan) { %>
+              <tr>
+                <td><a class="list__link" href="/staff/books/<%= loan.book_id %>"><%= loan.book_title %></a></td>
+                <td class="nowrap faint small"><%= loan.loaned_at.slice(0, 10) %></td>
+                <td class="nowrap">
+                  <% if (!loan.returned_at && loan.is_overdue) { %>
+                    <span class="pill pill--warn"><%= loan.due_at.slice(0, 10) %></span>
+                  <% } else { %>
+                    <span class="faint small"><%= loan.due_at.slice(0, 10) %></span>
+                  <% } %>
+                </td>
+                <td class="nowrap">
+                  <% if (loan.returned_at) { %>
+                    <span class="faint small"><%= loan.returned_at.slice(0, 10) %></span>
+                  <% } else { %>
+                    <span class="pill"><%= t('status.on_loan') %></span>
+                  <% } %>
+                </td>
+                <td class="nowrap">
+                  <% if (!loan.returned_at) { %>
+                    <form method="post" action="/staff/loans/checkin">
+                      <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                      <input type="hidden" name="loan_id" value="<%= loan.id %>">
+                      <input type="hidden" name="redirect_to" value="/staff/borrowers/<%= borrower.id %>">
+                      <button class="btn btn--small" type="submit"><%= t('staff.action.checkin') %></button>
+                    </form>
+                  <% } %>
+                </td>
+              </tr>
+            <% }); %>
+          </tbody>
+        </table>
+      </div>
+    <% } %>
+  </section>
+
+  <% if (!borrower.is_anonymized) { %>
+    <section class="panel">
+      <h2><%= t('common.edit') %></h2>
+
+      <form method="post" action="/staff/borrowers/<%= borrower.id %>">
+        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+
+        <div>
+          <label class="field__label" for="display_name"><%= t('staff.borrowers.name') %></label>
+          <input type="text" id="display_name" name="display_name"
+                 value="<%= values.display_name %>" required maxlength="200"
+                 <%- errors.display_name ? 'aria-invalid="true"' : '' %>>
+          <%- include('../partials/field-error', { hasT: hasT, code: errors.display_name, t: t }) %>
+        </div>
+
+        <div>
+          <label class="field__label" for="school_class"><%= t('staff.borrowers.class') %>
+            <span class="field__optional"><%= t('common.optional') %></span>
+          </label>
+          <input type="text" id="school_class" name="school_class"
+                 value="<%= values.school_class %>" maxlength="60" list="class-options">
+          <datalist id="class-options">
+            <% classes.forEach(function (name) { %>
+              <option value="<%= name %>"></option>
+            <% }); %>
+          </datalist>
+        </div>
+
+        <%# Deliberately no further fields. See the privacy note in
+            migrations/002_circulation.sql. -%>
+        <button class="btn" type="submit"><%= t('common.save') %></button>
+      </form>
+    </section>
+
+    <section class="panel">
+      <h2><%= t('staff.borrowers.anonymize') %></h2>
+      <p class="muted small">
+        <%= t('staff.borrowers.anonymizeExplain', {
+              placeholder: anonymizedName, count: borrower.total_loans }) %>
+      </p>
+
+      <% if (borrower.open_loans > 0) { %>
+        <p class="field__hint"><%= t('staff.borrowers.anonymizeBlocked') %></p>
+      <% } else { %>
+        <div class="btn-row">
+          <a class="btn btn--ghost" href="/staff/borrowers/<%= borrower.id %>/anonymize">
+            <%= t('staff.borrowers.anonymize') %>
+          </a>
+          <% if (borrower.total_loans === 0) { %>
+            <a class="btn btn--danger" href="/staff/borrowers/<%= borrower.id %>/delete">
+              <%= t('common.delete') %>
+            </a>
+          <% } %>
+        </div>
+      <% } %>
+    </section>
+  <% } %>
+
+</div>

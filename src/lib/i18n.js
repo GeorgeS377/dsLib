@@ -202,6 +202,9 @@ const el = {
 
   // --- Dashboard ---
   'staff.dashboard.title': 'Επισκόπηση',
+  'staff.dashboard.overdueCount': '{count} βιβλία έπρεπε να έχουν γυρίσει.',
+  'staff.dashboard.overdueSee': 'Δείτε ποια',
+  'staff.dashboard.quick': 'Γρήγορες ενέργειες',
   'staff.dashboard.recent': 'Πρόσφατες αλλαγές',
   'staff.dashboard.overdue': 'Εκπρόθεσμοι δανεισμοί',
   'staff.dashboard.empty': 'Ο κατάλογος είναι άδειος',
@@ -416,6 +419,7 @@ const el = {
   'staff.loans.borrowerNewHint':
     'Καταχωρίζονται μόνο όνομα και τμήμα — τίποτα άλλο.',
   'staff.loans.recentReturns': 'Πρόσφατες επιστροφές',
+  'staff.loans.checkinBySearch': 'Χωρίς barcode; Βρείτε τον μαθητή από την αναζήτηση:',
   'staff.loans.selected': 'Επιλεγμένα αντίτυπα ({count})',
   'staff.loans.addCopy': 'Προσθήκη',
   'staff.loans.alreadySelected': 'Επιλεγμένο',
@@ -718,6 +722,9 @@ const en = {
 
   // --- Dashboard ---
   'staff.dashboard.title': 'Overview',
+  'staff.dashboard.overdueCount': '{count} books are past their date.',
+  'staff.dashboard.overdueSee': 'See which',
+  'staff.dashboard.quick': 'Quick actions',
   'staff.dashboard.recent': 'Recent changes',
   'staff.dashboard.overdue': 'Overdue loans',
   'staff.dashboard.empty': 'The catalogue is empty',
@@ -926,6 +933,7 @@ const en = {
   'staff.loans.borrowerNew': 'New borrower',
   'staff.loans.borrowerNewHint': 'Only a name and a class are recorded — nothing else.',
   'staff.loans.recentReturns': 'Recent returns',
+  'staff.loans.checkinBySearch': 'No barcode? Find the student from the search:',
   'staff.loans.selected': 'Selected copies ({count})',
   'staff.loans.addCopy': 'Add',
   'staff.loans.alreadySelected': 'Selected',

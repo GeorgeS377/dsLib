@@ -1,0 +1,60 @@
+<%#
+  The staff home.
+
+  A teacher arriving for a shift wants one of four things: lend a book, take
+  one back, add one, or fix one. A console of sections makes them work out
+  which section each of those lives in; a search box does not. So the home
+  asks what they are looking for, and the actions hang off the answer.
+
+  The route behind this page still computes the dashboard figures — it is the
+  first interface's route, unchanged — and this template simply does not use
+  them. That is deliberate: no route branches on which interface is showing.
+-%>
+<div class="stack-lg">
+
+  <section>
+    <h1><%= t('staff.search.start') %></h1>
+    <form class="search search--wide" method="get" action="/staff/search" role="search"
+          style="margin-top:var(--s-4)">
+      <label class="visually-hidden" for="q"><%= t('staff.search.label') %></label>
+      <input type="search" id="q" name="q" autocomplete="off" autofocus
+             placeholder="<%= t('staff.search.label') %>">
+      <button class="btn" type="submit">
+        <%- include('../../partials/icon', { name: 'search', size: 17 }) %>
+        <%= t('common.search') %>
+      </button>
+    </form>
+    <p class="field__hint" style="margin-top:var(--s-2)"><%= t('staff.search.startHint') %></p>
+  </section>
+
+  <%# The one thing worth interrupting for. Shown only when something is
+      actually late, so it means something when it appears. -%>
+  <% if (stats.overdue > 0) { %>
+    <div class="flash flash--warning" role="status">
+      <%- include('../../partials/icon', { name: 'warning', size: 18 }) %>
+      <span>
+        <%= t('staff.dashboard.overdueCount', { count: stats.overdue }) %>
+        <a href="/staff/loans?status=overdue"><%= t('staff.dashboard.overdueSee') %></a>
+      </span>
+    </div>
+  <% } %>
+
+  <section>
+    <h2 class="label"><%= t('staff.dashboard.quick') %></h2>
+    <div class="btn-row" style="margin-top:var(--s-3)">
+      <a class="btn btn--ghost" href="/staff/books/new">
+        <%- include('../../partials/icon', { name: 'plus', size: 17 }) %>
+        <%= t('staff.action.addBook') %>
+      </a>
+      <a class="btn btn--ghost" href="/staff/loans/checkin">
+        <%- include('../../partials/icon', { name: 'archive', size: 17 }) %>
+        <%= t('staff.loans.checkin') %>
+      </a>
+      <a class="btn btn--ghost" href="/staff/books">
+        <%- include('../../partials/icon', { name: 'book', size: 17 }) %>
+        <%= t('staff.nav.books') %>
+      </a>
+    </div>
+  </section>
+
+</div>

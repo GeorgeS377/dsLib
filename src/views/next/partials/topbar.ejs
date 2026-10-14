@@ -38,16 +38,18 @@
         </a>
         <form method="post" action="/staff/logout">
           <input type="hidden" name="_csrf" value="<%= csrfToken %>">
-          <button class="bar__out" type="submit"
+          <%# The word collapses to its icon on a phone, where the bar cannot
+              hold the brand and both labels; the accessible name stays. -%>
+          <button class="bar__out" type="submit" aria-label="<%= t('staff.logout') %>"
                   style="background:none;border:0;font:inherit;cursor:pointer">
             <%- include('../../partials/icon', { name: 'logout', size: 15 }) %>
-            <%= t('staff.logout') %>
+            <span class="bar__out-label"><%= t('staff.logout') %></span>
           </button>
         </form>
       <% } else { %>
         <a class="bar__out" href="/staff/login" style="color:var(--blue-text)">
           <%- include('../../partials/icon', { name: 'login', size: 15 }) %>
-          <%= t('nav.staff') %>
+          <span class="bar__out-label"><%= t('nav.staff') %></span>
         </a>
       <% } %>
     </div>

@@ -343,18 +343,26 @@ main {
   border-top-color: var(--orange);
 }
 
-@media (min-width: 48rem) {
+/* The links move to the bottom bar at 64rem, not 48rem: between those two
+   widths the brand, five links, the name and sign-out add up to more than the
+   bar can hold, and the page scrolled sideways rather than looking crowded.
+   Measured at 945px: 905px of content plus gaps and padding against 945px of
+   room. */
+@media (min-width: 64rem) {
   .tabbar {
     display: none;
   }
 }
 
-@media (max-width: 47.99rem) {
+@media (max-width: 63.99rem) {
   .bar__links {
     display: none;
   }
+}
 
-  .bar__name {
+@media (max-width: 47.99rem) {
+  .bar__name,
+  .bar__out-label {
     display: none;
   }
 }
