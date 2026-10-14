@@ -1,0 +1,104 @@
+<%#
+  The combined search, in the first interface.
+
+  Nothing in the first interface links here — it was built for the second one,
+  where it is the home page. It exists here so that the route renders in both
+  interfaces rather than depending on which one a visitor happens to be in,
+  and because it gives this interface the one thing it cannot otherwise do:
+  take a book back by searching for it rather than scanning a barcode.
+-%>
+<div class="container stack-lg">
+
+  <h1 class="mt-0"><%= t('staff.search.title') %></h1>
+
+  <form class="search-form" method="get" action="/staff/search" role="search">
+    <label class="visually-hidden" for="q"><%= t('staff.search.label') %></label>
+    <input class="search-form__input" type="search" id="q" name="q" value="<%= q %>"
+           autocomplete="off" placeholder="<%= t('staff.search.label') %>">
+    <button class="button" type="submit"><%= t('common.search') %></button>
+  </form>
+
+  <% if (searched && books.length === 0 && borrowers.length === 0) { %>
+    <div class="state state--empty">
+      <h2 class="state__title"><%= t('staff.search.empty', { query: q }) %></h2>
+      <p class="state__body"><%= t('staff.search.emptyHint') %></p>
+    </div>
+  <% } %>
+
+  <% if (books.length > 0) { %>
+    <section>
+      <h2><%= t('staff.search.books') %></h2>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th scope="col"><%= t('staff.loan.book') %></th>
+              <th scope="col"><%= t('staff.field.shelf') %></th>
+              <th scope="col"><%= t('staff.copies.availability') %></th>
+              <th scope="col"></th>
+            </tr>
+          </thead>
+          <tbody>
+            <% books.forEach(function (book) { %>
+              <tr>
+                <td>
+                  <a href="/staff/books/<%= book.book_id %>"><%= book.book_title %></a>
+                  <% if (book.authors) { %><br><span class="small faint"><%= book.authors %></span><% } %>
+                </td>
+                <td class="small"><%= book.shelves.join(', ') || '—' %></td>
+                <td class="nowrap">
+                  <span class="badge badge--<%= book.available_count > 0 ? 'available' : 'unavailable' %>">
+                    <%= t('staff.loans.availableOf', {
+                          available: book.available_count, total: book.copy_count }) %>
+                  </span>
+                </td>
+                <td class="nowrap">
+                  <% if (book.available_count > 0) { %>
+                    <a class="button button--small" href="/staff/loans/checkout?copy=<%= book.available_ids[0] %>">
+                      <%= t('staff.action.checkout') %>
+                    </a>
+                  <% } %>
+                </td>
+              </tr>
+            <% }); %>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  <% } %>
+
+  <% if (borrowers.length > 0) { %>
+    <section>
+      <h2><%= t('staff.search.readers') %></h2>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th scope="col"><%= t('staff.borrowers.name') %></th>
+              <th scope="col"><%= t('staff.borrowers.class') %></th>
+              <th scope="col"><%= t('staff.borrowers.openLoans') %></th>
+              <th scope="col"></th>
+            </tr>
+          </thead>
+          <tbody>
+            <% borrowers.forEach(function (person) { %>
+              <tr>
+                <td><a href="/staff/borrowers/<%= person.id %>"><%= person.display_name %></a></td>
+                <td><%= person.school_class || '—' %></td>
+                <td><%= person.open_loans %></td>
+                <td class="nowrap">
+                  <% if (person.open_loans > 0) { %>
+                    <a class="button button--secondary button--small" href="/staff/borrowers/<%= person.id %>">
+                      <%= t('staff.action.checkin') %>
+                    </a>
+                  <% } %>
+                </td>
+              </tr>
+            <% }); %>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  <% } %>
+
+</div>

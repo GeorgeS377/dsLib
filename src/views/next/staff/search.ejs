@@ -1,0 +1,118 @@
+<%#
+  The desk's one search, and the home of the second interface.
+
+  Two groups, each omitted when empty — an empty "ΑΝΑΓΝΩΣΤΕΣ" box below a
+  list of books would say nothing and take up the room that says it.
+
+  The action on a book row is the whole point: a title with a free copy
+  offers Δανεισμός, which drops that copy in the basket and asks who is
+  taking it. A reader holding books offers Επιστροφή, which opens their
+  loans so the right one can be handed back.
+-%>
+<div class="stack-lg">
+
+  <section>
+    <h1><%= t('staff.search.title') %></h1>
+    <form class="search search--wide" method="get" action="/staff/search" role="search"
+          style="margin-top:var(--s-4)">
+      <label class="visually-hidden" for="q"><%= t('staff.search.label') %></label>
+      <input type="search" id="q" name="q" value="<%= q %>" autocomplete="off"
+             placeholder="<%= t('staff.search.label') %>" <%- q ? '' : 'autofocus' %>>
+      <button class="btn" type="submit">
+        <%- include('../../partials/icon', { name: 'search', size: 17 }) %>
+        <%= t('common.search') %>
+      </button>
+    </form>
+    <p class="field__hint" style="margin-top:var(--s-2)"><%= t('staff.search.hint') %></p>
+  </section>
+
+  <% if (!searched) { %>
+    <div class="state">
+      <h2 class="state__title"><%= t('staff.search.start') %></h2>
+      <p><%= t('staff.search.startHint') %></p>
+    </div>
+  <% } else if (books.length === 0 && borrowers.length === 0) { %>
+    <div class="state">
+      <h2 class="state__title"><%= t('staff.search.empty', { query: q }) %></h2>
+      <p><%= t('staff.search.emptyHint') %></p>
+    </div>
+  <% } %>
+
+  <% if (books.length > 0) { %>
+    <section>
+      <h2 class="label"><%= t('staff.search.books') %></h2>
+      <div class="list" style="margin-top:var(--s-2)">
+        <% books.forEach(function (book) { %>
+          <div class="list__item">
+            <span class="cover" aria-hidden="true">
+              <%- include('../../partials/icon', { name: 'shelf', size: 18 }) %>
+            </span>
+            <div class="list__grow">
+              <a class="list__title list__link" href="/staff/books/<%= book.book_id %>"><%= book.book_title %></a>
+              <div class="list__meta">
+                <% if (book.authors) { %><%= book.authors %><% } %>
+                <% if (book.shelves.length > 0) { %> · <%= book.shelves.join(', ') %><% } %>
+                <% if (book.barcodes.length > 0) { %>
+                  · <span class="mono"><%= book.barcodes.join(', ') %></span>
+                <% } %>
+              </div>
+            </div>
+            <span class="pill <%= book.available_count > 0 ? '' : 'pill--warn' %>">
+              <%= t('staff.loans.availableOf', {
+                    available: book.available_count, total: book.copy_count }) %>
+            </span>
+            <% if (book.available_count > 0) { %>
+              <a class="btn btn--small" href="/staff/loans/checkout?copy=<%= book.available_ids[0] %>">
+                <%= t('staff.action.checkout') %>
+              </a>
+            <% } else { %>
+              <a class="btn btn--ghost btn--small" href="/staff/books/<%= book.book_id %>">
+                <%= t('staff.search.view') %>
+              </a>
+            <% } %>
+          </div>
+        <% }); %>
+      </div>
+    </section>
+  <% } %>
+
+  <% if (borrowers.length > 0) { %>
+    <section>
+      <h2 class="label"><%= t('staff.search.readers') %></h2>
+      <div class="list" style="margin-top:var(--s-2)">
+        <% borrowers.forEach(function (person) { %>
+          <%
+            const initials = String(person.display_name || '')
+              .split(/\s+/).filter(Boolean).slice(0, 2)
+              .map(function (part) { return part[0]; }).join('').toUpperCase();
+          -%>
+          <div class="list__item">
+            <span class="initials" aria-hidden="true"><%= initials %></span>
+            <div class="list__grow">
+              <a class="list__title list__link" href="/staff/borrowers/<%= person.id %>"><%= person.display_name %></a>
+              <div class="list__meta">
+                <% if (person.school_class) { %><%= person.school_class %> · <% } %>
+                <%= person.open_loans > 0
+                      ? t('staff.search.holding', { count: person.open_loans })
+                      : t('staff.search.holdingNone') %>
+              </div>
+            </div>
+            <% if (person.overdue_loans > 0) { %>
+              <span class="pill pill--warn"><%= t('staff.stat.overdue') %></span>
+            <% } %>
+            <% if (person.open_loans > 0) { %>
+              <a class="btn btn--small" href="/staff/borrowers/<%= person.id %>">
+                <%= t('staff.action.checkin') %>
+              </a>
+            <% } else { %>
+              <a class="btn btn--ghost btn--small" href="/staff/borrowers/<%= person.id %>">
+                <%= t('staff.search.view') %>
+              </a>
+            <% } %>
+          </div>
+        <% }); %>
+      </div>
+    </section>
+  <% } %>
+
+</div>
