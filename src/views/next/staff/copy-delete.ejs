@@ -1,0 +1,40 @@
+<%# Deleting one copy. A copy with loan history is withdrawn instead, so the
+    history keeps pointing at a real item. -%>
+<div class="panel" style="max-width:44rem;margin-inline:auto">
+  <h1><%= t('staff.copies.deleteTitle') %></h1>
+
+  <dl class="list" style="display:grid;grid-template-columns:max-content 1fr;gap:0">
+    <dt class="list__item" style="font-weight:600"><%= t('staff.loan.book') %></dt>
+    <dd class="list__item"><a href="/staff/books/<%= copy.book_id %>"><%= copy.book_title %></a></dd>
+    <dt class="list__item" style="font-weight:600"><%= t('staff.field.barcode') %></dt>
+    <dd class="list__item mono"><%= copy.barcode || '—' %></dd>
+    <dt class="list__item" style="font-weight:600"><%= t('staff.field.shelf') %></dt>
+    <dd class="list__item"><%= copy.shelf_location || '—' %></dd>
+    <dt class="list__item" style="font-weight:600"><%= t('staff.field.status') %></dt>
+    <dd class="list__item"><%= t('condition.' + copy.status) %></dd>
+  </dl>
+
+  <% if (deletability.deletable) { %>
+    <form method="post" action="/staff/copies/<%= copy.id %>/delete">
+      <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+      <div class="btn-row">
+        <button class="btn btn--danger" type="submit"><%= t('common.delete') %></button>
+        <a class="btn btn--quiet" href="/staff/books/<%= copy.book_id %>/copies"><%= t('common.cancel') %></a>
+      </div>
+    </form>
+  <% } else { %>
+    <div class="flash flash--warning" role="status">
+      <span><%= t('staff.copies.deleteBlocked.' + deletability.reason) %></span>
+    </div>
+    <form method="post" action="/staff/copies/<%= copy.id %>">
+      <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+      <input type="hidden" name="status" value="withdrawn">
+      <input type="hidden" name="barcode" value="<%= copy.barcode || '' %>">
+      <input type="hidden" name="shelf_location" value="<%= copy.shelf_location || '' %>">
+      <div class="btn-row">
+        <button class="btn" type="submit"><%= t('staff.copies.withdrawInstead') %></button>
+        <a class="btn btn--quiet" href="/staff/books/<%= copy.book_id %>/copies"><%= t('common.cancel') %></a>
+      </div>
+    </form>
+  <% } %>
+</div>

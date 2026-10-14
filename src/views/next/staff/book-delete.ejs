@@ -1,0 +1,29 @@
+<%# Deleting a title. A title with loan history cannot go: the history has to
+    keep pointing at something real, so archiving is offered instead. -%>
+<div class="panel" style="max-width:44rem;margin-inline:auto">
+  <h1><%= t('staff.books.deleteConfirm', { title: book.title }) %></h1>
+
+  <% if (deletability.deletable) { %>
+    <p class="muted"><%= t('staff.books.deleteWarning', { count: deletability.copies }) %></p>
+    <form method="post" action="/staff/books/<%= book.id %>/delete">
+      <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+      <div class="btn-row">
+        <button class="btn btn--danger" type="submit"><%= t('common.delete') %></button>
+        <a class="btn btn--quiet" href="/staff/books/<%= book.id %>"><%= t('common.cancel') %></a>
+      </div>
+    </form>
+  <% } else { %>
+    <div class="flash flash--warning" role="status">
+      <span><%= t('staff.books.deleteBlocked.' + deletability.reason) %></span>
+    </div>
+    <h2><%= t('staff.books.archiveInstead') %></h2>
+    <p class="muted"><%= t('staff.books.archiveExplain') %></p>
+    <form method="post" action="/staff/books/<%= book.id %>/archive">
+      <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+      <div class="btn-row">
+        <button class="btn" type="submit"><%= t('staff.books.archiveAction') %></button>
+        <a class="btn btn--quiet" href="/staff/books/<%= book.id %>"><%= t('common.cancel') %></a>
+      </div>
+    </form>
+  <% } %>
+</div>

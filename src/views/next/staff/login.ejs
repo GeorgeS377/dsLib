@@ -1,0 +1,45 @@
+<%#
+  Sign in.
+
+  One generic message whichever half is wrong, so the form cannot be used to
+  find out which usernames exist.
+-%>
+<div class="panel" style="max-width:26rem;margin:var(--s-6) auto">
+  <h1><%= t('login.title') %></h1>
+  <p class="muted small"><%= t('login.lead') %></p>
+
+  <% if (expired) { %>
+    <div class="flash flash--warning" role="status"><span><%= t('login.expired') %></span></div>
+  <% } %>
+  <% if (changed) { %>
+    <div class="flash flash--success" role="status"><span><%= t('staff.account.changed') %></span></div>
+  <% } %>
+  <% if (error) { %>
+    <div class="flash flash--error" role="alert"><span><%= t('login.error.' + error) %></span></div>
+  <% } %>
+
+  <form method="post" action="/staff/login">
+    <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+    <% if (next) { %><input type="hidden" name="redirect" value="<%= next %>"><% } %>
+
+    <div>
+      <label class="field__label" for="username"><%= t('login.username') %></label>
+      <input type="text" id="username" name="username" required autofocus
+             autocomplete="username" autocapitalize="none" spellcheck="false">
+    </div>
+
+    <div>
+      <label class="field__label" for="password"><%= t('login.password') %></label>
+      <input type="password" id="password" name="password" required autocomplete="current-password">
+    </div>
+
+    <button class="btn" type="submit" style="width:100%"><%= t('login.submit') %></button>
+  </form>
+
+  <p class="field__hint" style="margin-top:var(--s-4)"><%= t('login.help') %></p>
+
+  <% if (typeof noAccounts !== 'undefined' && noAccounts) { %>
+    <p class="field__hint"><%= t('login.noAccounts') %></p>
+    <pre class="mono small"><code>node scripts/create-admin.js</code></pre>
+  <% } %>
+</div>

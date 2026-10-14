@@ -1,0 +1,27 @@
+<%# Deleting a reader outright, which is only possible when they have no loan
+    history at all. Otherwise the record is anonymised so the figures stay
+    right. -%>
+<div class="panel" style="max-width:44rem;margin-inline:auto">
+  <h1><%= t('staff.borrowers.deleteConfirm', { name: borrower.display_name }) %></h1>
+
+  <% if (canDelete) { %>
+    <p class="muted"><%= t('staff.borrowers.deleteExplain') %></p>
+    <form method="post" action="/staff/borrowers/<%= borrower.id %>/delete">
+      <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+      <div class="btn-row">
+        <button class="btn btn--danger" type="submit"><%= t('common.delete') %></button>
+        <a class="btn btn--quiet" href="/staff/borrowers/<%= borrower.id %>"><%= t('common.cancel') %></a>
+      </div>
+    </form>
+  <% } else { %>
+    <div class="flash flash--warning" role="status">
+      <span><%= t('staff.borrowers.deleteBlocked.has_loans') %></span>
+    </div>
+    <div class="btn-row">
+      <a class="btn" href="/staff/borrowers/<%= borrower.id %>/anonymize">
+        <%= t('staff.borrowers.anonymize') %>
+      </a>
+      <a class="btn btn--quiet" href="/staff/borrowers/<%= borrower.id %>"><%= t('common.cancel') %></a>
+    </div>
+  <% } %>
+</div>

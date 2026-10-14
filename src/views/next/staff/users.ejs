@@ -1,0 +1,84 @@
+<%# Staff accounts. Admin only — the route enforces that, this page shows it. -%>
+<div class="stack-lg">
+
+  <h1><%= t('staff.users.title') %></h1>
+
+  <div class="list">
+    <% users.forEach(function (user) { %>
+      <div class="list__item">
+        <span class="initials" aria-hidden="true">
+          <%= String(user.display_name || user.username).slice(0, 2).toUpperCase() %>
+        </span>
+        <div class="list__grow">
+          <span class="list__title"><%= user.display_name %></span>
+          <div class="list__meta">
+            <span class="mono"><%= user.username %></span> · <%= t('staff.role.' + user.role) %>
+          </div>
+        </div>
+        <% if (!user.is_active) { %>
+          <span class="pill pill--warn"><%= t('staff.users.inactive') %></span>
+        <% } %>
+        <% if (user.must_change_password) { %>
+          <span class="pill pill--warn"><%= t('staff.users.mustChange') %></span>
+        <% } %>
+        <a class="btn btn--ghost btn--small" href="/staff/users/<%= user.id %>"><%= t('common.edit') %></a>
+      </div>
+    <% }); %>
+  </div>
+
+  <section class="panel">
+    <h2><%= editing ? t('common.edit') : t('staff.users.add') %></h2>
+    <% if (!editing) { %>
+      <p class="field__hint"><%= t('staff.users.newUserNote') %></p>
+    <% } %>
+
+    <form method="post" action="<%= editing ? '/staff/users/' + editing.id : '/staff/users' %>">
+      <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+
+      <div>
+        <label class="field__label" for="username"><%= t('staff.account.username') %></label>
+        <input type="text" id="username" name="username" value="<%= values.username %>" required
+               maxlength="60" autocapitalize="none" spellcheck="false"
+               <%- errors.username ? 'aria-invalid="true"' : '' %>>
+        <%- include('../partials/field-error', { hasT: hasT, code: errors.username, t: t }) %>
+      </div>
+
+      <div>
+        <label class="field__label" for="display_name"><%= t('staff.field.personName') %></label>
+        <input type="text" id="display_name" name="display_name" value="<%= values.display_name %>"
+               required maxlength="200" <%- errors.display_name ? 'aria-invalid="true"' : '' %>>
+        <%- include('../partials/field-error', { hasT: hasT, code: errors.display_name, t: t }) %>
+      </div>
+
+      <div>
+        <label class="field__label" for="role"><%= t('staff.account.role') %></label>
+        <select id="role" name="role">
+          <option value="librarian" <%= values.role === 'librarian' ? 'selected' : '' %>>
+            <%= t('staff.role.librarian') %>
+          </option>
+          <option value="admin" <%= values.role === 'admin' ? 'selected' : '' %>>
+            <%= t('staff.role.admin') %>
+          </option>
+        </select>
+      </div>
+
+      <% if (!editing) { %>
+        <div>
+          <label class="field__label" for="password"><%= t('login.password') %></label>
+          <span class="field__hint"><%= t('staff.account.passwordHint', { min: minPasswordLength }) %></span>
+          <input type="password" id="password" name="password" required autocomplete="new-password"
+                 <%- errors.password ? 'aria-invalid="true"' : '' %>>
+          <%- include('../partials/field-error', { hasT: hasT, code: errors.password, t: t }) %>
+        </div>
+      <% } %>
+
+      <div class="btn-row">
+        <button class="btn" type="submit"><%= t('common.save') %></button>
+        <% if (editing) { %>
+          <a class="btn btn--quiet" href="/staff/users"><%= t('common.cancel') %></a>
+        <% } %>
+      </div>
+    </form>
+  </section>
+
+</div>

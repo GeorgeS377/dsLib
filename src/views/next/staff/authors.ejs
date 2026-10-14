@@ -1,0 +1,59 @@
+<%# Authors. Two spellings of one person are merged rather than deleted, so
+    the books keep pointing at someone. -%>
+<div class="stack-lg">
+
+  <h1><%= t('staff.authors.title') %></h1>
+
+  <% if (authors.length === 0) { %>
+    <div class="state"><h2 class="state__title"><%= t('staff.authors.empty') %></h2></div>
+  <% } else { %>
+    <div class="list">
+      <% authors.forEach(function (author) { %>
+        <div class="list__item">
+          <div class="list__grow">
+            <a class="list__title list__link" href="/authors/<%= author.id %>"><%= author.name %></a>
+          </div>
+          <span class="pill pill--quiet"><%= author.book_count %></span>
+          <a class="btn btn--ghost btn--small" href="/staff/authors/<%= author.id %>"><%= t('common.edit') %></a>
+          <% if (author.book_count === 0) { %>
+            <a class="small" href="/staff/authors/<%= author.id %>/delete"><%= t('common.delete') %></a>
+          <% } %>
+        </div>
+      <% }); %>
+    </div>
+  <% } %>
+
+  <% if (editing) { %>
+    <section class="panel">
+      <h2><%= t('common.edit') %></h2>
+
+      <% if (errors.merge) { %>
+        <div class="flash flash--warning" role="status">
+          <span><%= t('staff.authors.mergeExplain', { name: errors.merge.name }) %></span>
+        </div>
+        <form method="post" action="/staff/authors/<%= editing.id %>/merge">
+          <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+          <input type="hidden" name="into" value="<%= errors.merge.id %>">
+          <button class="btn" type="submit">
+            <%= t('staff.authors.mergeConfirm', { name: errors.merge.name }) %>
+          </button>
+        </form>
+      <% } %>
+
+      <form method="post" action="/staff/authors/<%= editing.id %>">
+        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+        <div>
+          <label class="field__label" for="author-name"><%= t('staff.field.name') %></label>
+          <input type="text" id="author-name" name="name" value="<%= values.name %>" required
+                 maxlength="200" <%- errors.name ? 'aria-invalid="true"' : '' %>>
+          <%- include('../partials/field-error', { hasT: hasT, code: errors.name, t: t }) %>
+        </div>
+        <div class="btn-row">
+          <button class="btn" type="submit"><%= t('common.save') %></button>
+          <a class="btn btn--quiet" href="/staff/authors"><%= t('common.cancel') %></a>
+        </div>
+      </form>
+    </section>
+  <% } %>
+
+</div>

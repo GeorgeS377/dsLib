@@ -1,0 +1,222 @@
+<%#
+  Add or edit a title.
+
+  One column, labels above fields. Authors get one input each so a
+  surname-first name containing a comma stays one person; categories are
+  checkboxes, because a multiple-select cannot be multi-selected without
+  Ctrl+click and draws its chosen rows in the grey it uses for disabled ones.
+-%>
+<div class="stack-lg">
+
+  <div>
+    <nav aria-label="<%= t('nav.breadcrumb') %>" class="small muted">
+      <a href="/staff/books"><%= t('staff.books.title') %></a>
+    </nav>
+    <h1 style="margin-top:var(--s-2)"><%= book ? book.title : t('staff.books.new') %></h1>
+  </div>
+
+  <% if (book && book.archived_at) { %>
+    <div class="flash flash--warning" role="status">
+      <span><%= t('staff.books.isArchived') %></span>
+    </div>
+  <% } %>
+
+  <% const errorKeys = Object.keys(errors || {}); %>
+  <% if (errorKeys.length > 0) { %>
+    <div class="flash flash--error" role="alert">
+      <span>
+        <strong><%= t('error.summary.title') %></strong>
+        <% errorKeys.forEach(function (key, index) { %>
+          <%= index > 0 ? ' · ' : ' ' %>
+          <a href="#field-<%= key %>">
+            <%= t('staff.field.' + key) !== 'staff.field.' + key ? t('staff.field.' + key) : key %>
+          </a>
+          — <%= hasT('error.field.' + errors[key]) ? t('error.field.' + errors[key]) : t('error.field.generic') %>
+        <% }); %>
+      </span>
+    </div>
+  <% } %>
+
+  <% if (typeof duplicate !== 'undefined' && duplicate) { %>
+    <div class="flash flash--error" role="alert">
+      <span>
+        <%= t('error.field.duplicate_isbn') %>
+        <a href="/staff/books/<%= duplicate.id %>"><%= duplicate.title %></a>
+      </span>
+    </div>
+  <% } %>
+
+  <section class="panel">
+    <form method="post" action="<%= book ? '/staff/books/' + book.id : '/staff/books' %>">
+      <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+
+      <div>
+        <label class="field__label" for="field-title"><%= t('staff.field.title') %></label>
+        <input type="text" id="field-title" name="title" value="<%= values.title %>" required
+               maxlength="500" <%- errors.title ? 'aria-invalid="true"' : '' %>>
+        <%- include('../partials/field-error', { hasT: hasT, code: errors.title, t: t }) %>
+      </div>
+
+      <div>
+        <label class="field__label" for="field-subtitle"><%= t('staff.field.subtitle') %>
+          <span class="field__optional"><%= t('common.optional') %></span>
+        </label>
+        <input type="text" id="field-subtitle" name="subtitle" value="<%= values.subtitle %>"
+               maxlength="500">
+      </div>
+
+      <fieldset data-repeatable>
+        <legend><%= t('staff.field.authors') %></legend>
+        <p class="field__hint"><%= t('staff.field.authorsHint') %></p>
+        <div data-repeatable-list class="stack">
+          <% values.authors.forEach(function (name, index) { %>
+            <div data-repeatable-row>
+              <label class="visually-hidden" for="field-author-<%= index %>">
+                <%= t('staff.field.authors') %> <%= index + 1 %>
+              </label>
+              <input type="text" id="field-author-<%= index %>" name="authors"
+                     value="<%= name %>" maxlength="200" autocomplete="off">
+            </div>
+          <% }); %>
+          <%# One spare row, so an author can be added with no scripting. -%>
+          <div data-repeatable-row>
+            <label class="visually-hidden" for="field-author-extra"><%= t('staff.field.addAuthor') %></label>
+            <input type="text" id="field-author-extra" name="authors" value=""
+                   maxlength="200" autocomplete="off">
+          </div>
+        </div>
+        <button class="btn btn--ghost btn--small" type="button" data-repeatable-add hidden>
+          + <%= t('staff.field.addAuthor') %>
+        </button>
+      </fieldset>
+
+      <div>
+        <label class="field__label" for="field-isbn"><%= t('staff.field.isbn') %>
+          <span class="field__optional"><%= t('common.optional') %></span>
+        </label>
+        <span class="field__hint"><%= t('staff.field.isbnHint') %></span>
+        <input type="text" id="field-isbn" name="isbn" value="<%= values.isbn %>" maxlength="32"
+               inputmode="numeric" autocomplete="off"
+               <%- errors.isbn ? 'aria-invalid="true"' : '' %>>
+        <%- include('../partials/field-error', { hasT: hasT, code: errors.isbn, t: t }) %>
+      </div>
+
+      <div>
+        <label class="field__label" for="field-publisher"><%= t('staff.field.publisher') %>
+          <span class="field__optional"><%= t('common.optional') %></span>
+        </label>
+        <input type="text" id="field-publisher" name="publisher" value="<%= values.publisher %>"
+               maxlength="200">
+      </div>
+
+      <div>
+        <label class="field__label" for="field-publication_year"><%= t('staff.field.year') %>
+          <span class="field__optional"><%= t('common.optional') %></span>
+        </label>
+        <input type="number" id="field-publication_year" name="publication_year"
+               value="<%= values.publication_year %>" min="1400" max="2200"
+               <%- errors.publication_year ? 'aria-invalid="true"' : '' %>>
+        <%- include('../partials/field-error', { hasT: hasT, code: errors.publication_year, t: t }) %>
+      </div>
+
+      <div>
+        <label class="field__label" for="field-edition"><%= t('staff.field.edition') %>
+          <span class="field__optional"><%= t('common.optional') %></span>
+        </label>
+        <input type="text" id="field-edition" name="edition" value="<%= values.edition %>"
+               maxlength="100">
+      </div>
+
+      <div>
+        <label class="field__label" for="field-language"><%= t('staff.field.language') %>
+          <span class="field__optional"><%= t('common.optional') %></span>
+        </label>
+        <span class="field__hint"><%= t('staff.field.languageHint') %></span>
+        <input type="text" id="field-language" name="language" value="<%= values.language %>"
+               maxlength="40" list="language-options">
+        <datalist id="language-options">
+          <% languages.forEach(function (code) { %><option value="<%= code %>"></option><% }); %>
+        </datalist>
+      </div>
+
+      <fieldset id="field-categories">
+        <legend><%= t('staff.field.categories') %>
+          <span class="field__optional"><%= t('common.optional') %></span>
+        </legend>
+        <% if (categories.length === 0) { %>
+          <p class="field__hint"><a href="/staff/categories"><%= t('staff.categories.add') %></a></p>
+        <% } else { %>
+          <p class="field__hint"><%= t('staff.field.categoriesHint') %></p>
+          <div class="btn-row">
+            <% categories.forEach(function (category) { %>
+              <label class="btn btn--ghost btn--small">
+                <input type="checkbox" name="categories" value="<%= category.id %>"
+                       style="width:auto;min-height:0;margin-inline-end:var(--s-2)"
+                       <%= values.categories.includes(category.id) ? 'checked' : '' %>>
+                <%= category.name %>
+              </label>
+            <% }); %>
+          </div>
+        <% } %>
+      </fieldset>
+
+      <div>
+        <label class="field__label" for="field-description"><%= t('staff.field.description') %>
+          <span class="field__optional"><%= t('common.optional') %></span>
+        </label>
+        <textarea id="field-description" name="description" rows="5"><%= values.description %></textarea>
+      </div>
+
+      <div class="btn-row">
+        <button class="btn" type="submit"><%= t('common.save') %></button>
+        <a class="btn btn--quiet" href="/staff/books"><%= t('common.cancel') %></a>
+      </div>
+    </form>
+  </section>
+
+  <% if (book) { %>
+    <section class="panel">
+      <h2><%= t('staff.field.cover') %></h2>
+      <form method="post" action="/staff/books/<%= book.id %>/cover" enctype="multipart/form-data">
+        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+        <div>
+          <label class="field__label" for="cover">
+            <%= book.cover_path ? t('staff.cover.replace') : t('staff.cover.upload') %>
+          </label>
+          <span class="field__hint"><%= t('staff.cover.hint', { mb: maxUploadMb }) %></span>
+          <input type="file" id="cover" name="cover" accept="image/jpeg,image/png,image/webp">
+        </div>
+        <button class="btn" type="submit"><%= t('common.save') %></button>
+      </form>
+      <% if (book.cover_path) { %>
+        <form method="post" action="/staff/books/<%= book.id %>/cover/remove">
+          <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+          <button class="btn btn--ghost btn--small" type="submit"><%= t('staff.cover.remove') %></button>
+        </form>
+      <% } %>
+    </section>
+
+    <section class="panel">
+      <h2><%= t('staff.books.manageCopies') %></h2>
+      <div class="btn-row">
+        <a class="btn btn--ghost" href="/staff/books/<%= book.id %>/copies">
+          <%= t('staff.books.manageCopies') %>
+        </a>
+        <% if (book.archived_at) { %>
+          <form method="post" action="/staff/books/<%= book.id %>/restore">
+            <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+            <button class="btn btn--ghost" type="submit"><%= t('staff.books.restoreAction') %></button>
+          </form>
+        <% } else { %>
+          <form method="post" action="/staff/books/<%= book.id %>/archive">
+            <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+            <button class="btn btn--ghost" type="submit"><%= t('staff.books.archiveAction') %></button>
+          </form>
+        <% } %>
+        <a class="btn btn--danger" href="/staff/books/<%= book.id %>/delete"><%= t('common.delete') %></a>
+      </div>
+      <p class="field__hint"><%= t('staff.books.archiveExplain') %></p>
+    </section>
+  <% } %>
+
+</div>

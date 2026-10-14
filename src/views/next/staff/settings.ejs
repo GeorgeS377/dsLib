@@ -1,0 +1,53 @@
+<%# Everything that is not a book, a loan or a reader. -%>
+<div class="stack-lg">
+
+  <div>
+    <h1><%= t('staff.settings.title') %></h1>
+    <p class="muted" style="margin-top:var(--s-2)"><%= t('staff.settings.lead') %></p>
+  </div>
+
+  <div class="list">
+    <a class="list__item" href="/staff/categories" style="text-decoration:none">
+      <span class="initials" aria-hidden="true">
+        <%- include('../../partials/icon', { name: 'tag', size: 17 }) %>
+      </span>
+      <span class="list__grow">
+        <span class="list__title"><%= t('staff.nav.categories') %></span>
+        <span class="list__meta"><%= t('staff.settings.categories') %></span>
+      </span>
+      <span class="pill pill--quiet"><%= counts.categories %></span>
+    </a>
+    <a class="list__item" href="/staff/authors" style="text-decoration:none">
+      <span class="initials" aria-hidden="true">
+        <%- include('../../partials/icon', { name: 'user', size: 17 }) %>
+      </span>
+      <span class="list__grow">
+        <span class="list__title"><%= t('staff.nav.authors') %></span>
+        <span class="list__meta"><%= t('staff.settings.authors') %></span>
+      </span>
+      <span class="pill pill--quiet"><%= counts.authors %></span>
+    </a>
+    <a class="list__item" href="/staff/users" style="text-decoration:none">
+      <span class="initials" aria-hidden="true">
+        <%- include('../../partials/icon', { name: 'lock', size: 17 }) %>
+      </span>
+      <span class="list__grow">
+        <span class="list__title"><%= t('staff.nav.users') %></span>
+        <span class="list__meta">
+          <%= t('staff.settings.users') %> · <%= t('staff.settings.adminOnly') %>
+        </span>
+      </span>
+      <span class="pill pill--quiet"><%= counts.staff %></span>
+    </a>
+    <a class="list__item" href="/staff/account" style="text-decoration:none">
+      <span class="initials" aria-hidden="true">
+        <%- include('../../partials/icon', { name: 'settings', size: 17 }) %>
+      </span>
+      <span class="list__grow">
+        <span class="list__title"><%= t('staff.nav.account') %></span>
+        <span class="list__meta"><%= t('staff.settings.account') %></span>
+      </span>
+    </a>
+  </div>
+
+</div>

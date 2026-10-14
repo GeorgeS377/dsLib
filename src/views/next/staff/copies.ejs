@@ -1,0 +1,163 @@
+<%#
+  The copies of one title.
+
+  The whole table is one form with one Save: a form per row meant editing
+  three rows and pressing one Save silently discarded the other two. Long
+  lists are paginated, and the page links say so, because leaving the page
+  takes unsaved edits with it.
+-%>
+<div class="stack-lg">
+
+  <div>
+    <nav aria-label="<%= t('nav.breadcrumb') %>" class="small muted">
+      <a href="/staff/books"><%= t('staff.books.title') %></a> ·
+      <a href="/staff/books/<%= book.id %>"><%= book.title %></a>
+    </nav>
+    <h1 style="margin-top:var(--s-2)"><%= t('staff.books.manageCopies') %></h1>
+    <p class="muted small" style="margin-top:var(--s-1)">
+      <%= t('staff.copies.availability') %>: <%= book.copies_available %>/<%= book.copies_total %>
+    </p>
+  </div>
+
+  <% if (copies.total === 0) { %>
+    <div class="state">
+      <h2 class="state__title"><%= t('staff.copies.empty') %></h2>
+      <p><%= t('staff.copies.emptyHint') %></p>
+    </div>
+  <% } else { %>
+    <section>
+      <form method="post" action="/staff/books/<%= book.id %>/copies/save">
+        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+        <input type="hidden" name="page" value="<%= copies.page %>">
+
+        <div class="table-wrap">
+          <table>
+            <caption>
+              <%= t('search.showing', {
+                    from: (copies.page - 1) * copies.perPage + 1,
+                    to: Math.min(copies.page * copies.perPage, copies.total),
+                    total: copies.total }) %>
+            </caption>
+            <thead>
+              <tr>
+                <th scope="col"><%= t('staff.field.barcode') %></th>
+                <th scope="col"><%= t('staff.field.shelf') %></th>
+                <th scope="col"><%= t('staff.field.status') %></th>
+                <th scope="col"><%= t('staff.copies.whereIsIt') %></th>
+                <th scope="col"><span class="visually-hidden"><%= t('common.delete') %></span></th>
+              </tr>
+            </thead>
+            <tbody>
+              <% copies.rows.forEach(function (copy) { %>
+                <tr>
+                  <td>
+                    <input type="hidden" name="copy_id" value="<%= copy.id %>">
+                    <label class="visually-hidden" for="barcode-<%= copy.id %>"><%= t('staff.field.barcode') %></label>
+                    <input type="text" id="barcode-<%= copy.id %>" name="barcode_<%= copy.id %>"
+                           value="<%= copy.barcode || '' %>" maxlength="64" autocomplete="off">
+                  </td>
+                  <td>
+                    <label class="visually-hidden" for="shelf-<%= copy.id %>"><%= t('staff.field.shelf') %></label>
+                    <input type="text" id="shelf-<%= copy.id %>" name="shelf_<%= copy.id %>"
+                           value="<%= copy.shelf_location || '' %>" maxlength="100" autocomplete="off">
+                  </td>
+                  <td>
+                    <label class="visually-hidden" for="status-<%= copy.id %>"><%= t('staff.field.status') %></label>
+                    <select id="status-<%= copy.id %>" name="status_<%= copy.id %>">
+                      <% statuses.forEach(function (status) { %>
+                        <option value="<%= status %>" <%= copy.status === status ? 'selected' : '' %>>
+                          <%= t('condition.' + status) %>
+                        </option>
+                      <% }); %>
+                    </select>
+                  </td>
+                  <td class="nowrap">
+                    <% if (copy.open_loan_id) { %>
+                      <span class="pill pill--warn"><%= t('status.on_loan') %></span>
+                      <span class="small faint"><%= copy.open_loan_due_at.slice(0, 10) %></span>
+                    <% } else if (copy.is_available) { %>
+                      <span class="pill"><%= t('status.available') %></span>
+                    <% } else { %>
+                      <span class="pill pill--quiet"><%= t('status.' + copy.status) %></span>
+                    <% } %>
+                  </td>
+                  <td class="nowrap">
+                    <a class="small" href="/staff/copies/<%= copy.id %>/delete"><%= t('common.delete') %></a>
+                  </td>
+                </tr>
+              <% }); %>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="btn-row" style="margin-top:var(--s-4)">
+          <button class="btn" type="submit"><%= t('staff.copies.saveAll') %></button>
+          <% if (copies.totalPages > 1) { %>
+            <span class="small muted"><%= t('staff.copies.saveBeforePaging') %></span>
+          <% } %>
+        </div>
+      </form>
+
+      <%- include('../partials/pagination', {
+            results: copies, pages: pages, pageUrl: pageUrl, t: t }) %>
+    </section>
+  <% } %>
+
+  <section class="panel">
+    <h2><%= t('staff.copies.add') %></h2>
+    <% if (errors.barcode) { %>
+      <div class="flash flash--error" role="alert">
+        <%- include('../partials/field-error', { hasT: hasT, code: errors.barcode, t: t }) %>
+      </div>
+    <% } %>
+    <form method="post" action="/staff/books/<%= book.id %>/copies">
+      <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+      <div>
+        <label class="field__label" for="new-barcode"><%= t('staff.field.barcode') %>
+          <span class="field__optional"><%= t('common.optional') %></span>
+        </label>
+        <input type="text" id="new-barcode" name="barcode" value="<%= values.barcode %>"
+               maxlength="64" autocomplete="off"
+               <%- errors.barcode ? 'aria-invalid="true"' : '' %>>
+      </div>
+      <div>
+        <label class="field__label" for="new-shelf"><%= t('staff.field.shelf') %>
+          <span class="field__optional"><%= t('common.optional') %></span>
+        </label>
+        <input type="text" id="new-shelf" name="shelf_location" value="<%= values.shelf_location %>"
+               maxlength="100" autocomplete="off">
+      </div>
+      <div>
+        <label class="field__label" for="new-status"><%= t('staff.field.status') %></label>
+        <select id="new-status" name="status">
+          <% statuses.forEach(function (status) { %>
+            <option value="<%= status %>" <%= values.status === status ? 'selected' : '' %>>
+              <%= t('condition.' + status) %>
+            </option>
+          <% }); %>
+        </select>
+      </div>
+      <button class="btn" type="submit"><%= t('staff.copies.add') %></button>
+    </form>
+  </section>
+
+  <section class="panel">
+    <h2><%= t('staff.copies.addMany') %></h2>
+    <p class="field__hint"><%= t('staff.copies.addManyHint') %></p>
+    <form method="post" action="/staff/books/<%= book.id %>/copies/bulk">
+      <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+      <div>
+        <label class="field__label" for="bulk-count"><%= t('staff.field.count') %></label>
+        <input type="number" id="bulk-count" name="count" value="2" min="1" max="100" step="1" required>
+      </div>
+      <div>
+        <label class="field__label" for="bulk-shelf"><%= t('staff.field.shelf') %>
+          <span class="field__optional"><%= t('common.optional') %></span>
+        </label>
+        <input type="text" id="bulk-shelf" name="shelf_location" maxlength="100" autocomplete="off">
+      </div>
+      <button class="btn btn--ghost" type="submit"><%= t('staff.copies.addMany') %></button>
+    </form>
+  </section>
+
+</div>

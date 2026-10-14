@@ -1,0 +1,14 @@
+<%# Deleting a subject. The titles in it are not deleted — they simply stop
+    belonging to it. -%>
+<div class="panel" style="max-width:44rem;margin-inline:auto">
+  <h1><%= t('staff.categories.deleteConfirm', { name: category.name }) %></h1>
+  <p class="muted"><%= t('staff.categories.deleteExplain', { count: bookCount }) %></p>
+
+  <form method="post" action="/staff/categories/<%= category.id %>/delete">
+    <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+    <div class="btn-row">
+      <button class="btn btn--danger" type="submit"><%= t('common.delete') %></button>
+      <a class="btn btn--quiet" href="/staff/categories"><%= t('common.cancel') %></a>
+    </div>
+  </form>
+</div>

@@ -1,0 +1,75 @@
+<%# The catalogue, as staff see it: every title including archived ones. -%>
+<div class="stack-lg">
+
+  <div class="panel__head">
+    <h1><%= t('staff.books.title') %></h1>
+    <a class="btn" href="/staff/books/new">
+      <%- include('../../partials/icon', { name: 'plus', size: 17 }) %>
+      <%= t('staff.action.addBook') %>
+    </a>
+  </div>
+
+  <form class="search" method="get" action="/staff/books" role="search">
+    <label class="visually-hidden" for="q"><%= t('staff.books.search') %></label>
+    <input type="search" id="q" name="q" value="<%= query.q || '' %>"
+           placeholder="<%= t('staff.books.search') %>" autocomplete="off">
+    <% if (query.archived) { %><input type="hidden" name="archived" value="1"><% } %>
+    <button class="btn btn--ghost" type="submit"><%= t('common.search') %></button>
+  </form>
+
+  <nav class="btn-row" aria-label="<%= t('common.filters') %>">
+    <a class="btn btn--small <%= query.archived ? 'btn--ghost' : '' %>"
+       href="/staff/books<%= query.q ? '?q=' + encodeURIComponent(query.q) : '' %>"
+       <%- query.archived ? '' : 'aria-current="page"' %>><%= t('staff.books.showActive') %></a>
+    <a class="btn btn--small <%= query.archived ? '' : 'btn--ghost' %>"
+       href="/staff/books?archived=1<%= query.q ? '&q=' + encodeURIComponent(query.q) : '' %>"
+       <%- query.archived ? 'aria-current="page"' : '' %>><%= t('staff.books.showArchived') %></a>
+  </nav>
+
+  <% if (results.total === 0) { %>
+    <div class="state">
+      <h2 class="state__title"><%= t('staff.books.empty') %></h2>
+      <p><%= t('staff.books.emptyHint') %></p>
+    </div>
+  <% } else { %>
+    <section>
+      <p class="muted small" role="status">
+        <%= t('search.showing', { from: range.from, to: range.to, total: range.total }) %>
+      </p>
+
+      <div class="list" style="margin-top:var(--s-3)">
+        <% results.rows.forEach(function (book) { %>
+          <div class="list__item">
+            <span class="cover" aria-hidden="true">
+              <% if (book.cover_path) { %>
+                <img src="/covers/<%= book.cover_path %>" alt="" width="36" height="50">
+              <% } else { %>
+                <%- include('../../partials/icon', { name: 'shelf', size: 18 }) %>
+              <% } %>
+            </span>
+            <div class="list__grow">
+              <a class="list__title list__link" href="/staff/books/<%= book.id %>"><%= book.title %></a>
+              <div class="list__meta">
+                <% if (book.authors) { %><%= book.authors %><% } %>
+                <% if (book.archived_at) { %>
+                  · <span class="pill pill--quiet"><%= t('staff.book.archived') %></span>
+                <% } %>
+              </div>
+            </div>
+            <span class="pill <%= book.copies_available > 0 ? '' : 'pill--warn' %>">
+              <%= t('staff.loans.availableOf', {
+                    available: book.copies_available, total: book.copies_total }) %>
+            </span>
+            <a class="btn btn--ghost btn--small" href="/staff/books/<%= book.id %>/copies">
+              <%= t('staff.book.copies') %>
+            </a>
+          </div>
+        <% }); %>
+      </div>
+    </section>
+
+    <%- include('../partials/pagination', {
+          results: results, pages: pages, pageUrl: pageUrl, t: t }) %>
+  <% } %>
+
+</div>

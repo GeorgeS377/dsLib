@@ -1,0 +1,63 @@
+<%# The signed-in person's own account. -%>
+<div class="stack-lg">
+
+  <h1><%= t('staff.account.title') %></h1>
+
+  <dl class="list" style="display:grid;grid-template-columns:max-content 1fr;gap:0">
+    <dt class="list__item" style="font-weight:600"><%= t('staff.account.username') %></dt>
+    <dd class="list__item mono"><%= staffUser.username %></dd>
+    <dt class="list__item" style="font-weight:600"><%= t('staff.field.personName') %></dt>
+    <dd class="list__item"><%= staffUser.display_name %></dd>
+    <dt class="list__item" style="font-weight:600"><%= t('staff.account.role') %></dt>
+    <dd class="list__item"><%= t('staff.role.' + staffUser.role) %></dd>
+    <% if (staffUser.last_login_at) { %>
+      <dt class="list__item" style="font-weight:600"><%= t('staff.account.lastLogin') %></dt>
+      <dd class="list__item faint"><%= staffUser.last_login_at.slice(0, 16).replace('T', ' ') %></dd>
+    <% } %>
+  </dl>
+
+  <section class="panel">
+    <h2><%= t('staff.account.changePassword') %></h2>
+
+    <form method="post" action="/staff/account/password">
+      <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+
+      <div>
+        <label class="field__label" for="current_password"><%= t('staff.account.currentPassword') %></label>
+        <input type="password" id="current_password" name="current_password" required
+               autocomplete="current-password"
+               <%- errors.current_password ? 'aria-invalid="true"' : '' %>>
+        <%- include('../partials/field-error', { hasT: hasT, code: errors.current_password, t: t }) %>
+      </div>
+
+      <div>
+        <label class="field__label" for="password"><%= t('staff.account.newPassword') %></label>
+        <span class="field__hint"><%= t('staff.account.passwordHint', { min: minPasswordLength }) %></span>
+        <input type="password" id="password" name="password" required autocomplete="new-password"
+               <%- errors.password ? 'aria-invalid="true"' : '' %>>
+        <%- include('../partials/field-error', { hasT: hasT, code: errors.password, t: t }) %>
+      </div>
+
+      <div>
+        <label class="field__label" for="password_confirm"><%= t('staff.account.confirmPassword') %></label>
+        <input type="password" id="password_confirm" name="password_confirm" required
+               autocomplete="new-password"
+               <%- errors.password_confirm ? 'aria-invalid="true"' : '' %>>
+        <%- include('../partials/field-error', { hasT: hasT, code: errors.password_confirm, t: t }) %>
+      </div>
+
+      <%# The heading above already says what this does. -%>
+      <button class="btn" type="submit"><%= t('common.save') %></button>
+    </form>
+  </section>
+
+  <section>
+    <h2 class="label"><%= t('staff.nav.settings') %></h2>
+    <div class="btn-row" style="margin-top:var(--s-3)">
+      <a class="btn btn--ghost" href="/staff/categories"><%= t('staff.nav.categories') %></a>
+      <a class="btn btn--ghost" href="/staff/authors"><%= t('staff.nav.authors') %></a>
+      <a class="btn btn--ghost" href="/staff/settings"><%= t('staff.nav.settings') %></a>
+    </div>
+  </section>
+
+</div>

@@ -1,0 +1,29 @@
+<%# Removing a reader's name while keeping their loans, so the library's
+    figures stay correct. Cannot happen while they still have books out. -%>
+<div class="panel" style="max-width:44rem;margin-inline:auto">
+  <h1><%= t('staff.borrowers.anonymizeConfirm', { name: borrower.display_name }) %></h1>
+  <p class="muted">
+    <%= t('staff.borrowers.anonymizeExplain', {
+          placeholder: anonymizedName, count: loanCount }) %>
+  </p>
+
+  <% if (borrower.open_loans > 0) { %>
+    <div class="flash flash--error" role="alert">
+      <span><%= t('staff.borrowers.error.open_loans') %></span>
+    </div>
+    <div class="btn-row">
+      <a class="btn" href="/staff/loans?borrower=<%= borrower.id %>&status=open">
+        <%= t('staff.loans.title') %>
+      </a>
+      <a class="btn btn--quiet" href="/staff/borrowers/<%= borrower.id %>"><%= t('common.cancel') %></a>
+    </div>
+  <% } else { %>
+    <form method="post" action="/staff/borrowers/<%= borrower.id %>/anonymize">
+      <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+      <div class="btn-row">
+        <button class="btn btn--danger" type="submit"><%= t('staff.borrowers.anonymize') %></button>
+        <a class="btn btn--quiet" href="/staff/borrowers/<%= borrower.id %>"><%= t('common.cancel') %></a>
+      </div>
+    </form>
+  <% } %>
+</div>
