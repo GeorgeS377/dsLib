@@ -326,6 +326,7 @@ export async function buildApp({ config = defaultConfig, logger, db, onRoute } =
       uiFlavour: request.uiFlavour,
       viewMode: request.viewMode,
       viewUrl: (target) => withQueryParam(request.url, 'view', target),
+      uiUrl: (target) => withQueryParam(request.url, 'ui', target),
       stylesheet: stylesheetFor(request.uiFlavour),
       supportedLangs: SUPPORTED_LANGS,
       libraryName: config.libraryName,

@@ -29,6 +29,9 @@
   <footer class="site-footer">
     <div class="container site-footer__inner">
       <p class="small faint"><%= libraryName %></p>
+      <%# The only change this redesign makes to the first interface: a way
+          into the second one. Remove this line and the trial disappears. -%>
+      <a class="small" href="<%= uiUrl('next') %>"><%= t('ui.toNext') %></a>
     </div>
   </footer>
 

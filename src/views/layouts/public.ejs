@@ -68,6 +68,9 @@
         <a href="/books"><%= t('nav.catalogue') %></a>
         <a href="/categories"><%= t('nav.categories') %></a>
         <a href="/authors"><%= t('nav.authors') %></a>
+        <%# The only change this redesign makes to the first interface: a way
+            into the second one. Remove this line and the trial disappears. -%>
+        <a href="<%= uiUrl('next') %>"><%= t('ui.toNext') %></a>
       </nav>
 
       <p class="site-footer__name"><%= libraryName %></p>

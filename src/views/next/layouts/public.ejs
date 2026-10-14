@@ -70,6 +70,8 @@
           <a href="<%= langUrl(code) %>"><%= t('lang.' + code) %></a>
         <% } %>
       <% }); %>
+      <%# The way back. A footer link because this is a trial, not a feature. -%>
+      <a href="<%= uiUrl('classic') %>"><%= t('ui.toClassic') %></a>
       <span class="foot__spacer faint"><%= libraryName %></span>
     </div>
   </footer>
