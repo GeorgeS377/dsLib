@@ -13,8 +13,8 @@
       <a href="/staff/books"><%= t('staff.books.title') %></a> ·
       <a href="/staff/books/<%= book.id %>"><%= book.title %></a>
     </nav>
-    <h1 style="margin-top:var(--s-2)"><%= t('staff.books.manageCopies') %></h1>
-    <p class="muted small" style="margin-top:var(--s-1)">
+    <h1 class="mt-2"><%= t('staff.books.manageCopies') %></h1>
+    <p class="muted small mt-1">
       <%= t('staff.copies.availability') %>: <%= book.copies_available %>/<%= book.copies_total %>
     </p>
   </div>
@@ -90,7 +90,7 @@
           </table>
         </div>
 
-        <div class="btn-row" style="margin-top:var(--s-4)">
+        <div class="btn-row mt-4">
           <button class="btn" type="submit"><%= t('staff.copies.saveAll') %></button>
           <% if (copies.totalPages > 1) { %>
             <span class="small muted"><%= t('staff.copies.saveBeforePaging') %></span>

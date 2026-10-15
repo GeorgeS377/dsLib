@@ -5,8 +5,8 @@
     <nav aria-label="<%= t('nav.breadcrumb') %>" class="small muted">
       <a href="/books"><%= t('nav.catalogue') %></a>
     </nav>
-    <h1 style="margin-top:var(--s-2)"><%= heading %></h1>
-    <% if (lead) { %><p class="muted" style="margin-top:var(--s-2)"><%= lead %></p><% } %>
+    <h1 class="mt-2"><%= heading %></h1>
+    <% if (lead) { %><p class="muted mt-2"><%= lead %></p><% } %>
   </div>
 
   <% if (results.total === 0) { %>

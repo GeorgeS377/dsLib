@@ -1,7 +1,7 @@
 <%# Deleting a reader outright, which is only possible when they have no loan
     history at all. Otherwise the record is anonymised so the figures stay
     right. -%>
-<div class="panel" style="max-width:44rem;margin-inline:auto">
+<div class="panel confirm centre">
   <h1><%= t('staff.borrowers.deleteConfirm', { name: borrower.display_name }) %></h1>
 
   <% if (canDelete) { %>

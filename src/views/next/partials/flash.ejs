@@ -4,7 +4,7 @@
   one language renders in whichever language it is read in.
 -%>
 <% if (flash && flash.length > 0) { %>
-  <ul class="stack" style="list-style:none;padding:0">
+  <ul class="stack list--plain">
     <% flash.forEach(function (message) { %>
       <%
         const flashIcon = message.type === 'success' ? 'check'

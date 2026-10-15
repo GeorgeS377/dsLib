@@ -91,7 +91,7 @@
           <%# A copy that cannot go out says so next to itself, and offers the
               return rather than a refusal after the fact. -%>
           <% if (copy.open_loan) { %>
-            <div class="flash flash--warning" role="status" style="border-top:0">
+            <div class="flash flash--warning flush-top" role="status" >
               <span>
                 <%= t('staff.loans.error.already_on_loan') %>
                 <%= copy.open_loan.borrower_name %><% if (copy.open_loan.school_class) { %> (<%= copy.open_loan.school_class %>)<% } %>,
@@ -104,7 +104,7 @@
               </form>
             </div>
           <% } else if (!copy.is_available) { %>
-            <div class="flash flash--error" role="alert" style="border-top:0">
+            <div class="flash flash--error flush-top" role="alert" >
               <span><%= t('staff.loans.error.copy_not_available') %></span>
             </div>
           <% } %>
@@ -155,9 +155,8 @@
               <p class="field__hint"><%= t('staff.loans.borrowerExisting') %></p>
               <div class="btn-row">
                 <% suggestions.forEach(function (person) { %>
-                  <label class="btn btn--ghost btn--small">
-                    <input type="radio" name="borrower_id" value="<%= person.id %>"
-                           style="width:auto;min-height:0;margin-inline-end:var(--s-2)">
+                  <label class="btn btn--ghost btn--small choice">
+                    <input type="radio" name="borrower_id" value="<%= person.id %>">
                     <%= person.display_name %><% if (person.school_class) { %> (<%= person.school_class %>)<% } %>
                   </label>
                 <% }); %>
@@ -196,7 +195,7 @@
             copies filled the screen with rows that gave nothing to choose
             between. Add takes the next free one. -%>
         <h2 class="label"><%= t('staff.loans.matches') %></h2>
-        <div class="list" style="margin-top:var(--s-3)">
+        <div class="list mt-3">
           <% matches.forEach(function (match) { %>
             <% const free = match.available_ids.filter(function (id) {
                  return !selectedIds.includes(id);

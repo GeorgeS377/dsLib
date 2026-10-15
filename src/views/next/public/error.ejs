@@ -1,19 +1,19 @@
 <%# Something went wrong. The detail goes to the log; the visitor gets a plain
     sentence and a way back. -%>
-<div class="state" role="alert" style="max-width:34rem;margin-inline:auto">
+<div class="state narrow-wide centre" role="alert">
   <%
     const errorIcon = status === 404 ? 'search'
       : status === 403 ? 'lock'
       : status === 429 ? 'clock'
       : 'warning';
   %>
-  <p style="display:flex;justify-content:center;color:var(--ink-faint)">
+  <p class="icon-centre">
     <%- include('../../partials/icon', { name: errorIcon, size: 32 }) %>
   </p>
-  <h1 class="state__title" style="margin-top:var(--s-3)"><%= t('error.' + status + '.title') %></h1>
+  <h1 class="state__title mt-3"><%= t('error.' + status + '.title') %></h1>
   <p><%= t('error.' + status + '.body') %></p>
   <% if (status === 404 || status === 500) { %>
-    <p style="margin-top:var(--s-4)">
+    <p class="mt-4">
       <a class="btn" href="/"><%= t('error.' + status + '.action') %></a>
     </p>
   <% } %>

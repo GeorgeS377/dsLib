@@ -16,10 +16,10 @@
     <header>
       <h1><%= book.title %></h1>
       <% if (book.subtitle) { %>
-        <p class="muted" style="margin-top:var(--s-2)"><%= book.subtitle %></p>
+        <p class="muted mt-2"><%= book.subtitle %></p>
       <% } %>
       <% if (book.authors.length > 0) { %>
-        <p style="margin-top:var(--s-2)">
+        <p class="mt-2">
           <% book.authors.forEach(function (author, index) { %><%
             %><a href="/authors/<%= author.id %>"><%= author.name %></a><%
             %><%= index < book.authors.length - 1 ? ', ' : '' %><%
@@ -27,7 +27,7 @@
         </p>
       <% } %>
       <% if (book.categories.length > 0) { %>
-        <div class="btn-row" style="margin-top:var(--s-3)">
+        <div class="btn-row mt-3">
           <% book.categories.forEach(function (category) { %>
             <a class="btn btn--ghost btn--small" href="/categories/<%= category.slug %>"><%= category.name %></a>
           <% }); %>
@@ -90,7 +90,7 @@
             <h2 class="label"><%= t('book.description') %></h2>
             <%# Escaped text with paragraph breaks kept, never raw HTML — a
                 librarian's description must not inject markup here. -%>
-            <div class="stack" style="margin-top:var(--s-3)">
+            <div class="stack mt-3">
               <% book.description.split(/\n\s*\n/).forEach(function (paragraph) { %>
                 <p><%= paragraph.trim() %></p>
               <% }); %>
@@ -101,7 +101,7 @@
         <% if (shelfLocations.length > 0) { %>
           <section>
             <h2 class="label"><%= t('book.shelf') %></h2>
-            <div class="btn-row" style="margin-top:var(--s-3)">
+            <div class="btn-row mt-3">
               <% shelfLocations.forEach(function (shelf) { %>
                 <span class="pill pill--quiet"><%= shelf %></span>
               <% }); %>
@@ -115,7 +115,7 @@
   <% if (related.length > 0) { %>
     <section>
       <h2 class="label"><%= t('book.relatedByAuthor') %></h2>
-      <div class="book-list list" style="margin-top:var(--s-3)">
+      <div class="book-list list mt-3">
         <% related.forEach(function (item) { %>
           <%- include('../partials/book-row', { book: item, t: t }) %>
         <% }); %>

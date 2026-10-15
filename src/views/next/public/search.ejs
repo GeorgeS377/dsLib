@@ -36,7 +36,7 @@
         <% } else { %><%= t('search.empty.catalogue') %><% } %>
       </p>
       <% if (query.q || hasFilters) { %>
-        <p style="margin-top:var(--s-4)">
+        <p class="mt-4">
           <a class="btn btn--ghost" href="/books">
             <%= hasFilters ? t('search.clearFilters') : t('search.clearSearch') %>
           </a>

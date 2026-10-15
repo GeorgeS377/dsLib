@@ -32,7 +32,7 @@
 
     <div class="bar__who">
       <% if (staffUser) { %>
-        <a class="bar__who" href="/staff/account" style="gap:var(--s-2)">
+        <a class="bar__who gap-2" href="/staff/account" >
           <span class="bar__avatar" aria-hidden="true"><%= initials %></span>
           <span class="bar__name"><%= staffUser.display_name %></span>
         </a>
@@ -40,14 +40,14 @@
           <input type="hidden" name="_csrf" value="<%= csrfToken %>">
           <%# The word collapses to its icon on a phone, where the bar cannot
               hold the brand and both labels; the accessible name stays. -%>
-          <button class="bar__out" type="submit" aria-label="<%= t('staff.logout') %>"
-                  style="background:none;border:0;font:inherit;cursor:pointer">
+          <button class="bar__out bar__out--button" type="submit"
+                  aria-label="<%= t('staff.logout') %>">
             <%- include('../../partials/icon', { name: 'logout', size: 15 }) %>
             <span class="bar__out-label"><%= t('staff.logout') %></span>
           </button>
         </form>
       <% } else { %>
-        <a class="bar__out" href="/staff/login" style="color:var(--blue-text)">
+        <a class="bar__out link-ink" href="/staff/login" >
           <%- include('../../partials/icon', { name: 'login', size: 15 }) %>
           <span class="bar__out-label"><%= t('nav.staff') %></span>
         </a>

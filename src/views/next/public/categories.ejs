@@ -3,7 +3,7 @@
 
   <div>
     <h1><%= t('categories.title') %></h1>
-    <p class="muted" style="margin-top:var(--s-2)"><%= t('categories.lead') %></p>
+    <p class="muted mt-2"><%= t('categories.lead') %></p>
   </div>
 
   <% if (categories.length === 0) { %>
@@ -11,7 +11,7 @@
   <% } else { %>
     <div class="list">
       <% categories.forEach(function (category) { %>
-        <a class="list__item" href="/categories/<%= category.slug %>" style="text-decoration:none">
+        <a class="list__item" href="/categories/<%= category.slug %>" class="plain">
           <span class="initials" aria-hidden="true">
             <%- include('../../partials/icon', { name: 'tag', size: 17 }) %>
           </span>

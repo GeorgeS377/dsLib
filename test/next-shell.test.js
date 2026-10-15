@@ -111,6 +111,44 @@ describe('the second interface shell', () => {
     assert.ok(!/color:#fff;background:#fb6222/.test(rules), 'white text on orange');
   });
 
+  it('carries no inline styles, which its own policy would block', async () => {
+    // The app sends style-src 'self' with no 'unsafe-inline', so a style
+    // attribute is not merely untidy — the browser drops it and the element
+    // renders unstyled. Nothing in the first interface uses one either.
+    const session2 = session;
+    const urls = [
+      ['/', NEXT],
+      ['/books', NEXT],
+      ['/books/1', NEXT],
+      ['/categories', NEXT],
+      ['/authors', NEXT],
+      ['/staff/login', NEXT],
+    ];
+    for (const [url, headers] of urls) {
+      const response = await get(url, { headers });
+      const found = response.body.match(/\sstyle="[^"]*"/g) ?? [];
+      assert.deepEqual(found, [], `${url} has inline styles: ${found.slice(0, 3)}`);
+    }
+
+    for (const url of ['/staff', '/staff/search?q=a', '/staff/books', '/staff/loans',
+                       '/staff/borrowers', '/staff/settings', '/staff/account']) {
+      const response = await app.inject({
+        method: 'GET',
+        url,
+        headers: { cookie: `${session2.cookie}; ui=next` },
+      });
+      const found = response.body.match(/\sstyle="[^"]*"/g) ?? [];
+      assert.deepEqual(found, [], `${url} has inline styles: ${found.slice(0, 3)}`);
+    }
+  });
+
+  it('declares a policy that forbids inline styles', async () => {
+    const response = await get('/', { headers: NEXT });
+    const csp = response.headers['content-security-policy'] ?? '';
+    assert.match(csp, /style-src [^;]*'self'/, 'no style-src policy');
+    assert.ok(!csp.includes("style-src 'self' 'unsafe-inline'"), 'the policy was loosened');
+  });
+
   it('still renders light by default and dark when asked', async () => {
     const light = await get('/', { headers: NEXT });
     assert.ok(!light.body.includes('data-theme="dark"'));

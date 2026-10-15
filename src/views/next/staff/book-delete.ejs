@@ -1,6 +1,6 @@
 <%# Deleting a title. A title with loan history cannot go: the history has to
     keep pointing at something real, so archiving is offered instead. -%>
-<div class="panel" style="max-width:44rem;margin-inline:auto">
+<div class="panel confirm centre">
   <h1><%= t('staff.books.deleteConfirm', { title: book.title }) %></h1>
 
   <% if (deletability.deletable) { %>

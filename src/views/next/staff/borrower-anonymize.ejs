@@ -1,6 +1,6 @@
 <%# Removing a reader's name while keeping their loans, so the library's
     figures stay correct. Cannot happen while they still have books out. -%>
-<div class="panel" style="max-width:44rem;margin-inline:auto">
+<div class="panel confirm centre">
   <h1><%= t('staff.borrowers.anonymizeConfirm', { name: borrower.display_name }) %></h1>
   <p class="muted">
     <%= t('staff.borrowers.anonymizeExplain', {

@@ -14,8 +14,8 @@
 
   <section>
     <h1><%= t('staff.search.start') %></h1>
-    <form class="search search--wide" method="get" action="/staff/search" role="search"
-          style="margin-top:var(--s-4)">
+    <form class="search search--wide mt-4" method="get" action="/staff/search" role="search"
+ >
       <label class="visually-hidden" for="q"><%= t('staff.search.label') %></label>
       <input type="search" id="q" name="q" autocomplete="off" autofocus
              placeholder="<%= t('staff.search.label') %>">
@@ -24,7 +24,7 @@
         <%= t('common.search') %>
       </button>
     </form>
-    <p class="field__hint" style="margin-top:var(--s-2)"><%= t('staff.search.startHint') %></p>
+    <p class="field__hint mt-2"><%= t('staff.search.startHint') %></p>
   </section>
 
   <%# The one thing worth interrupting for. Shown only when something is
@@ -41,7 +41,7 @@
 
   <section>
     <h2 class="label"><%= t('staff.dashboard.quick') %></h2>
-    <div class="btn-row" style="margin-top:var(--s-3)">
+    <div class="btn-row mt-3">
       <a class="btn btn--ghost" href="/staff/books/new">
         <%- include('../../partials/icon', { name: 'plus', size: 17 }) %>
         <%= t('staff.action.addBook') %>

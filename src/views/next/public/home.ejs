@@ -3,10 +3,10 @@
 
   <section>
     <h1><%= t('home.title') %></h1>
-    <p class="muted" style="margin-top:var(--s-2)"><%= t('home.lead') %></p>
+    <p class="muted mt-2"><%= t('home.lead') %></p>
 
-    <form class="search search--wide" method="get" action="/books" role="search"
-          style="margin-top:var(--s-4)">
+    <form class="search search--wide mt-4" method="get" action="/books" role="search"
+ >
       <label class="visually-hidden" for="q"><%= t('common.searchLabel') %></label>
       <input type="search" id="q" name="q" placeholder="<%= t('common.searchPlaceholder') %>"
              autocomplete="off">
@@ -16,7 +16,7 @@
       </button>
     </form>
 
-    <p class="muted small" style="margin-top:var(--s-3)">
+    <p class="muted small mt-3">
       <%= t('home.stats.summary', { titles: stats.titles, available: stats.available }) %>
     </p>
   </section>
@@ -24,7 +24,7 @@
   <% if (topCategories.length > 0) { %>
     <section>
       <h2 class="label"><%= t('home.categories') %></h2>
-      <div class="btn-row" style="margin-top:var(--s-3)">
+      <div class="btn-row mt-3">
         <% topCategories.forEach(function (category) { %>
           <a class="btn btn--ghost btn--small" href="/categories/<%= category.slug %>">
             <%= category.name %>
@@ -38,17 +38,17 @@
   <section>
     <h2 class="label"><%= t('home.recent') %></h2>
     <% if (recent.length === 0) { %>
-      <div class="state" style="margin-top:var(--s-3)">
+      <div class="state mt-3">
         <h3 class="state__title"><%= t('home.recentEmpty') %></h3>
         <p><%= t('home.recentEmptyHint') %></p>
       </div>
     <% } else { %>
-      <div class="book-list list" style="margin-top:var(--s-3)">
+      <div class="book-list list mt-3">
         <% recent.forEach(function (book) { %>
           <%- include('../partials/book-row', { book: book, t: t }) %>
         <% }); %>
       </div>
-      <p style="margin-top:var(--s-4)">
+      <p class="mt-4">
         <a class="btn btn--ghost" href="/books"><%= t('home.browseAll') %></a>
       </p>
     <% } %>

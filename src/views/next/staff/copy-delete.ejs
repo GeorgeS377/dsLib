@@ -1,17 +1,17 @@
 <%# Deleting one copy. A copy with loan history is withdrawn instead, so the
     history keeps pointing at a real item. -%>
-<div class="panel" style="max-width:44rem;margin-inline:auto">
+<div class="panel confirm centre">
   <h1><%= t('staff.copies.deleteTitle') %></h1>
 
-  <dl class="list" style="display:grid;grid-template-columns:max-content 1fr;gap:0">
-    <dt class="list__item" style="font-weight:600"><%= t('staff.loan.book') %></dt>
-    <dd class="list__item"><a href="/staff/books/<%= copy.book_id %>"><%= copy.book_title %></a></dd>
-    <dt class="list__item" style="font-weight:600"><%= t('staff.field.barcode') %></dt>
-    <dd class="list__item mono"><%= copy.barcode || '—' %></dd>
-    <dt class="list__item" style="font-weight:600"><%= t('staff.field.shelf') %></dt>
-    <dd class="list__item"><%= copy.shelf_location || '—' %></dd>
-    <dt class="list__item" style="font-weight:600"><%= t('staff.field.status') %></dt>
-    <dd class="list__item"><%= t('condition.' + copy.status) %></dd>
+  <dl class="detail-list">
+    <dt><%= t('staff.loan.book') %></dt>
+    <dd><a href="/staff/books/<%= copy.book_id %>"><%= copy.book_title %></a></dd>
+    <dt><%= t('staff.field.barcode') %></dt>
+    <dd class="mono"><%= copy.barcode || '—' %></dd>
+    <dt><%= t('staff.field.shelf') %></dt>
+    <dd><%= copy.shelf_location || '—' %></dd>
+    <dt><%= t('staff.field.status') %></dt>
+    <dd><%= t('condition.' + copy.status) %></dd>
   </dl>
 
   <% if (deletability.deletable) { %>

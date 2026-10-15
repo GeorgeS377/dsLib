@@ -939,6 +939,145 @@ tbody tr:last-child td {
 
 /* --------------------------------------------------------- 8. Utilities */
 
+/* Spacing and layout utilities.
+
+   These exist because the app sends style-src 'self' with no 'unsafe-inline':
+   a style attribute is not untidy here, it is dropped by the browser and the
+   element renders unstyled. Everything a template needs has a class. */
+.mt-1 { margin-top: var(--s-1); }
+.mt-2 { margin-top: var(--s-2); }
+.mt-3 { margin-top: var(--s-3); }
+.mt-4 { margin-top: var(--s-4); }
+.mt-5 { margin-top: var(--s-5); }
+.mt-6 { margin-top: var(--s-6); }
+
+.plain {
+  text-decoration: none;
+  color: inherit;
+}
+
+.plain:hover .list__title,
+.plain:hover .tile__title {
+  color: var(--blue-text);
+}
+
+.link-ink {
+  color: var(--blue-text);
+}
+
+.centre {
+  margin-inline: auto;
+}
+
+.narrow {
+  max-width: 26rem;
+}
+
+.narrow-wide {
+  max-width: 34rem;
+}
+
+.confirm {
+  max-width: 44rem;
+}
+
+.spread {
+  justify-content: space-between;
+}
+
+.centre-row {
+  justify-content: center;
+}
+
+.full {
+  width: 100%;
+}
+
+.flex-none {
+  flex: none;
+}
+
+.gap-2 {
+  gap: var(--s-2);
+}
+
+/* A marker rather than a style: the list view is the default and takes its
+   look from .list, but the class names which view is showing — tests and a
+   future stylesheet both need to be able to say so. */
+.book-list {
+  display: block;
+}
+
+.no-wrap-row {
+  flex-wrap: nowrap;
+}
+
+.flush-top {
+  border-top: 0;
+}
+
+/* A checkbox or radio sitting inside a button-shaped label. */
+.choice input {
+  width: auto;
+  min-height: 0;
+  margin-inline-end: var(--s-2);
+}
+
+/* A definition list drawn as a bordered two-column table. */
+.detail-list {
+  display: grid;
+  gap: 0;
+  background: var(--surface);
+  border: 1px solid var(--line);
+}
+
+@media (min-width: 30rem) {
+  .detail-list {
+    grid-template-columns: max-content 1fr;
+  }
+}
+
+.detail-list dt,
+.detail-list dd {
+  padding: var(--s-3) var(--s-4);
+  border-bottom: 1px solid var(--line);
+}
+
+.detail-list dt {
+  font-weight: 600;
+  color: var(--ink-muted);
+}
+
+@media (max-width: 29.99rem) {
+  .detail-list dt {
+    border-bottom: 0;
+    padding-bottom: 0;
+  }
+}
+
+.detail-list > :nth-last-child(-n + 2) {
+  border-bottom: 0;
+}
+
+/* The sign-out control is a submit, drawn as the link beside it. */
+.bar__out--button {
+  background: none;
+  border: 0;
+  font: inherit;
+  cursor: pointer;
+}
+
+.icon-centre {
+  display: flex;
+  justify-content: center;
+  color: var(--ink-faint);
+}
+
+.list--plain {
+  list-style: none;
+  padding: 0;
+}
+
 .visually-hidden {
   position: absolute;
   width: 1px;

@@ -45,7 +45,7 @@
         <%= t('search.showing', { from: range.from, to: range.to, total: range.total }) %>
       </p>
 
-      <div class="table-wrap" style="margin-top:var(--s-3)">
+      <div class="table-wrap mt-3">
         <table>
           <thead>
             <tr>
@@ -87,7 +87,7 @@
                 </td>
                 <td class="nowrap">
                   <% if (!loan.returned_at) { %>
-                    <div class="btn-row" style="flex-wrap:nowrap">
+                    <div class="btn-row no-wrap-row">
                       <form method="post" action="/staff/loans/checkin">
                         <input type="hidden" name="_csrf" value="<%= csrfToken %>">
                         <input type="hidden" name="loan_id" value="<%= loan.id %>">

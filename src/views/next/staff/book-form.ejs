@@ -12,7 +12,7 @@
     <nav aria-label="<%= t('nav.breadcrumb') %>" class="small muted">
       <a href="/staff/books"><%= t('staff.books.title') %></a>
     </nav>
-    <h1 style="margin-top:var(--s-2)"><%= book ? book.title : t('staff.books.new') %></h1>
+    <h1 class="mt-2"><%= book ? book.title : t('staff.books.new') %></h1>
   </div>
 
   <% if (book && book.archived_at) { %>
@@ -149,9 +149,8 @@
           <p class="field__hint"><%= t('staff.field.categoriesHint') %></p>
           <div class="btn-row">
             <% categories.forEach(function (category) { %>
-              <label class="btn btn--ghost btn--small">
+              <label class="btn btn--ghost btn--small choice">
                 <input type="checkbox" name="categories" value="<%= category.id %>"
-                       style="width:auto;min-height:0;margin-inline-end:var(--s-2)"
                        <%= values.categories.includes(category.id) ? 'checked' : '' %>>
                 <%= category.name %>
               </label>

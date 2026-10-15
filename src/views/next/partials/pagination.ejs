@@ -6,7 +6,7 @@
   parameters — this is what makes filters survive page navigation.
 -%>
 <% if (results.totalPages > 1) { %>
-  <nav class="row" aria-label="<%= t('pagination.label') %>" style="justify-content:center">
+  <nav class="row" aria-label="<%= t('pagination.label') %>" class="centre-row">
     <% if (results.page > 1) { %>
       <a class="btn btn--ghost btn--small" href="<%= pageUrl(results.page - 1) %>" rel="prev">
         <%- include('../../partials/icon', { name: 'chevron-left', size: 15 }) %>

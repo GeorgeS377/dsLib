@@ -4,7 +4,7 @@
   One generic message whichever half is wrong, so the form cannot be used to
   find out which usernames exist.
 -%>
-<div class="panel" style="max-width:26rem;margin:var(--s-6) auto">
+<div class="panel narrow centre mt-6">
   <h1><%= t('login.title') %></h1>
   <p class="muted small"><%= t('login.lead') %></p>
 
@@ -33,10 +33,10 @@
       <input type="password" id="password" name="password" required autocomplete="current-password">
     </div>
 
-    <button class="btn" type="submit" style="width:100%"><%= t('login.submit') %></button>
+    <button class="btn full" type="submit" ><%= t('login.submit') %></button>
   </form>
 
-  <p class="field__hint" style="margin-top:var(--s-4)"><%= t('login.help') %></p>
+  <p class="field__hint mt-4"><%= t('login.help') %></p>
 
   <% if (typeof noAccounts !== 'undefined' && noAccounts) { %>
     <p class="field__hint"><%= t('login.noAccounts') %></p>

@@ -13,8 +13,8 @@
 
   <section>
     <h1><%= t('staff.search.title') %></h1>
-    <form class="search search--wide" method="get" action="/staff/search" role="search"
-          style="margin-top:var(--s-4)">
+    <form class="search search--wide mt-4" method="get" action="/staff/search" role="search"
+ >
       <label class="visually-hidden" for="q"><%= t('staff.search.label') %></label>
       <input type="search" id="q" name="q" value="<%= q %>" autocomplete="off"
              placeholder="<%= t('staff.search.label') %>" <%- q ? '' : 'autofocus' %>>
@@ -23,7 +23,7 @@
         <%= t('common.search') %>
       </button>
     </form>
-    <p class="field__hint" style="margin-top:var(--s-2)"><%= t('staff.search.hint') %></p>
+    <p class="field__hint mt-2"><%= t('staff.search.hint') %></p>
   </section>
 
   <% if (!searched) { %>
@@ -41,7 +41,7 @@
   <% if (books.length > 0) { %>
     <section>
       <h2 class="label"><%= t('staff.search.books') %></h2>
-      <div class="list" style="margin-top:var(--s-2)">
+      <div class="list mt-2">
         <% books.forEach(function (book) { %>
           <div class="list__item">
             <span class="cover" aria-hidden="true">
@@ -79,7 +79,7 @@
   <% if (borrowers.length > 0) { %>
     <section>
       <h2 class="label"><%= t('staff.search.readers') %></h2>
-      <div class="list" style="margin-top:var(--s-2)">
+      <div class="list mt-2">
         <% borrowers.forEach(function (person) { %>
           <%
             const initials = String(person.display_name || '')

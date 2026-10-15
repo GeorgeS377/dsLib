@@ -3,7 +3,7 @@
 
   <div>
     <h1><%= t('authors.title') %></h1>
-    <p class="muted" style="margin-top:var(--s-2)"><%= t('authors.lead') %></p>
+    <p class="muted mt-2"><%= t('authors.lead') %></p>
   </div>
 
   <form class="search" method="get" action="/authors" role="search">
@@ -18,7 +18,7 @@
       <h2 class="state__title"><%= q ? t('search.empty.title') : t('authors.empty') %></h2>
       <% if (q) { %>
         <p><%= t('search.empty.withQuery', { query: q }) %></p>
-        <p style="margin-top:var(--s-4)">
+        <p class="mt-4">
           <a class="btn btn--ghost" href="/authors"><%= t('common.clear') %></a>
         </p>
       <% } %>
@@ -26,7 +26,7 @@
   <% } else { %>
     <div class="list">
       <% authors.forEach(function (author) { %>
-        <a class="list__item" href="/authors/<%= author.id %>" style="text-decoration:none">
+        <a class="list__item" href="/authors/<%= author.id %>" class="plain">
           <span class="initials" aria-hidden="true">
             <%= String(author.name || '').split(/\s+/).filter(Boolean).slice(0, 2)
                   .map(function (part) { return part[0]; }).join('').toUpperCase() %>

@@ -3,11 +3,11 @@
 
   <div>
     <h1><%= t('staff.settings.title') %></h1>
-    <p class="muted" style="margin-top:var(--s-2)"><%= t('staff.settings.lead') %></p>
+    <p class="muted mt-2"><%= t('staff.settings.lead') %></p>
   </div>
 
   <div class="list">
-    <a class="list__item" href="/staff/categories" style="text-decoration:none">
+    <a class="list__item plain" href="/staff/categories" >
       <span class="initials" aria-hidden="true">
         <%- include('../../partials/icon', { name: 'tag', size: 17 }) %>
       </span>
@@ -17,7 +17,7 @@
       </span>
       <span class="pill pill--quiet"><%= counts.categories %></span>
     </a>
-    <a class="list__item" href="/staff/authors" style="text-decoration:none">
+    <a class="list__item plain" href="/staff/authors" >
       <span class="initials" aria-hidden="true">
         <%- include('../../partials/icon', { name: 'user', size: 17 }) %>
       </span>
@@ -27,7 +27,7 @@
       </span>
       <span class="pill pill--quiet"><%= counts.authors %></span>
     </a>
-    <a class="list__item" href="/staff/users" style="text-decoration:none">
+    <a class="list__item plain" href="/staff/users" >
       <span class="initials" aria-hidden="true">
         <%- include('../../partials/icon', { name: 'lock', size: 17 }) %>
       </span>
@@ -39,7 +39,7 @@
       </span>
       <span class="pill pill--quiet"><%= counts.staff %></span>
     </a>
-    <a class="list__item" href="/staff/account" style="text-decoration:none">
+    <a class="list__item plain" href="/staff/account" >
       <span class="initials" aria-hidden="true">
         <%- include('../../partials/icon', { name: 'settings', size: 17 }) %>
       </span>

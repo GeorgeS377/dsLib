@@ -16,8 +16,8 @@
     <nav aria-label="<%= t('nav.breadcrumb') %>" class="small muted">
       <a href="/staff/borrowers"><%= t('staff.borrowers.title') %></a>
     </nav>
-    <h1 style="margin-top:var(--s-2)"><%= borrower.display_name %></h1>
-    <p class="muted small" style="margin-top:var(--s-1)">
+    <h1 class="mt-2"><%= borrower.display_name %></h1>
+    <p class="muted small mt-1">
       <% if (borrower.school_class) { %><%= borrower.school_class %> · <% } %>
       <%= borrower.open_loans > 0
             ? t('staff.search.holding', { count: borrower.open_loans })
@@ -36,9 +36,9 @@
   <section>
     <h2 class="label"><%= t('staff.borrowers.history') %></h2>
     <% if (loans.total === 0) { %>
-      <p class="muted" style="margin-top:var(--s-3)"><%= t('staff.borrowers.noHistory') %></p>
+      <p class="muted mt-3"><%= t('staff.borrowers.noHistory') %></p>
     <% } else { %>
-      <div class="table-wrap" style="margin-top:var(--s-3)">
+      <div class="table-wrap mt-3">
         <table>
           <thead>
             <tr>
