@@ -10,6 +10,7 @@ import {
   listPublicCategories,
 } from '../../db/queries/categories.js';
 import { distinctLanguages, distinctYears } from '../../db/queries/books.js';
+import { listPublishedAnnouncements } from '../../db/queries/announcements.js';
 import { publicStats } from '../../db/queries/stats.js';
 import { buildUrl, pageWindow, resultRange, withParams } from '../../lib/urls.js';
 import {
@@ -58,7 +59,7 @@ export default async function publicRoutes(app) {
       years: distinctYears(db),
       languages: distinctLanguages(db),
       topCategories: categories.slice(0, 12),
-      announcements: [],
+      announcements: listPublishedAnnouncements(db),
       // The first interface's home page has its own prominent search field, so
       // its header does not repeat it.
       hideHeaderSearch: true,

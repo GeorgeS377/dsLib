@@ -21,7 +21,10 @@ describe('migrations', () => {
   it('applies cleanly to an empty database', () => {
     const db = openDatabase(':memory:');
     const applied = migrate(db);
-    assert.deepEqual(applied, ['001_catalogue', '002_circulation']);
+    // Read from the directory rather than listed here: a new migration is a
+    // normal thing to add, and this test should check that all of them ran,
+    // not that there are exactly the ones someone wrote down once.
+    assert.deepEqual(applied, migrationNames());
 
     // Every table the application expects now exists.
     const tables = db
@@ -252,3 +255,13 @@ describe('database layer', () => {
     db.close();
   });
 });
+
+/** Every migration on disk, in the order the runner applies them. */
+function migrationNames() {
+  const dir = path.join(process.cwd(), 'src', 'db', 'migrations');
+  return fs
+    .readdirSync(dir)
+    .filter((name) => name.endsWith('.sql'))
+    .sort()
+    .map((name) => name.replace(/\.sql$/, ''));
+}

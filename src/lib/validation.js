@@ -298,6 +298,14 @@ export const checkinSchema = z.object({
   redirect_to: trimmed(200),
 });
 
+// ------------------------------------------------ staff: announcements
+
+export const announcementFormSchema = z.object({
+  title: z.string().trim().min(1, 'required').max(200),
+  body: trimmed(2000),
+  is_published: checkbox,
+});
+
 // -------------------------------------------------- staff: accounts, misc.
 
 export const staffUserFormSchema = z.object({

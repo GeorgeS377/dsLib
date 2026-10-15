@@ -27,6 +27,15 @@
       </span>
       <span class="pill pill--quiet"><%= counts.authors %></span>
     </a>
+    <a class="list__item plain" href="/staff/announcements">
+      <span class="initials" aria-hidden="true">
+        <%- include('../../partials/icon', { name: 'tag', size: 17 }) %>
+      </span>
+      <span class="list__grow">
+        <span class="list__title"><%= t('staff.announcements.title') %></span>
+        <span class="list__meta"><%= t('staff.announcements.lead') %></span>
+      </span>
+    </a>
     <a class="list__item plain" href="/staff/users" >
       <span class="initials" aria-hidden="true">
         <%- include('../../partials/icon', { name: 'lock', size: 17 }) %>

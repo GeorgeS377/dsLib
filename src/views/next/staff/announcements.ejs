@@ -1,0 +1,99 @@
+<%#
+  The notices on the front page.
+
+  Ordered by hand rather than by date: what matters this week is not
+  necessarily what was written last. A notice can be written before the day it
+  applies and held back until then.
+-%>
+<div class="stack-lg">
+
+  <div>
+    <h1><%= t('staff.announcements.title') %></h1>
+    <p class="muted mt-2"><%= t('staff.announcements.lead') %></p>
+  </div>
+
+  <% if (announcements.length === 0) { %>
+    <div class="state">
+      <h2 class="state__title"><%= t('staff.announcements.empty') %></h2>
+      <p><%= t('staff.announcements.emptyHint') %></p>
+    </div>
+  <% } else { %>
+    <div class="list">
+      <% announcements.forEach(function (item, index) { %>
+        <div class="list__item">
+          <div class="list__grow">
+            <span class="list__title"><%= item.title %></span>
+            <% if (item.body) { %><div class="list__meta"><%= item.body %></div><% } %>
+          </div>
+
+          <% if (!item.is_published) { %>
+            <span class="pill pill--quiet"><%= t('staff.announcements.draft') %></span>
+          <% } %>
+
+          <div class="btn-row no-wrap-row">
+            <% if (index > 0) { %>
+              <form method="post" action="/staff/announcements/<%= item.id %>/move">
+                <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                <input type="hidden" name="direction" value="up">
+                <button class="btn btn--ghost btn--small" type="submit"
+                        aria-label="<%= t('staff.announcements.moveUp') %>">↑</button>
+              </form>
+            <% } %>
+            <% if (index < announcements.length - 1) { %>
+              <form method="post" action="/staff/announcements/<%= item.id %>/move">
+                <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                <input type="hidden" name="direction" value="down">
+                <button class="btn btn--ghost btn--small" type="submit"
+                        aria-label="<%= t('staff.announcements.moveDown') %>">↓</button>
+              </form>
+            <% } %>
+            <a class="btn btn--ghost btn--small" href="/staff/announcements?edit=<%= item.id %>">
+              <%= t('common.edit') %>
+            </a>
+            <form method="post" action="/staff/announcements/<%= item.id %>/delete">
+              <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+              <button class="btn btn--ghost btn--small" type="submit"><%= t('common.delete') %></button>
+            </form>
+          </div>
+        </div>
+      <% }); %>
+    </div>
+  <% } %>
+
+  <section class="panel">
+    <h2><%= editing ? t('common.edit') : t('staff.announcements.add') %></h2>
+
+    <form method="post"
+          action="<%= editing ? '/staff/announcements/' + editing.id : '/staff/announcements' %>">
+      <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+
+      <div>
+        <label class="field__label" for="title"><%= t('staff.field.title') %></label>
+        <input type="text" id="title" name="title" value="<%= values.title %>" required
+               maxlength="200" <%- errors.title ? 'aria-invalid="true"' : '' %>>
+        <%- include('../partials/field-error', { hasT: hasT, code: errors.title, t: t }) %>
+      </div>
+
+      <div>
+        <label class="field__label" for="body"><%= t('staff.announcements.body') %>
+          <span class="field__optional"><%= t('common.optional') %></span>
+        </label>
+        <textarea id="body" name="body" rows="3" maxlength="2000"><%= values.body %></textarea>
+      </div>
+
+      <label class="filter__option">
+        <input type="checkbox" name="is_published" value="1"
+               <%= values.is_published ? 'checked' : '' %>>
+        <span><%= t('staff.announcements.published') %></span>
+      </label>
+
+      <div class="btn-row">
+        <button class="btn" type="submit"><%= t('common.save') %></button>
+        <% if (editing) { %>
+          <a class="btn btn--quiet" href="/staff/announcements"><%= t('common.cancel') %></a>
+        <% } %>
+      </div>
+    </form>
+  </section>
+
+</div>

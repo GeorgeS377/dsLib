@@ -115,7 +115,7 @@ describe('db-snapshot helper', () => {
   it('reports integrity and schema version', () => {
     const instance = makeInstance('report');
     assert.equal(integrityOf(instance.dbPath), 'ok');
-    assert.equal(versionsOf(instance.dbPath), '001_catalogue, 002_circulation');
+    assert.equal(versionsOf(instance.dbPath), migrationNames().join(', '));
   });
 });
 
@@ -297,3 +297,13 @@ describe('restore.sh', () => {
     db.close();
   });
 });
+
+/** Every migration on disk, in the order the runner applies them. */
+function migrationNames() {
+  const dir = path.join(process.cwd(), 'src', 'db', 'migrations');
+  return fs
+    .readdirSync(dir)
+    .filter((name) => name.endsWith('.sql'))
+    .sort()
+    .map((name) => name.replace(/\.sql$/, ''));
+}

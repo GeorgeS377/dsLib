@@ -13,6 +13,7 @@ import { requireAdmin, requireStaff } from '../../lib/auth.js';
 import { takeFlash } from '../../lib/flash.js';
 import { resolveTemplate } from '../../lib/ui-flavour.js';
 import authRoutes, { logoutRoutes } from './auth.js';
+import staffAnnouncementRoutes from './announcements.js';
 import staffBookRoutes from './books.js';
 import staffBorrowerRoutes from './borrowers.js';
 import staffCopyRoutes from './copies.js';
@@ -68,6 +69,7 @@ export default async function staffRoutes(app) {
     await protectedScope.register(staffTaxonomyRoutes);
     await protectedScope.register(staffLoanRoutes);
     await protectedScope.register(staffSearchRoutes);
+    await protectedScope.register(staffAnnouncementRoutes);
     await protectedScope.register(staffBorrowerRoutes);
     await protectedScope.register(staffUserRoutes);
   });

@@ -42,10 +42,24 @@ same data, and so abandoning the new one costs nothing but deleting it.
 - Runs beside the existing interface, switchable, with no change to data,
   routes, or what the system does.
 
+## Changes George made after seeing it running
+
+Recorded here because two of them override what this document originally said.
+
+- **The front page is the catalogue.** There is no separate landing page; the
+  search and filters act on `/` itself. `/books` still renders the same thing.
+- **The grid is the default view**, not the list. The covers are not all there
+  yet, but a shelf is something you look at.
+- **The nav underline animates on hover**, following GS-TK.
+- **Announcements on the front page**, as on myLib — and George chose for staff
+  to write them in the app rather than have them fixed in a file. **That
+  overrides the non-goal below: it adds `003_announcements.sql`.** Nothing
+  else in the schema changed, and no existing table was touched.
+
 ## Non-goals
 
 - No change to the database, the migrations, or any query beyond adding new
-  read paths for new screens.
+  read paths for new screens. *(Overridden for announcements — see above.)*
 - No change to URLs. `/books/12` stays `/books/12` in both interfaces.
 - No new features beyond the one noted below (combined staff search). This is
   about presentation, not scope.
