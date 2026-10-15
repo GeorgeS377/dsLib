@@ -142,6 +142,43 @@ describe('the second interface shell', () => {
     }
   });
 
+  it('switches the sign-in page too', async () => {
+    // The sign-in page renders through reply.view rather than the decorators,
+    // so it was the one page the flavour never reached — and the one page a
+    // teacher sees first.
+    const response = await get('/staff/login', { headers: NEXT });
+    assert.equal(response.statusCode, 200);
+    assert.ok(response.body.includes('/assets/css/next.css'), 'the sign-in page did not switch');
+    assert.ok(!response.body.includes('/assets/css/app.css'));
+  });
+
+  it('says what went wrong when a sign-in fails', async () => {
+    // The route hands over a whole translation key; a template that prefixes
+    // it again renders the key itself at the person who mistyped.
+    const form = await get('/staff/login', { headers: NEXT });
+    const token = form.body.match(/name="_csrf"\s+value="([^"]+)"/)[1];
+    // One cookie arrives as a string, several as an array.
+    const raw = form.headers['set-cookie'] ?? [];
+    const cookies = (Array.isArray(raw) ? raw : [raw])
+      .map((c) => c.split(';')[0]).join('; ');
+
+    const response = await app.inject({
+      method: 'POST',
+      url: '/staff/login',
+      headers: {
+        cookie: `${cookies}; ui=next`,
+        'content-type': 'application/x-www-form-urlencoded',
+      },
+      payload: new URLSearchParams({
+        _csrf: token, username: 'maria', password: 'definitely-wrong',
+      }).toString(),
+    });
+
+    assert.equal(response.statusCode, 401);
+    assert.ok(response.body.includes('Λάθος όνομα χρήστη ή κωδικός.'), 'no reason shown');
+    assert.ok(!response.body.includes('login.error'), 'a translation key was shown instead');
+  });
+
   it('declares a policy that forbids inline styles', async () => {
     const response = await get('/', { headers: NEXT });
     const csp = response.headers['content-security-policy'] ?? '';

@@ -24,10 +24,9 @@ export default async function authRoutes(app) {
       return reply.redirect(safeRedirect(request.query?.next) ?? '/staff', 302);
     }
 
-    return reply.view(
+    return reply.renderPlain(
       'staff/login',
       {
-        ...reply.locals,
         title: reply.locals.t('login.title'),
         csrfToken: reply.generateCsrf(),
         next: safeRedirect(request.query?.next) ?? '',
@@ -41,7 +40,6 @@ export default async function authRoutes(app) {
         // of leaving the operator at a login form no password can open.
         noAccounts: countStaff(db) === 0,
       },
-      { layout: 'layouts/staff-plain.ejs' },
     );
   });
 
@@ -67,10 +65,9 @@ export default async function authRoutes(app) {
         // "wrong password" — either would confirm which usernames exist.
         request.log.warn({ reason, ip: request.ip }, 'failed staff login');
         reply.code(401);
-        return reply.view(
+        return reply.renderPlain(
           'staff/login',
           {
-            ...reply.locals,
             title: reply.locals.t('login.title'),
             csrfToken: reply.generateCsrf(),
             next: next ?? '',
@@ -80,7 +77,6 @@ export default async function authRoutes(app) {
             username,
             noAccounts: countStaff(db) === 0,
           },
-          { layout: 'layouts/staff-plain.ejs' },
         );
       };
 

@@ -122,6 +122,25 @@ describe('the front page is the catalogue', () => {
 });
 
 describe('what a public page must never show', () => {
+  it('never prints "undefined" at a reader', async () => {
+    // A template that reads a field by the wrong name renders the word
+    // "undefined" into the page rather than failing, so nothing catches it
+    // except looking — which is how this one was found, on the front page.
+    for (const url of [
+      '/',
+      '/books',
+      `/books/${fixtures.books.odyssey}`,
+      '/categories',
+      '/authors',
+    ]) {
+      const response = await get(url);
+      assert.ok(
+        !/>\s*undefined|undefined\s*</.test(response.body) && !response.body.includes(' undefined '),
+        `${url} rendered the word "undefined"`,
+      );
+    }
+  });
+
   it('names no borrower, due date or barcode', async () => {
     for (const url of ['/', '/books', `/books/${fixtures.books.odyssey}`]) {
       const response = await get(url);

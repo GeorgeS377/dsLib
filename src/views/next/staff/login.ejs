@@ -15,7 +15,8 @@
     <div class="flash flash--success" role="status"><span><%= t('staff.account.changed') %></span></div>
   <% } %>
   <% if (error) { %>
-    <div class="flash flash--error" role="alert"><span><%= t('login.error.' + error) %></span></div>
+    <%# The route hands over a whole key, not a code. -%>
+    <div class="flash flash--error" role="alert"><span><%= t(error) %></span></div>
   <% } %>
 
   <form method="post" action="/staff/login">

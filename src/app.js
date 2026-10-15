@@ -352,6 +352,24 @@ export async function buildApp({ config = defaultConfig, logger, db, onRoute } =
     );
   });
 
+  /**
+   * Render a page in the bare staff shell — the sign-in page and anything
+   * else reached without an account.
+   *
+   * It exists so that no route has to compose a `reply.view` call of its own.
+   * The sign-in page did, and was the single page the interface flavour never
+   * reached: the first page a teacher sees, still in the old look.
+   */
+  app.decorateReply('renderPlain', function renderPlain(template, data = {}) {
+    const flavour = this.request.uiFlavour;
+    const resolve = (name) => resolveTemplate(flavour, name, { viewsRoot });
+    return this.view(
+      resolve(template),
+      { ...this.locals, ...data },
+      { layout: resolve('layouts/staff-plain.ejs') },
+    );
+  });
+
   // Routes resolve their own template names through the same rule, so a page
   // rendered outside the decorators still lands in the right interface.
   app.decorate('viewsRoot', viewsRoot);
