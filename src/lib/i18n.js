@@ -81,6 +81,7 @@ const el = {
   'home.recentEmpty': 'Δεν υπάρχουν ακόμη βιβλία στον κατάλογο.',
   'home.recentEmptyHint':
     'Μόλις το προσωπικό της βιβλιοθήκης καταχωρίσει τα πρώτα βιβλία, θα εμφανιστούν εδώ.',
+  'home.announcements': 'Ανακοινώσεις',
   'home.categories': 'Κατηγορίες',
   'home.stats.titles': '{count} τίτλοι στον κατάλογο',
   'home.stats.available': '{count} διαθέσιμα αντίτυπα',
@@ -607,6 +608,7 @@ const en = {
   'home.recent': 'Recently added',
   'home.recentEmpty': 'There are no books in the catalogue yet.',
   'home.recentEmptyHint': 'Once library staff add the first books, they will appear here.',
+  'home.announcements': 'Announcements',
   'home.categories': 'Categories',
   'home.stats.titles': '{count} titles in the catalogue',
   'home.stats.available': '{count} copies available',

@@ -70,10 +70,10 @@ export function stylesheetFor(flavour) {
 export const VIEW_COOKIE = 'view';
 export const VIEW_MODES = ['list', 'grid'];
 
-// The list leads: most titles have no cover image yet, so a grid today is a
-// wall of grey placeholders. The switch means the page does not have to be
-// redesigned once the covers exist.
-export const DEFAULT_VIEW = 'list';
+// The grid leads. The covers are not all there yet, so some of it is
+// placeholders — George's call, and the right one for a library: a shelf is
+// something you look at, and the grid is what makes it look like one.
+export const DEFAULT_VIEW = 'grid';
 
 /**
  * How the catalogue is laid out for this visitor. Same shape as the flavour:

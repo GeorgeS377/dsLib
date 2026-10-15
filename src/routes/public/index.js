@@ -27,22 +27,40 @@ export default async function publicRoutes(app) {
   // ------------------------------------------------------------------ home
   app.get('/', async (request, reply) => {
     const categories = listPublicCategories(db);
-    // The filter bar is shared with the catalogue page and expects the same
-    // shape, so an empty parsed query stands in for "nothing selected yet".
-    const query = searchQuerySchema.parse({});
+    const query = searchQuerySchema.parse(request.query ?? {});
+    const filters = searchFilters(query, { perPage: PER_PAGE });
+    const results = listBooks(db, filters);
+    const kept = preservedParams(query);
 
+    // The front page is the catalogue: arriving at the library should mean
+    // arriving at the books, not at a page about them. The search and the
+    // filters act on this page rather than sending anyone elsewhere, so the
+    // links below are built against '/' and not '/books'.
+    //
+    // The first interface's home template ignores `results` and the rest and
+    // still shows what it always showed — which is how both interfaces are
+    // served by one route.
     return reply.render('public/home', {
       title: null,
       recent: recentBooks(db, 8),
       stats: publicStats(db),
       query,
+      kept,
+      results,
+      range: resultRange(results),
+      pages: pageWindow(results.page, results.totalPages),
+      pageUrl: (page) => buildUrl('/', withParams(kept, { page: page > 1 ? page : undefined })),
+      sortUrl: (sort) => buildUrl('/', withParams(kept, { sort, page: undefined })),
+      clearUrl: buildUrl('/', { q: query.q }),
+      hasFilters: hasActiveFilters(query),
       categories,
       authors: listPublicAuthors(db),
       years: distinctYears(db),
       languages: distinctLanguages(db),
       topCategories: categories.slice(0, 12),
-      // The home page has its own prominent search field, so the header does
-      // not repeat it. Every other page shows the header one.
+      announcements: [],
+      // The first interface's home page has its own prominent search field, so
+      // its header does not repeat it.
       hideHeaderSearch: true,
     });
   });

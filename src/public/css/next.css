@@ -254,11 +254,33 @@ main {
   font-size: 0.9375rem;
 }
 
+/* The orange rule under a nav item grows from the middle on hover and stays
+   put on the current page — the movement is what tells you the thing is
+   reachable, before you have read it. Drawn as a pseudo-element rather than a
+   border so it can be animated; a border cannot be scaled. */
 .bar__link {
+  position: relative;
   color: var(--ink-muted);
   text-decoration: none;
   padding-block: var(--s-2);
-  border-bottom: 2px solid transparent;
+}
+
+.bar__link::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 2px;
+  background: var(--orange);
+  transform: scaleX(0);
+  transform-origin: center;
+  transition: transform 160ms ease-out;
+}
+
+.bar__link:hover::after,
+.bar__link:focus-visible::after {
+  transform: scaleX(1);
 }
 
 .bar__link:hover {
@@ -268,8 +290,19 @@ main {
 .bar__link[aria-current="page"] {
   color: var(--blue-text);
   font-weight: 600;
-  /* The one place orange appears in the chrome: it says where you are. */
-  border-bottom-color: var(--orange);
+}
+
+/* Where you are is a fact, not a hint: it does not wait to be hovered. */
+.bar__link[aria-current="page"]::after {
+  transform: scaleX(1);
+}
+
+/* Someone who asked their system for less movement gets the same information
+   without it. */
+@media (prefers-reduced-motion: reduce) {
+  .bar__link::after {
+    transition: none;
+  }
 }
 
 .bar__who {
@@ -1076,6 +1109,18 @@ tbody tr:last-child td {
 .list--plain {
   list-style: none;
   padding: 0;
+}
+
+.announce__item {
+  display: flex;
+  gap: var(--s-3);
+  align-items: flex-start;
+  color: var(--ink-muted);
+}
+
+.announce__title {
+  font-weight: 600;
+  color: var(--ink);
 }
 
 .visually-hidden {

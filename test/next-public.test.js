@@ -66,34 +66,58 @@ describe('every public page in the second interface', () => {
   });
 });
 
-describe('list or grid', () => {
-  it('shows a list by default', async () => {
+describe('grid or list', () => {
+  it('shows a grid by default', async () => {
     const response = await get('/books');
-    assert.match(response.body, /class="[^"]*\bbook-list\b/, 'not the list');
-    assert.ok(!/class="[^"]*\bbook-grid\b/.test(response.body), 'the grid showed without being asked');
+    assert.match(response.body, /class="[^"]*\bbook-grid\b/, 'not the grid');
+    assert.ok(!/class="[^"]*\bbook-list\b/.test(response.body), 'the list showed without being asked');
   });
 
-  it('switches to the grid and remembers it', async () => {
-    const chosen = await get('/books?view=grid');
-    assert.match(chosen.body, /class="[^"]*\bbook-grid\b/, 'the grid did not appear');
-    assert.equal(cookieValue(chosen, 'view'), 'grid');
+  it('switches to the list and remembers it', async () => {
+    const chosen = await get('/books?view=list');
+    assert.match(chosen.body, /class="[^"]*\bbook-list\b/, 'the list did not appear');
+    assert.equal(cookieValue(chosen, 'view'), 'list');
 
-    const later = await get('/books', { cookie: 'ui=next; view=grid' });
-    assert.match(later.body, /class="[^"]*\bbook-grid\b/, 'the choice was forgotten');
+    const later = await get('/books', { cookie: 'ui=next; view=list' });
+    assert.match(later.body, /class="[^"]*\bbook-list\b/, 'the choice was forgotten');
   });
 
   it('ignores a view that is not one of the two', async () => {
     const response = await get('/books?view=banana');
-    assert.match(response.body, /class="[^"]*\bbook-list\b/);
+    assert.match(response.body, /class="[^"]*\bbook-grid\b/);
     assert.equal(cookieValue(response, 'view'), undefined, 'an unknown view was remembered');
   });
 
   it('keeps the search and filters when switching', async () => {
     const response = await get(`/books?q=${encodeURIComponent('ομηρος')}&available=1`);
-    const link = response.body.match(/href="([^"]*view=grid[^"]*)"/)?.[1];
-    assert.ok(link, 'no way to switch to the grid');
+    const link = response.body.match(/href="([^"]*view=list[^"]*)"/)?.[1];
+    assert.ok(link, 'no way to switch to the list');
     assert.ok(link.includes('q='), 'the switch drops the search');
     assert.ok(link.includes('available=1'), 'the switch drops the filters');
+  });
+});
+
+describe('the front page is the catalogue', () => {
+  it('searches and filters from the front page itself', async () => {
+    // George prefers the catalogue to a separate landing page, so the two are
+    // one: arriving at the library means arriving at the books.
+    const response = await get('/');
+    assert.equal(response.statusCode, 200);
+    assert.match(response.body, /<form[^>]*role="search"/, 'no search on the front page');
+    assert.ok(response.body.includes('filter__options'), 'no filters on the front page');
+    assert.match(response.body, /class="[^"]*\bbook-grid\b/, 'no results on the front page');
+  });
+
+  it('searches without leaving it', async () => {
+    const response = await get(`/?q=${encodeURIComponent('οδυσσεια')}`);
+    assert.equal(response.statusCode, 200);
+    assert.ok(response.body.includes('Οδύσσεια'), 'the search found nothing');
+    assert.ok(!response.body.includes('Ιλιάδα'), 'the search did not narrow anything');
+  });
+
+  it('keeps /books working for anyone who has it', async () => {
+    const response = await get('/books');
+    assert.equal(response.statusCode, 200);
   });
 });
 

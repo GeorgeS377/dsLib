@@ -1,0 +1,22 @@
+<%#
+  Library announcements: opening hours, rules, whatever the term brings.
+
+  Shown only when there is something to say. An empty panel headed
+  "Ανακοινώσεις" on every visit teaches people to stop reading it.
+-%>
+<% if (announcements && announcements.length > 0) { %>
+  <section class="panel announce">
+    <h2 class="label"><%= t('home.announcements') %></h2>
+    <ul class="stack list--plain mt-3">
+      <% announcements.forEach(function (item) { %>
+        <li class="announce__item">
+          <%- include('../../partials/icon', { name: 'tag', size: 16 }) %>
+          <div>
+            <p class="announce__title"><%= item.title %></p>
+            <% if (item.body) { %><p class="muted small"><%= item.body %></p><% } %>
+          </div>
+        </li>
+      <% }); %>
+    </ul>
+  </section>
+<% } %>
