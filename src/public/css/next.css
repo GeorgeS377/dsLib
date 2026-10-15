@@ -707,6 +707,17 @@ form:not(.search):not(.btn-row) > *:not([type="hidden"]):not([hidden]) + .btn-ro
   align-items: center;
 }
 
+/* The actions on a table row sit at the far right, against the edge of the
+   table, where the eye already is after reading across. Left where the column
+   happens to start, they floated in the middle of empty space. */
+.cell-actions {
+  text-align: end;
+}
+
+.cell-actions .btn-row {
+  justify-content: flex-end;
+}
+
 /* One search field, capped. A full-bleed search box on a wide screen is the
    specific thing that made the borrower page look wrong. */
 .search {

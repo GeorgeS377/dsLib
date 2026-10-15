@@ -90,19 +90,19 @@
                     <span class="pill"><%= loan.due_at.slice(0, 10) %></span>
                   <% } %>
                 </td>
-                <td class="nowrap">
+                <td class="nowrap cell-actions">
                   <% if (!loan.returned_at) { %>
                     <div class="btn-row no-wrap-row">
                       <form method="post" action="/staff/loans/checkin">
                         <input type="hidden" name="_csrf" value="<%= csrfToken %>">
                         <input type="hidden" name="loan_id" value="<%= loan.id %>">
-                        <button class="btn btn--ghost btn--small" type="submit">
+                        <button class="btn btn--small" type="submit">
                           <%= t('staff.action.checkin') %>
                         </button>
                       </form>
                       <form method="post" action="/staff/loans/<%= loan.id %>/renew">
                         <input type="hidden" name="_csrf" value="<%= csrfToken %>">
-                        <button class="btn btn--ghost btn--small" type="submit">
+                        <button class="btn btn--small" type="submit">
                           <%= t('staff.loans.renew') %>
                         </button>
                       </form>

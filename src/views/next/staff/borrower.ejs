@@ -68,7 +68,7 @@
                     <span class="pill"><%= t('status.on_loan') %></span>
                   <% } %>
                 </td>
-                <td class="nowrap">
+                <td class="nowrap cell-actions">
                   <% if (!loan.returned_at) { %>
                     <form method="post" action="/staff/loans/checkin">
                       <input type="hidden" name="_csrf" value="<%= csrfToken %>">
