@@ -438,6 +438,7 @@ const el = {
   'staff.loans.findCopy': 'Εύρεση αντιτύπου',
   'staff.loans.dueDate': 'Προθεσμία επιστροφής',
   'staff.loans.dueDateHint': 'Προεπιλογή: {days} ημέρες.',
+  'staff.loans.borrowerSuggestHint': 'Αρχίστε να γράφετε — οι γνωστοί αναγνώστες εμφανίζονται από κάτω.',
   'staff.loans.borrowerExisting': 'Υπάρχων αναγνώστης',
   'staff.loans.borrowerNew': 'Νέος αναγνώστης',
   'staff.loans.borrowerNewHint':
@@ -977,6 +978,7 @@ const en = {
   'staff.loans.findCopy': 'Find copy',
   'staff.loans.dueDate': 'Due date',
   'staff.loans.dueDateHint': 'Default: {days} days.',
+  'staff.loans.borrowerSuggestHint': 'Start typing — readers the library knows appear below.',
   'staff.loans.borrowerExisting': 'Existing borrower',
   'staff.loans.borrowerNew': 'New borrower',
   'staff.loans.borrowerNewHint': 'Only a name and a class are recorded — nothing else.',

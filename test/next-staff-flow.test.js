@@ -100,6 +100,57 @@ describe('lending from the search', () => {
   });
 });
 
+describe('naming the reader at the desk', () => {
+  it('offers the readers the library already knows', async () => {
+    createBorrower(db, { displayName: 'Ελένη Σταθοπούλου', schoolClass: 'Β1' });
+    const copy = createCopy(db, createBook(db, { title: 'Για Πρόταση' }), { barcode: 'SUG-1' }).id;
+
+    const page = await get(`/staff/loans/checkout?copy=${copy}`);
+    assert.equal(page.statusCode, 200);
+    assert.match(page.body, /<datalist[^>]*id="reader-options"/, 'no list of readers to suggest');
+    assert.ok(page.body.includes('Ελένη Σταθοπούλου'), 'a known reader is not offered');
+  });
+
+  it('carries each reader\'s class, so choosing one can fill it in', async () => {
+    // The borrower form only exists once there is something to lend, so the
+    // list of readers lives on a page with a copy chosen.
+    const copy = createCopy(db, createBook(db, { title: 'Με Τάξη' }), { barcode: 'SUG-4' }).id;
+    const page = await get(`/staff/loans/checkout?copy=${copy}`);
+    const option = page.body.match(/<option value="Ελένη Σταθοπούλου"[^>]*>/)?.[0];
+    assert.ok(option, 'the reader is not in the list');
+    assert.ok(option.includes('Β1'), 'the class does not travel with the name');
+  });
+
+  it('reuses the record rather than making a second one', async () => {
+    const existing = createBorrower(db, { displayName: 'Ξανά Ο Ίδιος', schoolClass: 'Γ3' }).id;
+    const copy = createCopy(db, createBook(db, { title: 'Δεύτερος Δανεισμός' }), { barcode: 'SUG-2' }).id;
+
+    await post(
+      '/staff/loans/checkout',
+      { copy_id: copy, new_borrower_name: 'Ξανά Ο Ίδιος', new_borrower_class: 'Γ3' },
+      { tokenFrom: `/staff/loans/checkout?copy=${copy}` },
+    );
+
+    const matches = db.all(
+      "SELECT id FROM borrower WHERE display_name = 'Ξανά Ο Ίδιος'",
+    );
+    assert.equal(matches.length, 1, `${matches.length} records for one reader`);
+    assert.equal(matches[0].id, existing, 'a new record was made instead of reusing');
+  });
+
+  it('puts a reader it has never seen into the directory', async () => {
+    const copy = createCopy(db, createBook(db, { title: 'Πρώτη Φορά' }), { barcode: 'SUG-3' }).id;
+    await post(
+      '/staff/loans/checkout',
+      { copy_id: copy, new_borrower_name: 'Ολοκαίνουργιος Μαθητής', new_borrower_class: 'Α2' },
+      { tokenFrom: `/staff/loans/checkout?copy=${copy}` },
+    );
+
+    const listed = await get('/staff/borrowers');
+    assert.ok(listed.body.includes('Ολοκαίνουργιος Μαθητής'), 'the new reader is not in the directory');
+  });
+});
+
 describe('taking a book back from the search', () => {
   it('reaches the reader who has it and closes the loan', async () => {
     const borrower = createBorrower(db, { displayName: 'Κρατάει Ένα', schoolClass: 'Γ2' }).id;

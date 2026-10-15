@@ -130,9 +130,24 @@
             <legend><%= t('staff.loans.borrowerNew') %></legend>
             <p class="field__hint"><%= t('staff.loans.borrowerNewHint') %></p>
 
+            <%# The readers the library already knows, offered as you type.
+                A datalist does the suggesting natively, so it works with no
+                scripting at all; the script below only fills in the class
+                once a known name is chosen. -%>
+            <datalist id="reader-options">
+              <% readers.forEach(function (reader) { %>
+                <option value="<%= reader.display_name %>"
+                        data-class="<%= reader.school_class || '' %>"
+                        data-id="<%= reader.id %>"
+                        <% if (reader.school_class) { %>label="<%= reader.school_class %>"<% } %>>
+              <% }); %>
+            </datalist>
+
             <div>
               <label class="field__label" for="new_borrower_name"><%= t('staff.borrowers.name') %></label>
+              <span class="field__hint"><%= t('staff.loans.borrowerSuggestHint') %></span>
               <input type="text" id="new_borrower_name" name="new_borrower_name"
+                     list="reader-options" data-reader-name
                      value="<%= values.new_borrower_name %>" maxlength="200" autocomplete="off"
                      <%- errors.new_borrower_name || errors.borrower_id ? 'aria-invalid="true"' : '' %>>
               <%- include('../partials/field-error', { hasT: hasT, code: errors.new_borrower_name, t: t }) %>
@@ -146,6 +161,7 @@
                 <span class="field__optional"><%= t('common.optional') %></span>
               </label>
               <input type="text" id="new_borrower_class" name="new_borrower_class"
+                     data-reader-class
                      value="<%= values.new_borrower_class %>" maxlength="60" autocomplete="off">
             </div>
 

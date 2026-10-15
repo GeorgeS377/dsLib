@@ -46,7 +46,7 @@ const pages = () => [
   `/staff/books/${fixtures.books.odyssey}/copies`,
   `/staff/books/${fixtures.books.odyssey}/delete`,
   '/staff/loans',
-  '/staff/loans/checkout',
+  `/staff/loans/checkout?copy=${db.get('SELECT id FROM copy LIMIT 1').id}`,
   '/staff/loans/checkin',
   '/staff/borrowers',
   '/staff/categories',
@@ -97,6 +97,35 @@ describe('every staff page in the second interface', () => {
       const response = await get(url);
       assert.ok(!/<select[^>]*\bmultiple\b/.test(response.body), `${url} has a multiple-select`);
     }
+  });
+
+  it('sends the lending page to the search when it has nothing to lend', async () => {
+    // With no copy chosen it was a second, emptier copy of the search page —
+    // two places to start the same job. The one with the readers and the
+    // basket on it is the one worth keeping.
+    const response = await get('/staff/loans/checkout');
+    assert.equal(response.statusCode, 302);
+    assert.equal(response.headers.location, '/staff');
+  });
+
+  it('still shows the lending page once a copy is chosen', async () => {
+    const copy = db.get('SELECT id FROM copy LIMIT 1');
+    const response = await get(`/staff/loans/checkout?copy=${copy.id}`);
+    assert.equal(response.statusCode, 200);
+  });
+
+  it('keeps a search on the lending page working', async () => {
+    // Searching from there adds a second book to the same loan, so it is a
+    // different thing from arriving with nothing.
+    const response = await get(`/staff/loans/checkout?q=${encodeURIComponent('οδυσ')}`);
+    assert.equal(response.statusCode, 200);
+  });
+
+  it('has one page for the account, not two', async () => {
+    // /staff/account/password rendered the same template as /staff/account
+    // and nothing linked to it.
+    const response = await get('/staff/account/password');
+    assert.equal(response.statusCode, 404, 'the duplicate account page is still there');
   });
 
   it('keeps every form in one column with its submit set apart', async () => {

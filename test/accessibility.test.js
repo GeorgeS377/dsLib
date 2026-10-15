@@ -75,7 +75,7 @@ async function pages() {
     `/staff/authors/${author.id}`,
     '/staff/search?q=' + encodeURIComponent('οδυσ'),
     '/staff/loans',
-    '/staff/loans/checkout',
+    `/staff/loans/checkout?copy=${copy.id}`,
     '/staff/loans/checkout?barcode=T-0001',
     '/staff/loans/checkin',
     '/staff/borrowers',

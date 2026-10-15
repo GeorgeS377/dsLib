@@ -7,6 +7,7 @@ import { logAction } from '../../db/queries/audit.js';
 import {
   findOrCreateBorrower,
   getBorrowerById,
+  listBorrowerOptions,
   suggestBorrowers,
 } from '../../db/queries/borrowers.js';
 import { findLendableTitles, getCopyByBarcode, getCopyById } from '../../db/queries/copies.js';
@@ -73,6 +74,19 @@ export default async function staffLoanRoutes(app) {
     }
 
     const selected = loadSelection(db, ids);
+
+    // Nothing chosen, nothing searched for, nothing scanned: this page can do
+    // nothing from here that the search cannot do better, and two places to
+    // start the same job is one too many. Send them to the one that finds
+    // readers too.
+    //
+    // A barcode that matched nothing still belongs here: being told the scan
+    // found no copy is the answer to what was asked, and bouncing someone to
+    // another page instead of answering is worse than the duplicate was.
+    if (selected.length === 0 && !searchTerm && !barcode) {
+      return reply.redirect('/staff', 302);
+    }
+
     // The search stays up while copies are selected, so the next book can be
     // added without starting over.
     const matches = searchTerm ? findLendableTitles(db, { q: searchTerm }) : [];
@@ -86,6 +100,7 @@ export default async function staffLoanRoutes(app) {
       selectionUrl: (changes) =>
         buildUrl('/staff/loans/checkout', { q: searchTerm || undefined, ...changes }),
       suggestions: [],
+      readers: listBorrowerOptions(db),
       values: {
         barcode,
         borrower_id: '',
@@ -194,8 +209,9 @@ export default async function staffLoanRoutes(app) {
       });
     }
 
-    // Back to an empty form, ready for the next reader in the queue.
-    return reply.redirect('/staff/loans/checkout', 302);
+    // Back to the search, ready for the next reader in the queue. The empty
+    // lending page is not a place to land: it has nothing on it.
+    return reply.redirect('/staff', 302);
   });
 
   // --------------------------------------------------------------- check in
@@ -302,6 +318,7 @@ export default async function staffLoanRoutes(app) {
       suggestions: body?.new_borrower_name
         ? suggestBorrowers(db, body.new_borrower_name, 5)
         : [],
+      readers: listBorrowerOptions(db),
       values: {
         barcode,
         borrower_id: body?.borrower_id ?? '',

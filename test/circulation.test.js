@@ -60,7 +60,9 @@ describe('checking a book out and back in', () => {
   it('checks a copy out to a new borrower', async () => {
     const response = await checkOutByBarcode('T-0001', 'Μαρία Παπαδοπούλου', 'Β2');
     assert.equal(response.statusCode, 302);
-    assert.equal(response.headers.location, '/staff/loans/checkout');
+    // After lending, the desk lands on the search ready for the next reader,
+    // not on an empty copy of the lending page.
+    assert.equal(response.headers.location, '/staff');
 
     const open = listLoans(db, { status: 'open' });
     assert.equal(open.total, 1);

@@ -113,6 +113,26 @@ export function findOrCreateBorrower(db, { displayName, schoolClass } = {}) {
   return created.ok ? { ...created, created: true } : created;
 }
 
+/**
+ * Every reader the desk could be about to name, for the suggestion list on
+ * the lending form.
+ *
+ * Name and class only — the two things stored — and anonymised records are
+ * left out, since the whole point of anonymising is that the name is gone.
+ * Capped: the list is rendered into the page, and a library with thousands of
+ * readers would rather type than download them all. The cap is high enough
+ * that a school never meets it.
+ */
+export function listBorrowerOptions(db, limit = 1000) {
+  return db.all(
+    `SELECT id, display_name, school_class FROM borrower
+      WHERE is_anonymized = 0
+      ORDER BY name_norm
+      LIMIT ?`,
+    limit,
+  );
+}
+
 export function updateBorrower(db, id, { displayName, schoolClass, notes } = {}) {
   const current = db.get('SELECT * FROM borrower WHERE id = ?', id);
   if (!current) return { ok: false, reason: 'not_found' };

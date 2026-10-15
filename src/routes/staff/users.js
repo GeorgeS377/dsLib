@@ -31,14 +31,9 @@ export default async function staffUserRoutes(app) {
     }),
   );
 
-  app.get('/staff/account/password', async (request, reply) =>
-    reply.renderStaff('staff/account', {
-      title: reply.locals.t('staff.account.changePassword'),
-      errors: {},
-      minPasswordLength: MIN_PASSWORD_LENGTH,
-      focusPassword: true,
-    }),
-  );
+  // There is deliberately no GET for /staff/account/password: it rendered the
+  // same page as /staff/account, differing only by a flag no template read,
+  // and nothing linked to it. The POST below is the form's target.
 
   app.post('/staff/account/password', csrf, async (request, reply) => {
     const parsed = parseForm(passwordChangeSchema, request.body);

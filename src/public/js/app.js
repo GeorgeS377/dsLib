@@ -197,10 +197,45 @@ function enableLiveResults() {
   });
 }
 
+/**
+ * Fill in a reader's class once their name is chosen.
+ *
+ * The suggesting itself is the browser's: the name field is backed by a
+ * datalist, so it offers known readers with no scripting at all. This only
+ * saves the second keystroke — picking "Ελένη Σταθοπούλου" fills in Β1 —
+ * and typing a class by hand still overrides it.
+ */
+function enableReaderAutofill() {
+  const name = document.querySelector('[data-reader-name]');
+  const klass = document.querySelector('[data-reader-class]');
+  const list = name && document.getElementById(name.getAttribute('list'));
+  if (!name || !klass || !list) return;
+
+  const classFor = new Map(
+    [...list.options].map((option) => [option.value, option.dataset.class || '']),
+  );
+
+  name.addEventListener('input', () => {
+    const known = classFor.get(name.value);
+    // Only when the name is one we know, and only when the class is still
+    // empty or was itself filled in this way — never over something typed.
+    if (known === undefined) return;
+    if (klass.value && klass.dataset.filled !== 'yes') return;
+
+    klass.value = known;
+    klass.dataset.filled = 'yes';
+  });
+
+  klass.addEventListener('input', () => {
+    delete klass.dataset.filled;
+  });
+}
+
 document.addEventListener('DOMContentLoaded', () => {
   enableAutoSubmit();
   enableConfirmations();
   focusHomeSearch();
   enableRepeatableFields();
   enableLiveResults();
+  enableReaderAutofill();
 });

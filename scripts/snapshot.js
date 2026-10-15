@@ -72,19 +72,20 @@ for (const job of jobs) {
   const page = await visit(job.path);
   const body = await page.text();
 
-  // Write the stylesheet beside the page and point at it relatively, so each
-  // snapshot is self-contained and same-origin wherever it is served from.
-  const sheet = body.match(/href="(\/assets\/css\/[^"]+)"/)?.[1];
-  if (sheet) {
-    const css = await fetch(base + sheet).then((r) => r.text());
-    const name = sheet.split('/').pop();
-    fs.writeFileSync(path.join(path.dirname(job.out), name), css);
-    fs.writeFileSync(
-      job.out,
-      body.replaceAll(sheet, `./${name}`).replaceAll('"/assets/', `"${base}/assets/`),
-    );
-  } else {
-    fs.writeFileSync(job.out, body.replaceAll('"/assets/', `"${base}/assets/`));
+  // Write the stylesheet and the script beside the page and point at them
+  // relatively, so each snapshot is self-contained and same-origin wherever it
+  // is served from. The script matters as much as the stylesheet: left
+  // pointing at another port it is fetched but behaves as third-party code,
+  // and an enhancement that looked broken here was running fine in the app.
+  let out = body;
+  for (const pattern of [/href="(\/assets\/css\/[^"]+)"/, /src="(\/assets\/js\/[^"]+)"/]) {
+    const asset = body.match(pattern)?.[1];
+    if (!asset) continue;
+    const contents = await fetch(base + asset).then((r) => r.text());
+    const name = asset.split('/').pop();
+    fs.writeFileSync(path.join(path.dirname(job.out), name), contents);
+    out = out.replaceAll(asset, `./${name}`);
   }
+  fs.writeFileSync(job.out, out.replaceAll('"/assets/', `"${base}/assets/`));
   console.log(`${page.status}  ${job.path}  →  ${job.out}`);
 }
