@@ -26,6 +26,7 @@ import { createBorrower } from '../src/db/queries/borrowers.js';
 import { createCategory } from '../src/db/queries/categories.js';
 import { createCopies, createCopy } from '../src/db/queries/copies.js';
 import { checkOut } from '../src/db/queries/loans.js';
+import { createAnnouncement } from '../src/db/queries/announcements.js';
 import { createStaffUser } from '../src/db/queries/staff.js';
 
 const PORT = Number(process.argv[2]) || 3100;
@@ -97,6 +98,22 @@ createCopy(db, poems, { barcode: 'SL-0005', shelfLocation: 'Β3-02' });
 createCopy(db, poems, { barcode: 'SL-0006', shelfLocation: 'Β3-02' });
 createCopies(db, prince, 24, { shelfLocation: 'Π1-05' });
 createCopies(db, maths, 3, { shelfLocation: 'Ε1-01' });
+
+// A couple of notices, including one still unpublished, so the front page
+// shows the panel and the staff page shows both states.
+createAnnouncement(db, {
+  title: 'Ωράριο λειτουργίας',
+  body: 'Δευτέρα έως Παρασκευή, 08:30–14:00. Τα διαλείμματα η βιβλιοθήκη είναι ανοιχτή.',
+});
+createAnnouncement(db, {
+  title: 'Κανονισμός δανεισμού',
+  body: 'Κάθε μαθητής κρατάει έως δύο βιβλία για δύο εβδομάδες.',
+});
+createAnnouncement(db, {
+  title: 'Λέσχη ανάγνωσης — Νοέμβριος',
+  body: 'Ανακοινώνεται στα τμήματα την επόμενη εβδομάδα.',
+  isPublished: false,
+});
 
 const odysseas = createBorrower(db, { displayName: 'Οδυσσέας Μαρής', schoolClass: 'Β2' }).id;
 const maria = createBorrower(db, { displayName: 'Μαρία Παπαδοπούλου', schoolClass: 'Γ1' }).id;
