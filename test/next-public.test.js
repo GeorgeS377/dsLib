@@ -126,6 +126,26 @@ describe('searching as you type', () => {
     }
   });
 
+  it('marks everything that changes the results, not just the search box', async () => {
+    // Filters, the view switch and paging are the same operation as typing —
+    // ask for a URL and show the part that changed. Left as plain navigations
+    // they threw away the scroll position, which is a strange thing to happen
+    // when you tick a box halfway down a page.
+    const response = await get(`/?q=${encodeURIComponent('ο')}`);
+    assert.match(response.body, /<form[^>]*data-live-form/, 'the filter form is not marked');
+    assert.match(response.body, /data-live-link/, 'the view switch is not marked');
+  });
+
+  it('marks paging so it can bring the new page into view', async () => {
+    // Paging is the one case where staying put is wrong, so it is marked
+    // differently from the rest.
+    const many = await get('/books');
+    if (!many.body.includes('data-live-page')) {
+      // Only meaningful when there is more than one page of results.
+      assert.ok(!many.body.includes('pagination'), 'paging exists but is not marked');
+    }
+  });
+
   it('puts the results region where a fetched copy can replace it', async () => {
     // The script swaps the children of [data-live-results] with those from a
     // freshly fetched page, so exactly one such region must exist.

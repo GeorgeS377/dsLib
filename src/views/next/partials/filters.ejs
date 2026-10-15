@@ -6,7 +6,7 @@
   rows in the same grey it uses for disabled ones. Nothing auto-submits —
   the reader ticks what they want and presses Apply once.
 -%>
-<form class="panel" method="get" action="<%= action %>">
+<form class="panel" method="get" action="<%= action %>" data-live-form>
   <% if (query.q) { %><input type="hidden" name="q" value="<%= query.q %>"><% } %>
 
   <div class="filter-grid">

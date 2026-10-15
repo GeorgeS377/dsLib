@@ -79,62 +79,121 @@ function enableRepeatableFields() {
 
 
 /**
- * Show results while someone types.
+ * Update the results in place instead of loading a new page.
  *
- * The form still submits normally, and the page it submits to is the page
- * this updates — so with scripting off nothing is lost, and with scripting on
- * nothing new has to be learnt. It fetches the very page the form would have
- * loaded and swaps in the part that changed, which means there is no second
- * code path rendering results and no JSON endpoint to keep in step.
+ * Everything that changes what the results are — typing, applying filters,
+ * switching between grid and list, paging — is the same operation: ask the
+ * server for a URL and show the part that changed. Done as navigations, each
+ * of those threw away the scroll position and put you back at the top, which
+ * is a strange thing to happen when you tick a box halfway down the page.
  *
- * Marked up as data-live-search on the form, pointing at data-live-results.
+ * The page being fetched is exactly the page the link or form would have
+ * loaded, so there is no second renderer to keep in step, and with scripting
+ * off every one of them still works as a plain link or form.
  */
-function enableLiveSearch() {
-  const form = document.querySelector('form[data-live-search]');
+function enableLiveResults() {
   const target = document.querySelector('[data-live-results]');
-  if (!form || !target) return;
-
-  const input = form.querySelector('input[type="search"]');
-  if (!input) return;
+  if (!target) return;
 
   let pending;
   let timer;
 
-  const run = async () => {
-    const params = new URLSearchParams(new FormData(form));
-    const url = `${form.action}${params.toString() ? '?' + params : ''}`;
-
-    // One request in flight at a time: typing fast otherwise lands results in
-    // whatever order the server answers, which is not the order they were
-    // asked for.
+  const show = async (url, { keepScroll = true } = {}) => {
+    // One request in flight: typing quickly otherwise lands results in
+    // whatever order the server answers, which is not the order asked for.
     pending?.abort();
     pending = new AbortController();
+    target.setAttribute('aria-busy', 'true');
 
     try {
       const response = await fetch(url, { signal: pending.signal });
       if (!response.ok) return;
-      const markup = await response.text();
+
       const fresh = new DOMParser()
-        .parseFromString(markup, 'text/html')
+        .parseFromString(await response.text(), 'text/html')
         .querySelector('[data-live-results]');
-      if (fresh) {
-        target.replaceChildren(...fresh.childNodes);
-        target.setAttribute('aria-busy', 'false');
-      }
-      // The address bar follows, so the result of a search can be shared or
-      // reloaded exactly as if the form had been submitted.
-      window.history.replaceState({}, '', url);
+      if (!fresh) return;
+
+      const before = window.scrollY;
+      target.replaceChildren(...fresh.childNodes);
+      if (keepScroll) window.scrollTo({ top: before });
+
+      // The address bar follows, so a filtered page can still be shared,
+      // reloaded, or reached with the back button.
+      window.history.pushState({}, '', url);
     } catch (error) {
       if (error.name !== 'AbortError') throw error;
+    } finally {
+      target.setAttribute('aria-busy', 'false');
     }
   };
 
-  input.addEventListener('input', () => {
-    window.clearTimeout(timer);
-    target.setAttribute('aria-busy', 'true');
-    // Long enough that a word typed at speed is one request, short enough to
-    // feel like it is keeping up.
-    timer = window.setTimeout(run, 250);
+  const search = document.querySelector('form[data-live-search]');
+  const input = search?.querySelector('input[type="search"]');
+  const forms = [...document.querySelectorAll('form[data-live-search], form[data-live-form]')];
+
+  /**
+   * The URL for what is currently asked for.
+   *
+   * Built from every form at once, because the search box and the filter
+   * panel are separate forms describing one question. Taken from either alone,
+   * filtering would drop what was typed and typing would drop the filters —
+   * and the filter panel's copy of the search term is whatever the server
+   * rendered, which is stale the moment someone types.
+   */
+  const currentUrl = () => {
+    const params = new URLSearchParams();
+    for (const form of forms) {
+      for (const [key, value] of new FormData(form)) {
+        // Page: a changed filter returns to the first one, since keeping the
+        // old number often lands on a page that no longer exists.
+        if (key === 'q' || key === 'page' || value === '') continue;
+        params.append(key, value);
+      }
+    }
+    const typed = input?.value.trim();
+    if (typed) params.set('q', typed);
+
+    const query = params.toString();
+    return query ? `${forms[0].action}?${query}` : forms[0].action;
+  };
+
+  if (input) {
+    input.addEventListener('input', () => {
+      window.clearTimeout(timer);
+      // Long enough that a word typed at speed is one request, short enough
+      // to feel like it is keeping up.
+      timer = window.setTimeout(() => show(currentUrl()), 250);
+    });
+  }
+
+  // Applying filters, and submitting the search with the button or Enter.
+  for (const form of forms) {
+    form.addEventListener('submit', (event) => {
+      event.preventDefault();
+      window.clearTimeout(timer);
+      show(currentUrl());
+    });
+  }
+
+  // Switching view, sorting, paging. Delegated, because these links are
+  // inside the region and are replaced every time it updates.
+  document.addEventListener('click', (event) => {
+    const link = event.target.closest?.('a[data-live-link]');
+    if (!link || event.metaKey || event.ctrlKey || event.shiftKey || event.button !== 0) return;
+
+    event.preventDefault();
+    // Paging is the one case where staying put is wrong: the new page starts
+    // above where you are standing, so bring its top into view.
+    const paging = link.hasAttribute('data-live-page');
+    show(link.href, { keepScroll: !paging });
+    if (paging) target.scrollIntoView({ block: 'start', behavior: 'smooth' });
+  });
+
+  // The back button should undo a filter, not leave the page lying about
+  // what it is showing.
+  window.addEventListener('popstate', () => {
+    show(window.location.href, { keepScroll: false });
   });
 }
 
@@ -143,5 +202,5 @@ document.addEventListener('DOMContentLoaded', () => {
   enableConfirmations();
   focusHomeSearch();
   enableRepeatableFields();
-  enableLiveSearch();
+  enableLiveResults();
 });

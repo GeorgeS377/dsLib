@@ -8,7 +8,8 @@
 <% if (results.totalPages > 1) { %>
   <nav class="row" aria-label="<%= t('pagination.label') %>" class="centre-row">
     <% if (results.page > 1) { %>
-      <a class="btn btn--ghost btn--small" href="<%= pageUrl(results.page - 1) %>" rel="prev">
+      <a class="btn btn--ghost btn--small" href="<%= pageUrl(results.page - 1) %>" rel="prev"
+         data-live-link data-live-page>
         <%- include('../../partials/icon', { name: 'chevron-left', size: 15 }) %>
         <%= t('pagination.previous') %>
       </a>
@@ -21,12 +22,14 @@
         <span class="btn btn--small" aria-current="page"
               aria-label="<%= t('pagination.page', { current: page, total: results.totalPages }) %>"><%= page %></span>
       <% } else { %>
-        <a class="btn btn--ghost btn--small" href="<%= pageUrl(page) %>"><%= page %></a>
+        <a class="btn btn--ghost btn--small" href="<%= pageUrl(page) %>"
+           data-live-link data-live-page><%= page %></a>
       <% } %>
     <% }); %>
 
     <% if (results.page < results.totalPages) { %>
-      <a class="btn btn--ghost btn--small" href="<%= pageUrl(results.page + 1) %>" rel="next">
+      <a class="btn btn--ghost btn--small" href="<%= pageUrl(results.page + 1) %>" rel="next"
+         data-live-link data-live-page>
         <%= t('pagination.next') %>
         <%- include('../../partials/icon', { name: 'chevron-right', size: 15 }) %>
       </a>

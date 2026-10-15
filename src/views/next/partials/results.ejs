@@ -13,11 +13,13 @@
       the two buttons should match the order of the two states. -%>
   <div class="row" role="group" aria-label="<%= t('search.view.label') %>">
     <a class="btn btn--small <%= viewMode === 'grid' ? '' : 'btn--ghost' %>"
-       href="<%= viewUrl('grid') %>" <%- viewMode === 'grid' ? 'aria-current="true"' : '' %>>
+       href="<%= viewUrl('grid') %>" data-live-link
+       <%- viewMode === 'grid' ? 'aria-current="true"' : '' %>>
       <%= t('search.view.grid') %>
     </a>
     <a class="btn btn--small <%= viewMode === 'list' ? '' : 'btn--ghost' %>"
-       href="<%= viewUrl('list') %>" <%- viewMode === 'list' ? 'aria-current="true"' : '' %>>
+       href="<%= viewUrl('list') %>" data-live-link
+       <%- viewMode === 'list' ? 'aria-current="true"' : '' %>>
       <%= t('search.view.list') %>
     </a>
   </div>
