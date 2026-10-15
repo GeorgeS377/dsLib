@@ -24,6 +24,9 @@
           <div class="list__grow">
             <span class="list__title"><%= item.title %></span>
             <% if (item.body) { %><div class="list__meta"><%= item.body %></div><% } %>
+            <% if (item.link_url) { %>
+              <div class="list__meta mono"><%= item.link_url %></div>
+            <% } %>
           </div>
 
           <% if (!item.is_published) { %>
@@ -80,6 +83,23 @@
         </label>
         <textarea id="body" name="body" rows="3" maxlength="2000"><%= values.body %></textarea>
       </div>
+
+      <div>
+        <label class="field__label" for="link_url"><%= t('staff.announcements.link') %>
+          <span class="field__optional"><%= t('common.optional') %></span>
+        </label>
+        <span class="field__hint"><%= t('staff.announcements.linkHint') %></span>
+        <input type="url" id="link_url" name="link_url" value="<%= values.link_url %>"
+               maxlength="500" placeholder="https://" autocomplete="off"
+               <%- errors.link_url ? 'aria-invalid="true"' : '' %>>
+        <%- include('../partials/field-error', { hasT: hasT, code: errors.link_url, t: t }) %>
+      </div>
+
+      <label class="filter__option">
+        <input type="checkbox" name="link_new_tab" value="1"
+               <%= values.link_new_tab ? 'checked' : '' %>>
+        <span><%= t('staff.announcements.newTab') %></span>
+      </label>
 
       <label class="filter__option">
         <input type="checkbox" name="is_published" value="1"

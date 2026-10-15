@@ -304,6 +304,10 @@ export const announcementFormSchema = z.object({
   title: z.string().trim().min(1, 'required').max(200),
   body: trimmed(2000),
   is_published: checkbox,
+  // The scheme is checked in the query layer, which is the last thing before
+  // it is stored; this only bounds the length.
+  link_url: trimmed(500),
+  link_new_tab: checkbox,
 });
 
 // -------------------------------------------------- staff: accounts, misc.

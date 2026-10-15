@@ -32,8 +32,8 @@ const jobs = [];
 for (let i = 0; i < args.length; i += 2) jobs.push({ path: args[i], out: args[i + 1] });
 
 const base = `http://localhost:${port}`;
-const USERNAME = 'maria';
-const PASSWORD = 'a-long-enough-test-passphrase';
+const USERNAME = 'admin';
+const PASSWORD = 'admin';
 
 /** Collect cookies across requests the way a browser would. */
 const jar = new Map();

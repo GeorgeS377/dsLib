@@ -14,7 +14,7 @@
   <section>
     <h1><%= t('staff.search.title') %></h1>
     <form class="search search--wide mt-4" method="get" action="/staff/search" role="search"
- >
+          data-live-search>
       <label class="visually-hidden" for="q"><%= t('staff.search.label') %></label>
       <input type="search" id="q" name="q" value="<%= q %>" autocomplete="off"
              placeholder="<%= t('staff.search.label') %>" <%- q ? '' : 'autofocus' %>>
@@ -26,6 +26,7 @@
     <p class="field__hint mt-2"><%= t('staff.search.hint') %></p>
   </section>
 
+  <div data-live-results>
   <% if (!searched) { %>
     <div class="state">
       <h2 class="state__title"><%= t('staff.search.start') %></h2>
@@ -114,5 +115,6 @@
       </div>
     </section>
   <% } %>
+  </div>
 
 </div>

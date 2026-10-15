@@ -97,6 +97,44 @@ describe('grid or list', () => {
   });
 });
 
+describe('searching as you type', () => {
+  it('still works as a plain form', async () => {
+    // The enhancement fetches the very page the form would have submitted to,
+    // so the page has to answer that request correctly on its own.
+    const response = await get(`/?q=${encodeURIComponent('οδυσσεια')}`);
+    assert.equal(response.statusCode, 200);
+    assert.ok(response.body.includes('Οδύσσεια'));
+  });
+
+  it('marks the form and the region that updates', async () => {
+    for (const url of ['/', '/books']) {
+      const response = await get(url);
+      assert.match(response.body, /<form[^>]*data-live-search/, `${url}: form not marked`);
+      assert.match(response.body, /data-live-results/, `${url}: no region to update`);
+    }
+  });
+
+  it('loads the script on every page that asks for it', async () => {
+    // Marking a form data-live-search does nothing on a page that never loads
+    // the file implementing it — which is exactly what happened here.
+    for (const url of ['/', '/books']) {
+      const response = await get(url);
+      assert.ok(
+        response.body.includes('/assets/js/app.js'),
+        `${url} asks for live search but loads no script`,
+      );
+    }
+  });
+
+  it('puts the results region where a fetched copy can replace it', async () => {
+    // The script swaps the children of [data-live-results] with those from a
+    // freshly fetched page, so exactly one such region must exist.
+    const response = await get(`/?q=${encodeURIComponent('οδυσ')}`);
+    const regions = response.body.match(/data-live-results/g) ?? [];
+    assert.equal(regions.length, 1, `${regions.length} regions marked`);
+  });
+});
+
 describe('the front page is the catalogue', () => {
   it('searches and filters from the front page itself', async () => {
     // George prefers the catalogue to a separate landing page, so the two are

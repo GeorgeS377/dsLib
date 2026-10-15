@@ -23,25 +23,59 @@ export function getAnnouncementById(db, id) {
 }
 
 /**
+ * A link on a notice must be one a browser can follow to another page.
+ *
+ * `javascript:` and `data:` URLs are the reason this exists: a librarian is
+ * trusted to write the library's notices, which is not the same as being able
+ * to run script in every visitor's browser. Anything that is not http(s), or
+ * is not a URL at all, is refused rather than quietly dropped.
+ *
+ * @returns {{ ok: true, url: string|null } | { ok: false }}
+ */
+function parseLink(value) {
+  const trimmed = String(value ?? '').trim();
+  if (!trimmed) return { ok: true, url: null };
+
+  let parsed;
+  try {
+    parsed = new URL(trimmed);
+  } catch {
+    return { ok: false };
+  }
+  if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') return { ok: false };
+  return { ok: true, url: parsed.href };
+}
+
+/**
  * Write a new announcement. It goes to the top, because the thing just
  * written is usually the thing that matters.
  *
- * @returns {{ ok: true, id: number } | { ok: false, reason: 'required' }}
+ * @returns {{ ok: true, id: number }
+ *   | { ok: false, reason: 'required' | 'invalid_link' }}
  */
-export function createAnnouncement(db, { title, body, isPublished = true } = {}) {
+export function createAnnouncement(
+  db,
+  { title, body, isPublished = true, linkUrl, linkNewTab = false } = {},
+) {
   const trimmedTitle = String(title ?? '').trim();
   if (!trimmedTitle) return { ok: false, reason: 'required' };
+
+  const link = parseLink(linkUrl);
+  if (!link.ok) return { ok: false, reason: 'invalid_link' };
 
   const timestamp = now();
   const top = (db.value('SELECT MIN(position) FROM announcement') ?? 0) - 1;
 
   const result = db.run(
-    `INSERT INTO announcement (title, body, is_published, position, created_at, updated_at)
-     VALUES (?, ?, ?, ?, ?, ?)`,
+    `INSERT INTO announcement
+       (title, body, is_published, position, link_url, link_new_tab, created_at, updated_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
     trimmedTitle,
     String(body ?? '').trim() || null,
     isPublished ? 1 : 0,
     top,
+    link.url,
+    linkNewTab ? 1 : 0,
     timestamp,
     timestamp,
   );
@@ -54,20 +88,34 @@ export function createAnnouncement(db, { title, body, isPublished = true } = {})
  *
  * @returns {{ ok: true } | { ok: false, reason: 'not_found' | 'required' }}
  */
-export function updateAnnouncement(db, id, { title, body, isPublished } = {}) {
+export function updateAnnouncement(
+  db,
+  id,
+  { title, body, isPublished, linkUrl, linkNewTab } = {},
+) {
   const current = getAnnouncementById(db, id);
   if (!current) return { ok: false, reason: 'not_found' };
 
   const nextTitle = title === undefined ? current.title : String(title).trim();
   if (!nextTitle) return { ok: false, reason: 'required' };
 
+  let nextLink = current.link_url;
+  if (linkUrl !== undefined) {
+    const link = parseLink(linkUrl);
+    if (!link.ok) return { ok: false, reason: 'invalid_link' };
+    nextLink = link.url;
+  }
+
   db.run(
     `UPDATE announcement
-        SET title = ?, body = ?, is_published = ?, updated_at = ?
+        SET title = ?, body = ?, is_published = ?, link_url = ?, link_new_tab = ?,
+            updated_at = ?
       WHERE id = ?`,
     nextTitle,
     body === undefined ? current.body : String(body).trim() || null,
     isPublished === undefined ? current.is_published : isPublished ? 1 : 0,
+    nextLink,
+    linkNewTab === undefined ? current.link_new_tab : linkNewTab ? 1 : 0,
     now(),
     id,
   );

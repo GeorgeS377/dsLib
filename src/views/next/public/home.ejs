@@ -12,7 +12,8 @@
   <section>
     <h1><%= query.q ? t('search.resultsFor', { query: query.q }) : t('home.title') %></h1>
 
-    <form class="search search--wide mt-4" method="get" action="/" role="search">
+    <form class="search search--wide mt-4" method="get" action="/" role="search"
+          data-live-search>
       <label class="visually-hidden" for="q"><%= t('common.searchLabel') %></label>
       <input type="search" id="q" name="q" value="<%= query.q || '' %>"
              placeholder="<%= t('common.searchPlaceholder') %>" autocomplete="off">
@@ -34,6 +35,9 @@
         languages: languages, action: '/', hasFilters: hasFilters,
         clearUrl: clearUrl, t: t }) %>
 
+  <%# Everything below updates as you type. The same markup is what a plain
+      form submission renders, so the two can never drift apart. -%>
+  <div data-live-results>
   <% if (results.total === 0) { %>
     <div class="state">
       <h2 class="state__title"><%= t('search.empty.title') %></h2>
@@ -59,5 +63,6 @@
     <%- include('../partials/pagination', {
           results: results, pages: pages, pageUrl: pageUrl, t: t }) %>
   <% } %>
+  </div>
 
 </div>

@@ -31,6 +31,8 @@ export default async function staffAnnouncementRoutes(app) {
         title: editing?.title ?? '',
         body: editing?.body ?? '',
         is_published: editing ? Boolean(editing.is_published) : true,
+        link_url: editing?.link_url ?? '',
+        link_new_tab: editing ? Boolean(editing.link_new_tab) : false,
       },
       errors: {},
     });
@@ -46,9 +48,12 @@ export default async function staffAnnouncementRoutes(app) {
       title: parsed.data.title,
       body: parsed.data.body,
       isPublished: parsed.data.is_published,
+      linkUrl: parsed.data.link_url,
+      linkNewTab: parsed.data.link_new_tab,
     });
     if (!result.ok) {
-      return rerender(reply, request.body, { title: result.reason });
+      const field = result.reason === 'invalid_link' ? 'link_url' : 'title';
+      return rerender(reply, request.body, { [field]: result.reason });
     }
 
     logAction(db, {
@@ -74,9 +79,12 @@ export default async function staffAnnouncementRoutes(app) {
       title: parsed.data.title,
       body: parsed.data.body,
       isPublished: parsed.data.is_published,
+      linkUrl: parsed.data.link_url ?? '',
+      linkNewTab: parsed.data.link_new_tab,
     });
     if (!result.ok) {
-      return rerender(reply, request.body, { title: result.reason }, existing);
+      const field = result.reason === 'invalid_link' ? 'link_url' : 'title';
+      return rerender(reply, request.body, { [field]: result.reason }, existing);
     }
 
     logAction(db, {
@@ -124,6 +132,8 @@ export default async function staffAnnouncementRoutes(app) {
         title: body?.title ?? '',
         body: body?.body ?? '',
         is_published: Boolean(body?.is_published),
+        link_url: body?.link_url ?? '',
+        link_new_tab: Boolean(body?.link_new_tab),
       },
       errors,
     });

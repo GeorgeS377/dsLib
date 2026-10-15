@@ -3,6 +3,8 @@
 // These pin the decisions from the mockup session that are structural rather
 // than cosmetic — what sits where, and what is reachable without a tap.
 import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import path from 'node:path';
 import { after, before, describe, it } from 'node:test';
 import { buildApp } from '../src/app.js';
 import { cleanupDir, makeTestDb, seedTestCatalogue, testConfig } from './helpers.js';
@@ -177,6 +179,36 @@ describe('the second interface shell', () => {
     assert.equal(response.statusCode, 401);
     assert.ok(response.body.includes('Λάθος όνομα χρήστη ή κωδικός.'), 'no reason shown');
     assert.ok(!response.body.includes('login.error'), 'a translation key was shown instead');
+  });
+
+  it('styles every kind of text input it uses', async () => {
+    // A field whose type is missing from the stylesheet renders as a browser
+    // default — a box a third the width of the ones around it. Comparing the
+    // two lists catches that without needing to look.
+    const css = (await get('/assets/css/next.css')).body;
+    const styled = new Set(
+      [...css.matchAll(/input\[type="([a-z]+)"\]/g)].map((m) => m[1]),
+    );
+
+    const views = path.join(process.cwd(), 'src', 'views', 'next');
+    const used = new Set();
+    const walk = (dir) => {
+      for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+        const full = path.join(dir, entry.name);
+        if (entry.isDirectory()) walk(full);
+        else if (entry.name.endsWith('.ejs')) {
+          for (const m of fs.readFileSync(full, 'utf8').matchAll(/type="([a-z]+)"/g)) {
+            used.add(m[1]);
+          }
+        }
+      }
+    };
+    walk(views);
+
+    // These carry their own rules or need none.
+    const exempt = new Set(['hidden', 'checkbox', 'radio', 'submit', 'button', 'file']);
+    const unstyled = [...used].filter((type) => !styled.has(type) && !exempt.has(type));
+    assert.deepEqual(unstyled, [], `input types with no styling: ${unstyled}`);
   });
 
   it('declares a policy that forbids inline styles', async () => {

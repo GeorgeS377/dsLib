@@ -12,8 +12,8 @@
 //   node scripts/review-server.js            → http://localhost:3100
 //   node scripts/review-server.js 3200       → a different port
 //
-// Sign in with the credentials it prints. They are test fixtures, shared with
-// test/staff-helpers.js, and grant nothing anywhere else.
+// Sign in with the credentials it prints. They unlock a database that exists
+// for a few minutes in /tmp and nothing else.
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
@@ -30,8 +30,13 @@ import { createAnnouncement } from '../src/db/queries/announcements.js';
 import { createStaffUser } from '../src/db/queries/staff.js';
 
 const PORT = Number(process.argv[2]) || 3100;
-const USERNAME = 'maria';
-const PASSWORD = 'a-long-enough-test-passphrase';
+// Deliberately trivial, and safe only because of what this server is: a
+// throwaway database in a temp directory, bound to 127.0.0.1, thrown away when
+// the process stops. The rules that would reject this password live at the
+// sign-in route and in scripts/create-admin.js, which is where they belong —
+// nothing here relaxes them for the real application.
+const USERNAME = 'admin';
+const PASSWORD = 'admin';
 
 const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'dslib-review-'));
 process.on('exit', () => fs.rmSync(dir, { recursive: true, force: true }));

@@ -14,6 +14,19 @@
           <div>
             <p class="announce__title"><%= item.title %></p>
             <% if (item.body) { %><p class="muted small"><%= item.body %></p><% } %>
+            <% if (item.link_url) { %>
+              <%# rel="noopener" on a new tab: the page being opened must not
+                  get a handle on this one. -%>
+              <p class="small mt-1">
+                <a href="<%= item.link_url %>"
+                   <% if (item.link_new_tab) { %>target="_blank" rel="noopener noreferrer"<% } %>>
+                  <%= t('staff.announcements.openLink') %>
+                  <% if (item.link_new_tab) { %>
+                    <span class="visually-hidden"><%= t('staff.announcements.newTab') %></span>
+                  <% } %>
+                </a>
+              </p>
+            <% } %>
           </div>
         </li>
       <% }); %>

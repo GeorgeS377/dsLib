@@ -9,26 +9,28 @@
   <p class="muted small" role="status">
     <%= t('search.showing', { from: range.from, to: range.to, total: range.total }) %>
   </p>
+  <%# The grid comes first because it is what you get by default: the order of
+      the two buttons should match the order of the two states. -%>
   <div class="row" role="group" aria-label="<%= t('search.view.label') %>">
-    <a class="btn btn--small <%= viewMode === 'list' ? '' : 'btn--ghost' %>"
-       href="<%= viewUrl('list') %>" <%- viewMode === 'list' ? 'aria-current="true"' : '' %>>
-      <%= t('search.view.list') %>
-    </a>
     <a class="btn btn--small <%= viewMode === 'grid' ? '' : 'btn--ghost' %>"
        href="<%= viewUrl('grid') %>" <%- viewMode === 'grid' ? 'aria-current="true"' : '' %>>
       <%= t('search.view.grid') %>
+    </a>
+    <a class="btn btn--small <%= viewMode === 'list' ? '' : 'btn--ghost' %>"
+       href="<%= viewUrl('list') %>" <%- viewMode === 'list' ? 'aria-current="true"' : '' %>>
+      <%= t('search.view.list') %>
     </a>
   </div>
 </div>
 
 <% if (viewMode === 'grid') { %>
-  <ul class="book-grid">
+  <ul class="book-grid mt-4">
     <% results.rows.forEach(function (book) { %>
       <%- include('./book-tile', { book: book, t: t }) %>
     <% }); %>
   </ul>
 <% } else { %>
-  <div class="book-list list">
+  <div class="book-list list mt-4">
     <% results.rows.forEach(function (book) { %>
       <%- include('./book-row', { book: book, t: t }) %>
     <% }); %>

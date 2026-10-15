@@ -121,8 +121,13 @@
 .panel > * + *,
 fieldset > * + *,
 /* Row-shaped forms lay themselves out; everything else stacks. Without this
-   a bare field div next to a fieldset had no gap at all. */
-form:not(.search):not(.btn-row) > * + * {
+   a bare field div next to a fieldset had no gap at all.
+   
+   `*:not([type="hidden"]) + *` and not `* + *`: a hidden input is still an
+   element, so the plain version pushed every button that follows a CSRF token
+   down by a row — which is what made the sign-out control and the reorder
+   arrows sit out of line with everything beside them. */
+form:not(.search):not(.btn-row) > *:not([type="hidden"]):not([hidden]) + * {
   margin-top: var(--s-4);
 }
 
@@ -335,18 +340,34 @@ main {
   max-width: 11rem;
 }
 
+/* The account name and the sign-out sit side by side, so they are built the
+   same: same padding, same height, no underline until hovered. A plain link
+   next to a button looked like something half-styled. */
+.bar__who > a,
+.bar__out {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  padding: var(--s-1) var(--s-2);
+  border-radius: var(--r-control);
+  text-decoration: none;
+  line-height: 1.4;
+}
+
+.bar__who > a:hover,
+.bar__out:hover {
+  background: var(--sunken);
+  text-decoration: none;
+}
+
 .bar__out {
   color: var(--red);
   font-weight: 600;
-  text-decoration: none;
-  display: flex;
-  align-items: center;
   gap: var(--s-1);
 }
 
 .bar__out:hover {
   color: var(--red);
-  text-decoration: underline;
 }
 
 /* The four everyday pages, always visible, never behind a button that has to
@@ -455,6 +476,7 @@ main {
   gap: var(--s-3);
   padding: var(--s-3) var(--s-4);
   border-bottom: 1px solid var(--line);
+  position: relative;
 }
 
 .list__item:last-child {
@@ -548,12 +570,17 @@ main {
   margin-top: var(--s-1);
 }
 
+/* Every text-like input, listed rather than `input:not(...)` so a new type
+   is a deliberate addition. A url field was added and missed this list, and
+   rendered as a browser-default box a third the width of its neighbours. */
 input[type="text"],
 input[type="search"],
 input[type="password"],
 input[type="number"],
 input[type="date"],
 input[type="email"],
+input[type="url"],
+input[type="tel"],
 select,
 textarea {
   width: 100%;
@@ -783,6 +810,31 @@ form:not(.search):not(.btn-row) > *:not([type="hidden"]):not([hidden]) + .btn-ro
   border: 1px solid var(--line);
   display: flex;
   flex-direction: column;
+  position: relative;
+}
+
+/* The title's link is stretched over the whole tile, so the cover is
+   clickable without being a second link with no text in it. */
+.tile__title::after,
+.list__item .list__title::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+}
+
+.tile:hover,
+.list__item:has(.list__title:hover) {
+  background: var(--sunken);
+}
+
+/* Anything that must stay clickable sits above the stretched link. */
+.tile .pill,
+.list__item .btn,
+.list__item .pill,
+.list__item form,
+.list__item > a:not(.list__title) {
+  position: relative;
+  z-index: 1;
 }
 
 .tile__cover {
@@ -1098,6 +1150,10 @@ tbody tr:last-child td {
   border: 0;
   font: inherit;
   cursor: pointer;
+}
+
+.bar__who form {
+  display: flex;
 }
 
 .icon-centre {

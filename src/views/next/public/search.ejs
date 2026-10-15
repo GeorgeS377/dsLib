@@ -12,7 +12,8 @@
     </h1>
   </div>
 
-  <form class="search search--wide" method="get" action="/books" role="search">
+  <form class="search search--wide" method="get" action="/books" role="search"
+        data-live-search>
     <label class="visually-hidden" for="q"><%= t('common.searchLabel') %></label>
     <input type="search" id="q" name="q" value="<%= query.q || '' %>"
            placeholder="<%= t('common.searchPlaceholder') %>" autocomplete="off">
@@ -27,6 +28,7 @@
         languages: languages, action: '/books', hasFilters: hasFilters,
         clearUrl: clearUrl, t: t }) %>
 
+  <div data-live-results>
   <% if (results.total === 0) { %>
     <div class="state">
       <h2 class="state__title"><%= t('search.empty.title') %></h2>
@@ -52,5 +54,6 @@
     <%- include('../partials/pagination', {
           results: results, pages: pages, pageUrl: pageUrl, t: t }) %>
   <% } %>
+  </div>
 
 </div>

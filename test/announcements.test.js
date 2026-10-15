@@ -109,6 +109,27 @@ describe('keeping announcements', () => {
     assert.deepEqual(listAnnouncements(db).map((item) => item.id), ids, 'the last one moved down');
   });
 
+  it('keeps a link and how it should open', () => {
+    const item = createAnnouncement(db, {
+      title: 'Κανονισμός',
+      linkUrl: 'https://example.gr/kanonismos.pdf',
+      linkNewTab: true,
+    });
+    const stored = listAnnouncements(db).find((row) => row.id === item.id);
+    assert.equal(stored.link_url, 'https://example.gr/kanonismos.pdf');
+    assert.equal(stored.link_new_tab, 1);
+  });
+
+  it('refuses a link that is not http', () => {
+    // A notice is written by staff, but "javascript:" in a link on the front
+    // page is not a notice.
+    for (const hostile of ['javascript:alert(1)', 'data:text/html,<script>', 'file:///etc/passwd']) {
+      const result = createAnnouncement(db, { title: 'Κακός σύνδεσμος', linkUrl: hostile });
+      assert.equal(result.ok, false, `${hostile} was accepted`);
+      assert.equal(result.reason, 'invalid_link');
+    }
+  });
+
   it('deletes one', () => {
     const doomed = createAnnouncement(db, { title: 'Προσωρινή' });
     deleteAnnouncement(db, doomed.id);
