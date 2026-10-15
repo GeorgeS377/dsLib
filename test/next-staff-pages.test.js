@@ -64,7 +64,11 @@ describe('every staff page in the second interface', () => {
     const root = path.join(process.cwd(), 'src', 'views');
     const classic = fs.readdirSync(path.join(root, 'staff')).filter((f) => f.endsWith('.ejs'));
     const next = new Set(fs.readdirSync(path.join(root, 'next', 'staff')));
-    const missing = classic.filter((file) => !next.has(file));
+    // checkin.ejs is deliberately absent: returning a book is an action on a
+    // loan that is already on screen, so the second interface has no page for
+    // it. The first interface keeps its one.
+    const deliberatelyGone = new Set(['checkin.ejs']);
+    const missing = classic.filter((file) => !next.has(file) && !deliberatelyGone.has(file));
     assert.deepEqual(missing, [], `staff pages with no second-interface template: ${missing}`);
   });
 

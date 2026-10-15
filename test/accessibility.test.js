@@ -77,7 +77,6 @@ async function pages() {
     '/staff/loans',
     `/staff/loans/checkout?copy=${copy.id}`,
     '/staff/loans/checkout?barcode=T-0001',
-    '/staff/loans/checkin',
     '/staff/borrowers',
     '/staff/users',
     '/staff/account',

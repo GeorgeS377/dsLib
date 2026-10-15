@@ -104,7 +104,13 @@ export function getCopyByBarcode(db, barcode) {
  * the next one that is not already in the basket.
  */
 export function findLendableTitles(db, { q, limit = 20, barcodeHints = 5 } = {}) {
-  const copies = findLendableCopies(db, { q, limit: 500 });
+  // A barcode is on the copy, not in the title's search text, so a scan found
+  // nothing. The desk scans far more often than it types a barcode, and the
+  // exact match is cheap, so it is tried first and wins outright when it hits.
+  const scanned = getCopyByBarcode(db, q);
+  const copies = scanned
+    ? [{ ...scanned, is_available: scanned.is_available, authors: null }]
+    : findLendableCopies(db, { q, limit: 500 });
 
   const titles = new Map();
   for (const copy of copies) {

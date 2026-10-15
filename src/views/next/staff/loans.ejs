@@ -10,11 +10,16 @@
 
   <div class="panel__head">
     <h1><%= t('staff.loans.title') %></h1>
-    <div class="btn-row">
-      <a class="btn" href="/staff/search"><%= t('staff.loans.checkout') %></a>
-      <a class="btn btn--ghost" href="/staff/loans/checkin"><%= t('staff.loans.checkin') %></a>
-    </div>
+    <a class="btn" href="/staff/search"><%= t('staff.loans.checkout') %></a>
   </div>
+
+  <form class="search" method="get" action="/staff/loans" role="search">
+    <label class="visually-hidden" for="q"><%= t('staff.loans.search') %></label>
+    <input type="search" id="q" name="q" value="<%= q || '' %>"
+           placeholder="<%= t('staff.loans.search') %>" autocomplete="off">
+    <% if (status !== 'open') { %><input type="hidden" name="status" value="<%= status %>"><% } %>
+    <button class="btn btn--ghost" type="submit"><%= t('common.search') %></button>
+  </form>
 
   <nav class="btn-row" aria-label="<%= t('common.filters') %>">
     <% statuses.forEach(function (option) { %>

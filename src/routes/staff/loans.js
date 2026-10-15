@@ -36,9 +36,12 @@ export default async function staffLoanRoutes(app) {
     const page = Number(request.query?.page) || 1;
     const borrowerId = Number(request.query?.borrower) || undefined;
     const bookId = Number(request.query?.book) || undefined;
+    const q = typeof request.query?.q === 'string' ? request.query.q.slice(0, 200) : '';
 
-    const results = listLoans(db, { status, page, borrowerId, bookId, perPage: 30 });
-    const kept = { status, borrower: borrowerId, book: bookId };
+    const results = listLoans(db, { status, page, borrowerId, bookId, q, perPage: 30 });
+    // The search travels with every link on the page, so changing the status
+    // filter narrows what you were already looking at rather than starting over.
+    const kept = { status, borrower: borrowerId, book: bookId, q: q || undefined };
 
     return reply.renderStaff('staff/loans', {
       title: reply.locals.t('staff.loans.title'),
@@ -48,7 +51,8 @@ export default async function staffLoanRoutes(app) {
       range: resultRange(results),
       pages: pageWindow(results.page, results.totalPages),
       pageUrl: (p) => buildUrl('/staff/loans', withParams(kept, { page: p > 1 ? p : undefined })),
-      statusUrl: (s) => buildUrl('/staff/loans', { status: s }),
+      q,
+      statusUrl: (s) => buildUrl('/staff/loans', withParams(kept, { status: s, page: undefined })),
       borrower: borrowerId ? getBorrowerById(db, borrowerId) : null,
     });
   });
@@ -215,6 +219,15 @@ export default async function staffLoanRoutes(app) {
   });
 
   // --------------------------------------------------------------- check in
+  //
+  // The second interface has no page for this and links to it from nowhere:
+  // returning a book is an action on a loan, and every loan is already on
+  // screen somewhere — the reader's page, the loan list, or the search, which
+  // reads a scanned barcode too. A page whose only job was to accept a
+  // barcode was a third place to start the same thing, and the emptiest.
+  //
+  // The route stays because the first interface still has that page and still
+  // links to it, and this branch does not change the first interface.
   app.get('/staff/loans/checkin', async (request, reply) => {
     const barcode = typeof request.query?.barcode === 'string' ? request.query.barcode : '';
     return reply.renderStaff('staff/checkin', {

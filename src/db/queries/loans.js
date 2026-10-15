@@ -5,6 +5,7 @@
 // idx_loan_one_open_per_copy), so two librarians checking out the same copy at
 // the same moment cannot both succeed: the loser gets a constraint error,
 // which checkOut() translates into a clear result object.
+import { queryTokens } from '../../lib/normalize.js';
 import { now } from '../index.js';
 
 /** Loan rows joined to their copy, title and borrower. */
@@ -156,6 +157,18 @@ export function listLoans(db, filters = {}) {
       break;
     default:
       break;
+  }
+
+  // Free text over the three things written on a loan: what the book is, who
+  // has it, and the label on the copy. Normalized for the title and the name
+  // so Greek case and accents behave as they do everywhere else; the barcode
+  // is matched as typed, because that is what a scanner sends.
+  const tokens = queryTokens(filters.q);
+  if (tokens.length > 0) {
+    for (const token of tokens) {
+      clauses.push('(b.search_text LIKE ? OR br.name_norm LIKE ? OR c.barcode = ?)');
+      params.push(`%${token}%`, `%${token}%`, String(filters.q).trim());
+    }
   }
 
   if (filters.borrowerId) {
