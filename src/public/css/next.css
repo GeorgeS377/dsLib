@@ -553,8 +553,19 @@ main {
   display: block;
   font-size: 0.875rem;
   color: var(--ink-muted);
-  margin-top: calc(var(--s-1) - var(--s-2));
   margin-bottom: var(--s-2);
+}
+
+/* A hint belonging to a label closes up against it, cancelling most of the
+   label's own gap so the two read as one unit.
+
+   Scoped to that case on purpose: as a rule on .field__hint itself the pull
+   applied to every hint, including the line under a panel's heading, where it
+   beat the panel's stacking rule and dragged the hint four pixels *over* the
+   heading. */
+.field__label + .field__hint,
+legend + .field__hint {
+  margin-top: calc(var(--s-1) - var(--s-2));
 }
 
 .field__optional {

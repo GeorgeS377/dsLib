@@ -39,11 +39,28 @@
       ? '.' + el.className.trim().split(/\s+/).slice(0, 2).join('.')
       : '');
 
+  /**
+   * Whether a container stacks its children.
+   *
+   * A flex or grid row puts them side by side, where a negative vertical gap
+   * is the normal state of affairs rather than a fault — the top bar and the
+   * search row both look like overlaps if this is not checked.
+   */
+  const stacks = (el) => {
+    const style = getComputedStyle(el);
+    if (style.display === 'flex' || style.display === 'inline-flex') {
+      return style.flexDirection.startsWith('column');
+    }
+    if (style.display === 'grid') return style.gridTemplateColumns.split(' ').length <= 1;
+    return true;
+  };
+
   const probe = (root) => {
     const found = [];
     const containers = [...root.querySelectorAll(
-      '.card, .fieldset, .filters, .state, .stat, form, .container, .panel, .wrap, fieldset',
-    )].filter((el) => el.offsetHeight > 40);
+      '.card, .fieldset, .filters, .state, .stat, form, .container, .panel, .wrap, fieldset,'
+      + ' .list, .tile',
+    )].filter((el) => el.offsetHeight > 40 && stacks(el));
 
     for (const box of containers) {
       const kids = [...box.children].filter(
@@ -58,7 +75,12 @@
             'h1,h2,h3,table,.table-wrap,form,fieldset,.button,button,.btn,' +
             '.button-row,.btn-row,section,.card,.panel,.list,dl,ul',
           );
-        if (gap >= 0 && gap < 12 && (heavy(kids[i]) || heavy(kids[i - 1]))) {
+        // Two stacked things on top of each other is wrong whatever they
+        // are — a negative margin meant to pull a hint towards its label was
+        // dragging it over a heading instead.
+        if (gap < 0) {
+          found.push(`OVERLAP ${name(box)}: ${name(kids[i - 1])} → ${name(kids[i])} = ${gap}px`);
+        } else if (gap < 12 && (heavy(kids[i]) || heavy(kids[i - 1]))) {
           found.push(`${name(box)}: ${name(kids[i - 1])} → ${name(kids[i])} = ${gap}px`);
         }
       }
