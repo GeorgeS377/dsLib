@@ -126,6 +126,27 @@ describe('a cover saved with a new title', () => {
     assert.equal(getBookById(db, book.id).cover_path, null);
   });
 
+  it('keeps the title when the cover is too large to accept', async () => {
+    // A phone photo of a book cover is routinely several megabytes -- the
+    // exact input this feature exists for. The transport used to refuse the
+    // whole request, so the librarian lost every field they had typed and
+    // got a bare 413 instead of a page.
+    const huge = Buffer.alloc(Math.round(3.5 * 1024 * 1024), 0);
+    // A real JPEG header, so it is the size that stops it and nothing else.
+    (await jpeg({ width: 40, height: 60 })).copy(huge);
+
+    const response = await postMultipart('/staff/books', {
+      fields: { title: 'Τεράστιο Εξώφυλλο' },
+      file: { filename: 'huge.jpg', contentType: 'image/jpeg', buffer: huge },
+      tokenFrom: '/staff/books/new',
+    });
+    assert.equal(response.statusCode, 302, `the whole submission was refused (${response.statusCode})`);
+
+    const book = bookNamed('τεραστιο');
+    assert.ok(book, 'the title was lost along with the oversized cover');
+    assert.equal(getBookById(db, book.id).cover_path, null, 'an oversized cover was stored anyway');
+  });
+
   it('ignores crop coordinates that arrive with no file', async () => {
     const response = await postMultipart('/staff/books', {
       fields: {

@@ -240,7 +240,7 @@
           <%= t('staff.books.manageCopies') %>
         </a>
         <% if (book.archived_at) { %>
-          <form method="post" action="/staff/books/<%= book.id %>/restore">
+          <form method="post" action="/staff/books/<%= book.id %>/unarchive">
             <input type="hidden" name="_csrf" value="<%= csrfToken %>">
             <button class="btn btn--ghost" type="submit"><%= t('staff.books.restoreAction') %></button>
           </form>

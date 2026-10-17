@@ -37,6 +37,16 @@ import publicRoutes from './routes/public/index.js';
 import staffRoutes from './routes/staff/index.js';
 
 const ONE_YEAR_SECONDS = 365 * 24 * 60 * 60;
+
+/**
+ * How far above MAX_UPLOAD_BYTES the transport will still accept a file.
+ *
+ * Headroom, not a second limit: anything over MAX_UPLOAD_BYTES is still
+ * refused, but by the handler, which can say so on the page and keep the rest
+ * of the form. Four times covers the phone photos this exists for; past that
+ * the request really is abnormal and the transport cutting it off is right.
+ */
+const UPLOAD_CEILING_MULTIPLIER = 4;
 const THEME_COOKIE = 'theme';
 const THEMES = ['light', 'dark'];
 
@@ -123,9 +133,16 @@ export async function buildApp({ config = defaultConfig, logger, db, onRoute } =
   // without this a multipart upload would arrive with no body for it to
   // inspect and every cover upload would be refused with a 403.
   //
-  // 'keyValues' also means the file reaches the handler as a Buffer, already
-  // capped by limits.fileSize — an oversized upload is rejected by the
-  // transport rather than buffered in full and rejected afterwards.
+  // 'keyValues' also means the file reaches the handler as a Buffer.
+  //
+  // limits.fileSize is deliberately *above* MAX_UPLOAD_BYTES rather than equal
+  // to it. When the two matched, the transport refused an oversized file
+  // during preValidation and the handler never ran — so a librarian who
+  // attached a 3 MB phone photo to a title they had just typed in lost the
+  // whole form to a bare 413. Now the request is accepted, the handler's own
+  // check in storeCoverImage reports 'too_large', and the title is saved with
+  // the cover error shown beside it. The cost is buffering one file of up to
+  // this ceiling; the alternative was discarding the librarian's work.
   //
   // The field and part counts are sized for the book form, which carries its
   // cover now: a title, nine other fields, a row per author and a checkbox per
@@ -135,7 +152,7 @@ export async function buildApp({ config = defaultConfig, logger, db, onRoute } =
   await app.register(fastifyMultipart, {
     attachFieldsToBody: 'keyValues',
     limits: {
-      fileSize: config.maxUploadBytes,
+      fileSize: config.maxUploadBytes * UPLOAD_CEILING_MULTIPLIER,
       files: 1,
       fields: 60,
       fieldSize: 100_000,
