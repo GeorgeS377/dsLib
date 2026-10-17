@@ -264,7 +264,17 @@ sudo crontab -u dslib -e
 # Nightly at 02:30, keeping the last 30 days.
 30 2 * * * cd /opt/dslib && ./scripts/backup.sh >> /opt/dslib/data/backup.log 2>&1
 45 2 * * * find /opt/dslib/backups -maxdepth 1 -type d -name '20*' -mtime +30 -exec rm -rf {} +
+# Weekly: delete cover images no title refers to.
+15 3 * * 0 cd /opt/dslib && npm run prune-covers >> /opt/dslib/data/prune.log 2>&1
 ```
+
+`npm run prune-covers` is safe to run while the site is up. Orphaned covers
+come from book forms that were refused and then abandoned: the cover is stored
+at the moment of refusal so the framing is not lost, and nothing points at it
+if the form is never completed. The sweep only ever considers files matching
+the name shape the application itself writes, and leaves anything newer than
+24 hours alone in case a form is still open. `--dry-run` lists what it would
+remove; `--hours N` changes the threshold.
 
 Then **copy the backups off the machine**. A backup that lives only on the
 server does not survive the server. `rsync`, `restic` or `rclone` to another

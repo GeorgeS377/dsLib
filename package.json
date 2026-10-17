@@ -13,6 +13,7 @@
     "migrate": "node src/db/migrate.js",
     "seed:demo": "node scripts/seed-demo.js",
     "create-admin": "node scripts/create-admin.js",
+    "prune-covers": "node scripts/prune-covers.js",
     "reindex": "node scripts/reindex-search.js",
     "test": "node --test \"test/**/*.test.js\"",
     "test:watch": "node --test --watch \"test/**/*.test.js\""
