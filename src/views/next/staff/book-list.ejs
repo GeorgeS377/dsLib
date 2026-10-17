@@ -58,7 +58,7 @@
             </div>
             <span class="pill <%= book.copies_available > 0 ? '' : 'pill--warn' %>">
               <%= t('staff.loans.availableOf', {
-                    available: book.copies_available, total: book.copies_total }) %>
+                    available: book.copies_available, total: book.copies_total , count: book.copies_total}) %>
             </span>
             <a class="btn btn--ghost btn--small" href="/staff/books/<%= book.id %>/copies">
               <%= t('staff.book.copies') %>

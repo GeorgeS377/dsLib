@@ -16,7 +16,7 @@
     <% if (book.authors) { %><p class="tile__author"><%= book.authors %></p><% } %>
     <span class="pill <%= book.copies_available > 0 ? '' : 'pill--warn' %>">
       <%= t('book.availableCount', {
-            available: book.copies_available, total: book.copies_total }) %>
+            available: book.copies_available, total: book.copies_total , count: book.copies_total}) %>
     </span>
   </div>
 </li>

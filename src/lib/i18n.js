@@ -94,7 +94,7 @@ const el = {
     one: '{count} διαθέσιμο αντίτυπο',
     other: '{count} διαθέσιμα αντίτυπα',
   },
-  'home.stats.summary': '{titles} τίτλοι στον κατάλογο, {available} αντίτυπα διαθέσιμα τώρα.',
+  'home.stats.summary': '{titles}, {available} τώρα.',
 
   // --- Search and browse ---
   'search.title': 'Βιβλία',
@@ -143,7 +143,10 @@ const el = {
   'book.coverAlt': 'Εξώφυλλο: {title}',
   'book.noCover': 'Χωρίς εξώφυλλο',
   'book.availability': 'Αντίτυπα',
-  'book.availableCount': '{available} από {total} διαθέσιμα',
+  'book.availableCount': {
+    one: '{available} από {total} διαθέσιμο',
+    other: '{available} από {total} διαθέσιμα',
+  },
   'book.allAvailable': 'Διαθέσιμο',
   'book.noneAvailable': 'Μη διαθέσιμο',
   'book.noCopies': 'Δεν έχουν καταχωριστεί αντίτυπα.',
@@ -243,7 +246,10 @@ const el = {
     one: '{count} βιβλίο έπρεπε να έχει γυρίσει.',
     other: '{count} βιβλία έπρεπε να έχουν γυρίσει.',
   },
-  'staff.dashboard.overdueSee': 'Δείτε ποια',
+  'staff.dashboard.overdueSee': {
+    one: 'Δείτε ποιο',
+    other: 'Δείτε ποια',
+  },
   'staff.dashboard.quick': 'Γρήγορες ενέργειες',
   'staff.dashboard.recent': 'Πρόσφατες αλλαγές',
   'staff.dashboard.overdue': 'Εκπρόθεσμοι δανεισμοί',
@@ -350,7 +356,10 @@ const el = {
   'staff.cover.frame': 'Κάδρο εξωφύλλου',
   'staff.cover.kept': 'Το εξώφυλλο που επιλέξατε διατηρήθηκε. Αποθηκεύστε ξανά για να μπει στον τίτλο.',
   'suggest.none': 'Καμία αντιστοιχία',
-  'suggest.count': '{n} αντιστοιχίες',
+  'suggest.count': {
+    one: '{n} αντιστοιχία',
+    other: '{n} αντιστοιχίες',
+  },
   'staff.cover.dragHint': 'Σύρετε την εικόνα για να τη μετακινήσετε μέσα στο κάδρο.',
   'staff.cover.zoom': 'Μεγέθυνση',
   'staff.cover.saved': 'Το εξώφυλλο αποθηκεύτηκε.',
@@ -480,7 +489,10 @@ const el = {
   'staff.loans.scanHint': 'Σαρώστε ή πληκτρολογήστε το barcode και πατήστε Enter.',
   'staff.loans.findCopy': 'Εύρεση αντιτύπου',
   'staff.loans.dueDate': 'Προθεσμία επιστροφής',
-  'staff.loans.dueDateHint': 'Προεπιλογή: {days} ημέρες.',
+  'staff.loans.dueDateHint': {
+    one: 'Προεπιλογή: {days} ημέρα.',
+    other: 'Προεπιλογή: {days} ημέρες.',
+  },
   'staff.loans.borrowerSuggestHint': 'Αρχίστε να γράφετε — οι γνωστοί αναγνώστες εμφανίζονται από κάτω.',
   'staff.loans.borrowerExisting': 'Υπάρχων αναγνώστης',
   'staff.loans.borrowerNew': 'Νέος αναγνώστης',
@@ -495,7 +507,10 @@ const el = {
   'staff.loans.addCopy': 'Προσθήκη',
   'staff.loans.alreadySelected': 'Επιλεγμένο',
   'staff.loans.allSelected': 'Όλα επιλεγμένα',
-  'staff.loans.availableOf': '{available} από {total} διαθέσιμα',
+  'staff.loans.availableOf': {
+    one: '{available} από {total} διαθέσιμο',
+    other: '{available} από {total} διαθέσιμα',
+  },
   'staff.loans.removeCopy': 'Αφαίρεση',
   'staff.loans.clearSelection': 'Καθαρισμός επιλογής',
   'staff.loans.lendCount': {
@@ -698,7 +713,7 @@ const en = {
     one: '{count} copy available',
     other: '{count} copies available',
   },
-  'home.stats.summary': '{titles} titles in the catalogue, {available} copies on the shelf right now.',
+  'home.stats.summary': '{titles}, {available} right now.',
 
   // --- Search and browse ---
   'search.title': 'Books',
@@ -747,7 +762,10 @@ const en = {
   'book.coverAlt': 'Cover: {title}',
   'book.noCover': 'No cover image',
   'book.availability': 'Copies',
-  'book.availableCount': '{available} of {total} available',
+  'book.availableCount': {
+    one: '{available} of {total} available',
+    other: '{available} of {total} available',
+  },
   'book.allAvailable': 'Available',
   'book.noneAvailable': 'Not available',
   'book.noCopies': 'No copies have been recorded.',
@@ -846,7 +864,10 @@ const en = {
     one: '{count} book is overdue.',
     other: '{count} books are overdue.',
   },
-  'staff.dashboard.overdueSee': 'See which',
+  'staff.dashboard.overdueSee': {
+    one: 'See which one',
+    other: 'See which ones',
+  },
   'staff.dashboard.quick': 'Quick actions',
   'staff.dashboard.recent': 'Recent changes',
   'staff.dashboard.overdue': 'Overdue loans',
@@ -953,7 +974,10 @@ const en = {
   'staff.cover.frame': 'Cover frame',
   'staff.cover.kept': 'The cover you chose was kept. Save again to attach it to the title.',
   'suggest.none': 'No matches',
-  'suggest.count': '{n} matches',
+  'suggest.count': {
+    one: '{n} match',
+    other: '{n} matches',
+  },
   'staff.cover.dragHint': 'Drag the image to position it inside the frame.',
   'staff.cover.zoom': 'Zoom',
   'staff.cover.saved': 'Cover image saved.',
@@ -1079,7 +1103,10 @@ const en = {
   'staff.loans.scanHint': 'Scan or type the barcode and press Enter.',
   'staff.loans.findCopy': 'Find copy',
   'staff.loans.dueDate': 'Due date',
-  'staff.loans.dueDateHint': 'Default: {days} days.',
+  'staff.loans.dueDateHint': {
+    one: 'Default: {days} day.',
+    other: 'Default: {days} days.',
+  },
   'staff.loans.borrowerSuggestHint': 'Start typing — readers the library knows appear below.',
   'staff.loans.borrowerExisting': 'Existing borrower',
   'staff.loans.borrowerNew': 'New borrower',
@@ -1093,7 +1120,10 @@ const en = {
   'staff.loans.addCopy': 'Add',
   'staff.loans.alreadySelected': 'Selected',
   'staff.loans.allSelected': 'All selected',
-  'staff.loans.availableOf': '{available} of {total} available',
+  'staff.loans.availableOf': {
+    one: '{available} of {total} available',
+    other: '{available} of {total} available',
+  },
   'staff.loans.removeCopy': 'Remove',
   'staff.loans.clearSelection': 'Clear selection',
   'staff.loans.lendCount': {

@@ -213,6 +213,51 @@ describe('plural forms', () => {
     assert.ok(!text.includes('object'), `got "${text}"`);
   });
 
+  it('agrees with the sentence it follows', () => {
+    // The link is the back half of "1 βιβλίο έπρεπε να έχει γυρίσει. Δείτε
+    // ποιο." — a plural link after a singular sentence is the same fault as
+    // the one the count forms fixed, moved one word along.
+    assert.equal(translate('el', 'staff.dashboard.overdueSee', { count: 1 }), 'Δείτε ποιο');
+    assert.equal(translate('el', 'staff.dashboard.overdueSee', { count: 4 }), 'Δείτε ποια');
+    assert.equal(translate('en', 'staff.dashboard.overdueSee', { count: 1 }), 'See which one');
+    assert.equal(translate('en', 'staff.dashboard.overdueSee', { count: 4 }), 'See which ones');
+  });
+
+  it('agrees on strings that count without saying "count"', () => {
+    // These were missed by the first sweep, which searched for {count}: they
+    // count things under other names — {total}, {days}, {n} — and read just
+    // as wrongly at one.
+    assert.equal(
+      translate('el', 'book.availableCount', { available: 1, total: 1, count: 1 }),
+      '1 από 1 διαθέσιμο',
+    );
+    assert.equal(
+      translate('el', 'book.availableCount', { available: 1, total: 3, count: 3 }),
+      '1 από 3 διαθέσιμα',
+    );
+    assert.equal(
+      translate('el', 'staff.loans.dueDateHint', { days: 1, count: 1 }),
+      'Προεπιλογή: 1 ημέρα.',
+    );
+    assert.equal(
+      translate('el', 'staff.loans.dueDateHint', { days: 14, count: 14 }),
+      'Προεπιλογή: 14 ημέρες.',
+    );
+    assert.equal(translate('el', 'suggest.count', { n: 1, count: 1 }), '1 αντιστοιχία');
+    assert.equal(translate('el', 'suggest.count', { n: 5, count: 5 }), '5 αντιστοιχίες');
+  });
+
+  it('builds the front-page summary from two counted parts', () => {
+    // One sentence, two independent numbers — a single singular/plural pair
+    // cannot express it, so it is composed from the two keys that can.
+    const one = translate('el', 'home.stats.summary', {
+      titles: translate('el', 'home.stats.titles', { count: 1 }),
+      available: translate('el', 'home.stats.available', { count: 1 }),
+    });
+    assert.ok(one.includes('1 τίτλος'), one);
+    assert.ok(one.includes('1 διαθέσιμο αντίτυπο'), one);
+  });
+
   it('reports a plural key as existing', () => {
     assert.equal(hasTranslation('staff.dashboard.overdueCount'), true);
   });

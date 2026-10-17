@@ -358,9 +358,14 @@ function upgradeSuggestField(input) {
       // Substring rather than prefix, so a surname finds a full name.
       matches = entries.filter((entry) => entry.fold.includes(typed)).slice(0, 50);
       // Said out loud for a screen reader, which cannot see the list appear.
+      // One match or several is a different sentence in Greek, and only this
+      // side knows which, so the server sent both forms.
+      const template = matches.length === 1
+        ? source.dataset.suggestCountOne
+        : source.dataset.suggestCountOther;
       status.textContent = matches.length === 0
         ? (source.dataset.suggestNone || '')
-        : (source.dataset.suggestCount || '{n}').replace('{n}', String(matches.length));
+        : (template || '{n}').replace('{n}', String(matches.length));
 
       if (matches.length === 0) {
         close();

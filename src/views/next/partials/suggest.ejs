@@ -18,7 +18,9 @@
 -%>
 <datalist id="<%= id %>"
           data-suggest-none="<%= t('suggest.none') %>"
-          data-suggest-count="<%= t('suggest.count', { n: '{n}' }) %>">
+          <%# Both forms, because only the browser knows how many matched. -%>
+          data-suggest-count-one="<%= t('suggest.count', { n: '{n}', count: 1 }) %>"
+          data-suggest-count-other="<%= t('suggest.count', { n: '{n}', count: 2 }) %>">
   <% options.forEach(function (option) { -%>
     <% const value = typeof option === 'string' ? option : option.value; -%>
     <% const extra = typeof option === 'string' ? '' : (option.extra || ''); -%>

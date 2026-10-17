@@ -182,7 +182,7 @@
 
           <div>
             <label class="field__label" for="due_date"><%= t('staff.loans.dueDate') %></label>
-            <span class="field__hint"><%= t('staff.loans.dueDateHint', { days: defaultLoanDays }) %></span>
+            <span class="field__hint"><%= t('staff.loans.dueDateHint', { days: defaultLoanDays, count: defaultLoanDays }) %></span>
             <input type="date" id="due_date" name="due_date" value="<%= values.due_date %>">
             <%- include('../partials/field-error', { hasT: hasT, code: errors.due_date, t: t }) %>
           </div>
@@ -232,7 +232,7 @@
               </div>
               <span class="pill <%= match.available_count > 0 ? '' : 'pill--warn' %>">
                 <%= t('staff.loans.availableOf', {
-                      available: match.available_count, total: match.copy_count }) %>
+                      available: match.available_count, total: match.copy_count , count: match.copy_count}) %>
               </span>
               <% if (free.length > 0) { %>
                 <a class="btn btn--small"

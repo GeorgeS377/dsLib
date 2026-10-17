@@ -24,7 +24,12 @@
     </form>
 
     <p class="muted small mt-3">
-      <%= t('home.stats.summary', { titles: stats.titles, available: stats.copies_available }) %>
+      <%# Two independent numbers, so each part carries its own singular and
+          plural and this key only joins them. -%>
+      <%= t('home.stats.summary', {
+            titles: t('home.stats.titles', { count: stats.titles }),
+            available: t('home.stats.available', { count: stats.copies_available }),
+          }) %>
     </p>
   </section>
 
