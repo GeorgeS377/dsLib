@@ -21,7 +21,12 @@ import { listAuthorOptions } from '../../db/queries/authors.js';
 import { listAllCategories } from '../../db/queries/categories.js';
 import { addFlash } from '../../lib/flash.js';
 import { buildUrl, pageWindow, resultRange, withParams } from '../../lib/urls.js';
-import { parseCropFields, removeCoverFiles, storeCoverImage } from '../../lib/upload.js';
+import {
+  parseCropFields,
+  pendingCoverFrom,
+  removeCoverFiles,
+  storeCoverImage,
+} from '../../lib/upload.js';
 import { bookFormSchema, parseForm, parseIsbn } from '../../lib/validation.js';
 
 const PER_PAGE = 25;
@@ -46,7 +51,12 @@ export default async function staffBookRoutes(app) {
     // arrives as a Buffer already capped at maxUploadBytes.
     const uploaded = request.body?.cover;
     if (!Buffer.isBuffer(uploaded) || uploaded.length === 0) {
-      return { ok: false, reason: 'empty' };
+      // Nothing new chosen — but a cover may have been stored already while
+      // the form was being corrected, in which case adopting it is the whole
+      // point of having kept it.
+      const pending = pendingCoverFrom(request.body);
+      if (!pending) return { ok: false, reason: 'empty' };
+      return adopt(request, book, pending);
     }
 
     const stored = await storeCoverImage(uploaded, {
@@ -59,16 +69,36 @@ export default async function staffBookRoutes(app) {
       return stored;
     }
 
+    // A new file beats anything kept from a rejected attempt, and the kept
+    // one goes with it rather than lingering on disk.
+    const superseded = pendingCoverFrom(request.body);
+    if (superseded) {
+      await removeCoverFiles(app.config.uploadDir, superseded.coverPath, superseded.thumbPath);
+    }
+
+    return adopt(request, book, stored);
+  }
+
+  /**
+   * Point a book at cover files that are already on disk, and tidy up the
+   * ones it was using.
+   *
+   * Shared by a fresh upload and by a cover that waited out a rejected form:
+   * by this point both are just a pair of stored filenames.
+   */
+  async function adopt(request, book, { coverPath, thumbPath }) {
     // Point the record at the new files first, then delete the old ones —
     // never the other way round, so a failure cannot leave the record naming
     // a file that is gone.
-    const previous = [book.cover_path, book.cover_thumb_path].filter(Boolean);
-    setBookCover(db, book.id, { coverPath: stored.coverPath, thumbPath: stored.thumbPath });
+    const previous = [book.cover_path, book.cover_thumb_path]
+      .filter(Boolean)
+      .filter((name) => name !== coverPath && name !== thumbPath);
+    setBookCover(db, book.id, { coverPath, thumbPath });
     await removeCoverFiles(app.config.uploadDir, ...previous);
 
     logAction(db, {
       actor: request.staffUser,
-      action: 'book.cover.replace',
+      action: book.cover_path ? 'book.cover.replace' : 'book.cover.set',
       entity: 'book',
       entityId: book.id,
     });
@@ -139,12 +169,12 @@ export default async function staffBookRoutes(app) {
   app.post('/staff/books', csrf, async (request, reply) => {
     const parsed = parseForm(bookFormSchema, request.body);
     if (!parsed.ok) {
-      return rerenderForm(reply, { book: null, body: request.body, errors: parsed.errors });
+      return await rerenderForm(reply, { request, book: null, body: request.body, errors: parsed.errors });
     }
 
     const isbn = parseIsbn(parsed.data.isbn);
     if (!isbn.ok) {
-      return rerenderForm(reply, {
+      return await rerenderForm(reply, { request,
         book: null,
         body: request.body,
         errors: { isbn: 'invalid_isbn' },
@@ -156,7 +186,7 @@ export default async function staffBookRoutes(app) {
     if (isbn.isbn13) {
       const existing = findBookByIsbn13(db, isbn.isbn13);
       if (existing) {
-        return rerenderForm(reply, {
+        return await rerenderForm(reply, { request,
           book: null,
           body: request.body,
           errors: { isbn: 'duplicate_isbn' },
@@ -200,17 +230,17 @@ export default async function staffBookRoutes(app) {
 
     const parsed = parseForm(bookFormSchema, request.body);
     if (!parsed.ok) {
-      return rerenderForm(reply, { book, body: request.body, errors: parsed.errors });
+      return await rerenderForm(reply, { request, book, body: request.body, errors: parsed.errors });
     }
 
     const isbn = parseIsbn(parsed.data.isbn);
     if (!isbn.ok) {
-      return rerenderForm(reply, { book, body: request.body, errors: { isbn: 'invalid_isbn' } });
+      return await rerenderForm(reply, { request, book, body: request.body, errors: { isbn: 'invalid_isbn' } });
     }
     if (isbn.isbn13) {
       const existing = findBookByIsbn13(db, isbn.isbn13, { excludeId: book.id });
       if (existing) {
-        return rerenderForm(reply, {
+        return await rerenderForm(reply, { request,
           book,
           body: request.body,
           errors: { isbn: 'duplicate_isbn' },
@@ -359,9 +389,43 @@ export default async function staffBookRoutes(app) {
   });
 
   // ------------------------------------------------------------- helpers
-  function rerenderForm(reply, { book, body, errors, duplicate }) {
+  /**
+   * Re-render a refused form with everything still on it.
+   *
+   * The cover is the part that cannot simply be echoed back: a browser never
+   * re-populates a file input, so by the time the page reloads the chosen
+   * photo and its framing are gone. It is therefore stored now — cropped,
+   * sniffed and re-encoded exactly as a saved one — and only its filenames
+   * ride back, to be adopted when the form finally goes through.
+   *
+   * The cost is a pair of files left on disk if the form is then abandoned.
+   * `npm run prune-covers` sweeps those up; losing the librarian's work was
+   * the worse trade.
+   */
+  async function rerenderForm(reply, { book, body, errors, duplicate, request }) {
+    let pending = pendingCoverFrom(body);
+
+    const uploaded = body?.cover;
+    if (Buffer.isBuffer(uploaded) && uploaded.length > 0) {
+      const stored = await storeCoverImage(uploaded, {
+        uploadDir: app.config.uploadDir,
+        maxBytes: app.config.maxUploadBytes,
+        crop: parseCropFields(body),
+      });
+      if (stored.ok) {
+        // A newly chosen file replaces one kept from an earlier attempt.
+        if (pending) {
+          await removeCoverFiles(app.config.uploadDir, pending.coverPath, pending.thumbPath);
+        }
+        pending = { coverPath: stored.coverPath, thumbPath: stored.thumbPath };
+      } else if (stored.error) {
+        request?.log.error({ err: stored.error }, 'cover upload failed while re-rendering');
+      }
+    }
+
     reply.code(422);
     return reply.renderStaff('staff/book-form', {
+      pendingCover: pending,
       title: book ? book.title : reply.locals.t('staff.books.new'),
       book,
       // Re-render with what the librarian typed, so nothing is lost.

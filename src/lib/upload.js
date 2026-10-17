@@ -181,6 +181,28 @@ export async function storeCoverImage(buffer, { uploadDir, maxBytes, crop }) {
 }
 
 /**
+ * Read a cover that is waiting out a rejected form.
+ *
+ * When the server refuses a book form it re-renders with everything that was
+ * typed, but a browser will never re-populate a file input — a page could
+ * otherwise preload a file off disk and steal it on submit. So the cover is
+ * stored at the moment of rejection and only its filenames come back, in
+ * hidden fields.
+ *
+ * Which means these names arrive from a form and are untrusted like anything
+ * else off a browser. isSafeStoredName's UUID shape is what stops one naming
+ * a file outside covers/; anything else reads as no pending cover at all.
+ *
+ * @returns {{ coverPath: string, thumbPath: string } | null}
+ */
+export function pendingCoverFrom(body) {
+  const coverPath = body?.pending_cover;
+  const thumbPath = body?.pending_thumb;
+  if (!isSafeStoredName(coverPath) || !isSafeStoredName(thumbPath)) return null;
+  return { coverPath, thumbPath };
+}
+
+/**
  * Delete stored cover files. Each name is checked to be a bare filename, so a
  * value that somehow arrived from elsewhere cannot delete outside the covers
  * directory.

@@ -227,3 +227,99 @@ describe('removing a cover from the second interface', () => {
     assert.equal(getBookById(db, bookId).cover_path, null);
   });
 });
+
+describe('a cover kept across a rejected form', () => {
+  // An ISBN already in the catalogue is refused, so the form comes back with
+  // everything the librarian typed — except, until now, the cover.
+  const seededIsbn = '9780141439518';
+  const rejected = (fields, file) => postMultipart('/staff/books', {
+    fields: { isbn: seededIsbn, ...fields },
+    file,
+    tokenFrom: '/staff/books/new',
+  });
+  const pendingIn = (body) => ({
+    cover: body.match(/name="pending_cover" value="([^"]+)"/)?.[1],
+    thumb: body.match(/name="pending_thumb" value="([^"]+)"/)?.[1],
+  });
+
+  it('comes back with the form instead of vanishing', async () => {
+    const response = await rejected(
+      { title: 'Απορρίφθηκε' },
+      { filename: 'c.jpg', contentType: 'image/jpeg', buffer: await jpeg() },
+    );
+    assert.equal(response.statusCode, 422);
+    const { cover } = pendingIn(response.body);
+    assert.ok(cover, 'the cover was not kept');
+    assert.ok(fs.existsSync(path.join(uploadDir, 'covers', cover)), 'kept but not stored');
+    assert.ok(response.body.includes('/covers/'), 'the librarian cannot see it survived');
+  });
+
+  it('is saved when the form finally goes through', async () => {
+    const first = await rejected(
+      { title: 'Δεύτερη Προσπάθεια' },
+      { filename: 'c.jpg', contentType: 'image/jpeg', buffer: await jpeg() },
+    );
+    const { cover, thumb } = pendingIn(first.body);
+
+    const second = await postMultipart('/staff/books', {
+      fields: { title: 'Δεύτερη Προσπάθεια', pending_cover: cover, pending_thumb: thumb },
+      tokenFrom: '/staff/books/new',
+    });
+    assert.equal(second.statusCode, 302);
+    assert.equal(getBookById(db, bookNamed('δευτερη προσπαθεια').id).cover_path, cover);
+  });
+
+  it('keeps the framing, because the crop is already applied', async () => {
+    const first = await rejected(
+      { title: 'Κομμένο Απορριφθέν', crop_x: '100', crop_y: '200', crop_w: '400', crop_h: '600' },
+      { filename: 'c.jpg', contentType: 'image/jpeg', buffer: await jpeg() },
+    );
+    const { cover } = pendingIn(first.body);
+    const image = await Jimp.read(path.join(uploadDir, 'covers', cover));
+    assert.equal(image.width, 400);
+    assert.equal(image.height, 600);
+  });
+
+  it('leaves nothing behind when a second rejection replaces it', async () => {
+    const first = await rejected(
+      { title: 'Δύο Απορρίψεις' },
+      { filename: 'a.jpg', contentType: 'image/jpeg', buffer: await jpeg() },
+    );
+    const firstPending = pendingIn(first.body);
+
+    const second = await postMultipart('/staff/books', {
+      fields: {
+        isbn: seededIsbn, title: 'Δύο Απορρίψεις',
+        pending_cover: firstPending.cover, pending_thumb: firstPending.thumb,
+      },
+      file: {
+        filename: 'b.jpg',
+        contentType: 'image/jpeg',
+        buffer: await jpeg({ width: 600, height: 900 }),
+      },
+      tokenFrom: '/staff/books/new',
+    });
+    const secondPending = pendingIn(second.body);
+    assert.ok(secondPending.cover, 'the replacement was not kept');
+    assert.notEqual(secondPending.cover, firstPending.cover, 'the new file did not replace it');
+    assert.ok(
+      !fs.existsSync(path.join(uploadDir, 'covers', firstPending.cover)),
+      'the replaced file was orphaned',
+    );
+  });
+
+  it('ignores a pending name that was tampered with', async () => {
+    // The filename comes back off a form, so it is untrusted like anything
+    // else that arrives from a browser.
+    for (const name of ['../../etc/passwd', 'not-a-uuid.jpg', '/etc/passwd']) {
+      const response = await postMultipart('/staff/books', {
+        fields: { title: 'Πειραγμένο Όνομα', pending_cover: name, pending_thumb: name },
+        tokenFrom: '/staff/books/new',
+      });
+      assert.equal(response.statusCode, 302);
+      const book = bookNamed('πειραγμενο ονομα');
+      assert.equal(getBookById(db, book.id).cover_path, null, `accepted "${name}"`);
+      db.run('DELETE FROM book WHERE id = ?', book.id);
+    }
+  });
+});

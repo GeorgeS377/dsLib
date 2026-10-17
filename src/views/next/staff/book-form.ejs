@@ -181,7 +181,17 @@
       <fieldset>
         <legend><%= t('staff.field.cover') %></legend>
 
-        <% if (book && book.cover_path) { %>
+        <%# A cover that survived a refused submit. The file input beside it is
+            empty — a browser will not refill one — so without this the framing
+            would be silently gone and the title saved bare. -%>
+        <% const kept = typeof pendingCover !== 'undefined' && pendingCover; %>
+        <% if (kept) { %>
+          <input type="hidden" name="pending_cover" value="<%= kept.coverPath %>">
+          <input type="hidden" name="pending_thumb" value="<%= kept.thumbPath %>">
+          <img class="cover-current" src="/covers/<%= kept.thumbPath %>"
+               alt="<%= t('staff.field.cover') %>">
+          <p class="field__hint"><%= t('staff.cover.kept') %></p>
+        <% } else if (book && book.cover_path) { %>
           <img class="cover-current" src="/covers/<%= book.cover_thumb_path || book.cover_path %>"
                alt="<%= t('book.coverAlt', { title: book.title }) %>">
         <% } %>
