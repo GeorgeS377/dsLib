@@ -44,6 +44,34 @@ export function normalize(value) {
 }
 
 /**
+ * The body of `normalize`, as source the browser can run.
+ *
+ * `src/public/js/app.js` is served to the browser exactly as written — no
+ * bundler, no build step — so it cannot import this module, and the suggestion
+ * lists need to fold what the librarian types before matching it. The copy in
+ * app.js is pasted from here verbatim; a test in test/suggestions.test.js
+ * asserts it still matches, and test/normalize.test.js runs both against the
+ * same Greek samples.
+ *
+ * Why the duplication is worth guarding rather than avoiding: suggestions that
+ * folded differently from the catalogue search would offer a name, then fail
+ * to find it. One authority, one copy, one test holding them together.
+ *
+ * Kept in step with `normalize` above: NFD, strip combining marks, lowercase,
+ * final sigma, non-alphanumerics to spaces, trim.
+ */
+export const BROWSER_FOLD_SOURCE = `
+  if (value === null || value === undefined) return '';
+  return String(value)
+    .normalize('NFD')
+    .replace(/[\\u0300-\\u036f]/g, '')
+    .toLowerCase()
+    .replaceAll('\\u03c2', '\\u03c3')
+    .replace(/[^\\p{L}\\p{N}]+/gu, ' ')
+    .trim();
+`;
+
+/**
  * Build the haystack stored in a search_text column. Accepts any mix of
  * strings, numbers, nulls and arrays; de-duplicates tokens so repeated words
  * (a title echoed in its description) do not bloat the column.

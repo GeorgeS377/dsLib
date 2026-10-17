@@ -5,7 +5,13 @@
 // SQLite 3.51.2), so if this function is wrong, Greek search silently fails.
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
-import { buildSearchText, normalize, queryTokens, slugify } from '../src/lib/normalize.js';
+import {
+  BROWSER_FOLD_SOURCE,
+  buildSearchText,
+  normalize,
+  queryTokens,
+  slugify,
+} from '../src/lib/normalize.js';
 
 describe('normalize', () => {
   it('folds Greek case', () => {
@@ -145,5 +151,30 @@ describe('slugify', () => {
 
   it('caps length so a slug cannot grow unbounded', () => {
     assert.ok(slugify('α'.repeat(200)).length <= 80);
+  });
+});
+
+describe('the folding the browser does', () => {
+  // app.js cannot import this module — it is served to the browser as written,
+  // with no build step — so it carries its own copy of the folding. Two
+  // implementations that drifted would make the suggestion lists find things
+  // the catalogue search cannot, which is worse than no suggestions. So the
+  // copy is published from here and both are run against the same samples.
+  const browserFold = new Function('value', BROWSER_FOLD_SOURCE);
+
+  it('agrees with the server on Greek', () => {
+    for (const sample of [
+      'Νίκος Καζαντζάκης', 'ΝΊΚΟΣ ΚΑΖΑΝΤΖΆΚΗΣ', 'νικοσ καζαντζακησ',
+      'Το καπλάνι της βιτρίνας', 'ΤΟ ΚΑΠΛΑΝΙ ΤΗΣ ΒΙΤΡΙΝΆΣ',
+      'Παπαδόπουλος, Γιώργος', 'Antoine de Saint-Exupéry', 'Charlotte Brontë',
+      'Άξιον Εστί', 'Οδυσσέας Ελύτης', '  διπλό   κενό  ', '', 'Α1', 'Β2',
+      'Ὀδύσσεια', 'ΐδιο', 'ΰ', 'Μαρία-Ελένη', "O'Brien",
+    ]) {
+      assert.equal(browserFold(sample), normalize(sample), `disagreed on "${sample}"`);
+    }
+  });
+
+  it('folds a final sigma, the commonest Greek ending', () => {
+    assert.equal(browserFold('Καζαντζάκης'), browserFold('καζαντζακησ'));
   });
 });
