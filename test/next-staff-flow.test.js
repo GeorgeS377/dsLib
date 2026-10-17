@@ -176,3 +176,32 @@ describe('taking a book back from the search', () => {
     assert.equal(listLoans(db, { borrowerId: borrower, status: 'open' }).total, 0);
   });
 });
+
+describe('suggesting authors already in the catalogue', () => {
+  it('offers them on a new title', async () => {
+    const page = await get('/staff/books/new');
+    assert.ok(page.body.includes('id="author-options"'), 'no author datalist');
+    assert.ok(page.body.includes('Όμηρος'), 'a known author is not suggested');
+  });
+
+  it('points every author field at the list', async () => {
+    const page = await get('/staff/books/new');
+    const inputs = page.body.match(/<input[^>]*name="authors"[^>]*>/g) ?? [];
+    assert.ok(inputs.length > 0, 'no author fields');
+    for (const input of inputs) {
+      assert.match(input, /list="author-options"/, `an author field has no suggestions: ${input}`);
+    }
+  });
+
+  it('keeps a comma inside one name', async () => {
+    // One input is one person, so "Surname, Forename" must stay a single
+    // option rather than being split into two.
+    createBook(db, { title: 'Με Κόμμα', authorNames: ['Παπαδόπουλος, Γιώργος'] });
+    const page = await get('/staff/books/new');
+    const options = [...page.body.matchAll(/<option value="([^"]*)"><\/option>/g)].map((m) => m[1]);
+    assert.ok(
+      options.includes('Παπαδόπουλος, Γιώργος'),
+      `the name was split: ${options.filter((o) => o.includes('Παπαδ'))}`,
+    );
+  });
+});

@@ -40,6 +40,19 @@ export function listAllAuthors(db) {
   );
 }
 
+/**
+ * Author names for the suggestion list on the book form.
+ *
+ * Rendered into the page rather than fetched, so typing suggests with no
+ * round trip and the field still works with no scripting at all. Capped for
+ * the same reason the reader list is: the names travel with the page, and a
+ * catalogue with thousands of authors would rather be typed into than
+ * downloaded. The cap is far above what a school library reaches.
+ */
+export function listAuthorOptions(db, limit = 1000) {
+  return db.all('SELECT id, name FROM author ORDER BY name_norm LIMIT ?', limit);
+}
+
 export function getAuthorById(db, id) {
   return db.get('SELECT id, name, name_norm, sort_name FROM author WHERE id = ?', id);
 }

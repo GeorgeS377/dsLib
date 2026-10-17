@@ -72,6 +72,13 @@
       <fieldset data-repeatable>
         <legend><%= t('staff.field.authors') %></legend>
         <p class="field__hint"><%= t('staff.field.authorsHint') %></p>
+        <%# Suggestions come with the page rather than over the wire, so they
+            work the moment the field is focused and cost nothing when they
+            are not used. One option per author: a name with a comma in it is
+            one person, and splitting on the comma would invent a second. -%>
+        <datalist id="author-options">
+          <% authorOptions.forEach(function (author) { %><option value="<%= author.name %>"></option><% }); %>
+        </datalist>
         <div data-repeatable-list class="stack">
           <% values.authors.forEach(function (name, index) { %>
             <div data-repeatable-row>
@@ -79,14 +86,15 @@
                 <%= t('staff.field.authors') %> <%= index + 1 %>
               </label>
               <input type="text" id="field-author-<%= index %>" name="authors"
-                     value="<%= name %>" maxlength="200" autocomplete="off">
+                     value="<%= name %>" maxlength="200" autocomplete="off"
+                     list="author-options">
             </div>
           <% }); %>
           <%# One spare row, so an author can be added with no scripting. -%>
           <div data-repeatable-row>
             <label class="visually-hidden" for="field-author-extra"><%= t('staff.field.addAuthor') %></label>
             <input type="text" id="field-author-extra" name="authors" value=""
-                   maxlength="200" autocomplete="off">
+                   maxlength="200" autocomplete="off" list="author-options">
           </div>
         </div>
         <button class="btn btn--ghost btn--small" type="button" data-repeatable-add hidden>

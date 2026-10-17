@@ -17,6 +17,7 @@ import {
   unarchiveBook,
   updateBook,
 } from '../../db/queries/books.js';
+import { listAuthorOptions } from '../../db/queries/authors.js';
 import { listAllCategories } from '../../db/queries/categories.js';
 import { addFlash } from '../../lib/flash.js';
 import { buildUrl, pageWindow, resultRange, withParams } from '../../lib/urls.js';
@@ -114,6 +115,7 @@ export default async function staffBookRoutes(app) {
       errors: {},
       categories: listAllCategories(db),
       languages: distinctLanguages(db),
+      authorOptions: listAuthorOptions(db),
     }),
   );
 
@@ -128,6 +130,7 @@ export default async function staffBookRoutes(app) {
       errors: {},
       categories: listAllCategories(db),
       languages: distinctLanguages(db),
+      authorOptions: listAuthorOptions(db),
       deletability: describeBookDeletability(db, book.id),
     });
   });
@@ -367,6 +370,7 @@ export default async function staffBookRoutes(app) {
       duplicate,
       categories: listAllCategories(db),
       languages: distinctLanguages(db),
+      authorOptions: listAuthorOptions(db),
       deletability: book ? describeBookDeletability(db, book.id) : undefined,
     });
   }
