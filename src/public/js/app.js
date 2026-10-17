@@ -629,6 +629,46 @@ function enablePasswordReveal() {
   }
 }
 
+/**
+ * Fold the filters away on a narrow screen.
+ *
+ * They are served open, because with no script there is nothing to reopen
+ * them with. Where there is one, a phone gets them closed: measured at
+ * 390px the first book sat 1270 pixels down the page, which is a screen and
+ * a half of controls before any of the thing you came for.
+ *
+ * A reader who already has filters on keeps them open — closing them would
+ * hide the reason the results look the way they do.
+ */
+function enableFilterCollapse() {
+  const narrow = window.matchMedia('(max-width: 47.999rem)');
+
+  for (const filters of document.querySelectorAll('[data-filters]')) {
+    const active = Number(filters.dataset.filterCount) || 0;
+
+    // Once a reader opens the fold themselves, a later resize must not shut
+    // it again. Setting .open fires toggle too, and asynchronously, so those
+    // are marked as ours or every automatic change would read as a choice.
+    let touched = false;
+    let ours = false;
+    filters.addEventListener('toggle', () => {
+      if (ours) ours = false;
+      else touched = true;
+    });
+
+    const apply = () => {
+      if (touched) return;
+      const wanted = !narrow.matches || active > 0;
+      if (filters.open === wanted) return;
+      ours = true;
+      filters.open = wanted;
+    };
+
+    apply();
+    narrow.addEventListener('change', apply);
+  }
+}
+
 document.addEventListener('DOMContentLoaded', () => {
   enableAutoSubmit();
   enableConfirmations();
@@ -638,4 +678,5 @@ document.addEventListener('DOMContentLoaded', () => {
   enableSuggestions();
   enableCoverCropper();
   enablePasswordReveal();
+  enableFilterCollapse();
 });

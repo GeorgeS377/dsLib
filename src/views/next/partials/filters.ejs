@@ -5,10 +5,30 @@
   pick a second entry, which almost nobody discovers, and draws the chosen
   rows in the same grey it uses for disabled ones. Nothing auto-submits —
   the reader ticks what they want and presses Apply once.
+
+  Wrapped in a <details open>. On a phone the filters ran past a screen and a
+  half before the first book appeared, so app.js closes this below 48rem —
+  but only when no filter is on, and only when there is a script to reopen
+  it. Open is therefore the served state: with no scripting the reader gets
+  the filters as they have always been rather than shut with no way in.
 -%>
 <form class="panel" method="get" action="<%= action %>" data-live-form>
   <% if (query.q) { %><input type="hidden" name="q" value="<%= query.q %>"><% } %>
 
+  <%
+    const activeFilters = query.category.length + query.author.length
+      + query.year.length + (query.language ? 1 : 0) + (query.available ? 1 : 0);
+  %>
+  <details class="filters" data-filters data-filter-count="<%= activeFilters %>" open>
+    <summary class="filters__summary">
+      <%- include('../../partials/icon', { name: 'tag', size: 16 }) %>
+      <span><%= t('search.filter.toggle') %></span>
+      <% if (activeFilters > 0) { %>
+        <span class="pill pill--quiet"><%= activeFilters %></span>
+      <% } %>
+    </summary>
+
+    <div class="filters__body">
   <div class="filter-grid">
     <fieldset class="filter">
       <legend class="field__label"><%= t('search.filter.category') %></legend>
@@ -87,6 +107,8 @@
         <a class="btn btn--quiet btn--small" href="<%= clearUrl %>"><%= t('search.clearFilters') %></a>
       <% } %>
       <button class="btn btn--small" type="submit"><%= t('common.apply') %></button>
+      </div>
     </div>
-  </div>
+    </div>
+  </details>
 </form>

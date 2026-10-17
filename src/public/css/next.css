@@ -1392,3 +1392,97 @@ tbody tr:last-child td {
   padding-top: var(--s-3);
   border-top: 1px solid var(--line);
 }
+
+/* ------------------------------------------------- filters on a phone
+
+   The filters ran a screen and a half deep before the first book appeared,
+   so below 48rem they fold behind a heading. The summary only exists at
+   that width: on a wide screen the panel has room and hiding it would be
+   a click for nothing. */
+.filters__summary {
+  display: none;
+}
+
+@media (max-width: 47.999rem) {
+  .filters__summary {
+    display: flex;
+    align-items: center;
+    gap: var(--s-2);
+    /* Comfortable to hit with a thumb. */
+    min-height: 44px;
+    font-weight: 600;
+    cursor: pointer;
+    list-style: none;
+  }
+
+  .filters__summary::-webkit-details-marker {
+    display: none;
+  }
+
+  /* The caret, drawn rather than relying on the browser's marker, which
+     cannot be positioned at the end of the row. */
+  .filters__summary::after {
+    content: "";
+    margin-inline-start: auto;
+    width: 9px;
+    height: 9px;
+    border-right: 2px solid var(--ink-faint);
+    border-bottom: 2px solid var(--ink-faint);
+    transform: rotate(45deg) translate(-2px, -2px);
+  }
+
+  .filters[open] > .filters__summary::after {
+    transform: rotate(-135deg) translate(-2px, -2px);
+  }
+
+  .filters[open] > .filters__summary {
+    margin-bottom: var(--s-4);
+  }
+
+  /* One column: two 12rem columns side by side left each label clipped. */
+  .filter-grid {
+    grid-template-columns: 1fr;
+  }
+
+  /* A list that scrolls inside a page that also scrolls is hard to use with
+     a thumb — the wrong one moves. Inside a fold there is room to show the
+     whole list instead. */
+  .filter__options {
+    max-height: none;
+    overflow-y: visible;
+  }
+
+  /* Big enough to hit, and 16px so iOS does not zoom the page on focus. */
+  .filter__option {
+    min-height: 44px;
+    font-size: 1rem;
+  }
+
+  .filter__option input {
+    width: 1.25rem;
+    height: 1.25rem;
+  }
+
+  input,
+  select,
+  textarea {
+    font-size: 1rem;
+  }
+}
+
+/* On a phone the word beside the magnifier cost the search field a third of
+   its width — "Τίτλος, συγγραφέας, IS" was as much of the placeholder as fit.
+   The icon carries it alone at that size; the button keeps its name for a
+   screen reader. */
+@media (max-width: 30rem) {
+  .search .btn__label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+    border: 0;
+  }
+}

@@ -247,3 +247,34 @@ describe('the front page with announcements', () => {
     assert.ok(!page.body.includes('home-split'), 'an empty half was still laid out');
   });
 });
+
+describe('the public pages on a phone', () => {
+  it('keeps the filters open when nothing can collapse them', async () => {
+    // No scripting means no collapse, so they must arrive open rather than
+    // shut with no way to reach them.
+    const page = await get('/');
+    assert.match(page.body, /<details[^>]*\bopen\b[^>]*class="filters"|<details class="filters"[^>]*\bopen\b/,
+      'the filters are not open by default');
+  });
+
+  it('gives the filters a heading to collapse under', async () => {
+    const page = await get('/');
+    assert.match(page.body, /<summary[^>]*class="filters__summary"/, 'nothing to tap to collapse them');
+    assert.ok(page.body.includes('Φίλτρα'), 'the control is not named');
+  });
+
+  it('marks up the filters so a phone can be told how many are on', async () => {
+    const page = await get('/?category=1');
+    assert.match(page.body, /data-filter-count="\d+"/, 'the count of active filters is not published');
+  });
+
+  it('still submits as one form', async () => {
+    // The collapse must not have split the controls out of the form that
+    // carries them.
+    const page = await get('/');
+    const form = page.body.match(/<form class="panel"[\s\S]*?<\/form>/)?.[0] ?? '';
+    assert.ok(form.includes('name="category"'), 'the category boxes left the form');
+    assert.ok(form.includes('name="sort"'), 'the sort control left the form');
+    assert.ok(form.includes('<details'), 'the collapse is not inside the form');
+  });
+});

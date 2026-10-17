@@ -12,7 +12,9 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title><%= typeof title !== 'undefined' && title ? title + ' · ' : '' %><%= t('staff.area') %></title>
+  <%# The library's name here too: the tab for a page nobody has signed in
+      on should not be headed with the name of the office behind it. -%>
+  <title><%= typeof title !== 'undefined' && title ? title + ' · ' : '' %><%= libraryName %></title>
   <meta name="robots" content="noindex, nofollow">
   <link rel="stylesheet" href="<%= stylesheet %>">
   <link rel="icon" href="/assets/icon.svg" type="image/svg+xml">

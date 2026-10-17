@@ -17,9 +17,9 @@
     <label class="visually-hidden" for="q"><%= t('common.searchLabel') %></label>
     <input type="search" id="q" name="q" value="<%= query.q || '' %>"
            placeholder="<%= t('common.searchPlaceholder') %>" autocomplete="off">
-    <button class="btn" type="submit">
+    <button class="btn" type="submit" aria-label="<%= t('common.search') %>">
       <%- include('../../partials/icon', { name: 'search', size: 17 }) %>
-      <%= t('common.search') %>
+      <span class="btn__label"><%= t('common.search') %></span>
     </button>
   </form>
 

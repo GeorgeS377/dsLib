@@ -10,7 +10,7 @@
     <label class="visually-hidden" for="author-q"><%= t('authors.findByName') %></label>
     <input type="search" id="author-q" name="q" value="<%= q || '' %>"
            placeholder="<%= t('authors.findByName') %>" autocomplete="off">
-    <button class="btn btn--ghost" type="submit"><%= t('common.search') %></button>
+    <button class="btn btn--ghost" type="submit" aria-label="<%= t('common.search') %>"><span class="btn__label"><%= t('common.search') %></span></button>
   </form>
 
   <% if (authors.length === 0) { %>
