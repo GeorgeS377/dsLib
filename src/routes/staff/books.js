@@ -20,7 +20,7 @@ import {
 import { listAllCategories } from '../../db/queries/categories.js';
 import { addFlash } from '../../lib/flash.js';
 import { buildUrl, pageWindow, resultRange, withParams } from '../../lib/urls.js';
-import { removeCoverFiles, storeCoverImage } from '../../lib/upload.js';
+import { parseCropFields, removeCoverFiles, storeCoverImage } from '../../lib/upload.js';
 import { bookFormSchema, parseForm, parseIsbn } from '../../lib/validation.js';
 
 const PER_PAGE = 25;
@@ -28,6 +28,52 @@ const PER_PAGE = 25;
 export default async function staffBookRoutes(app) {
   const db = app.db;
   const csrf = { preHandler: app.csrfProtection };
+
+  /**
+   * Store the cover that came with a submitted form, if one did.
+   *
+   * Shared by all three ways a cover arrives — creating a title, editing one,
+   * and the standalone upload the first interface still uses — so the audit
+   * entry, the crop and the deletion of the file being replaced happen the
+   * same way whichever door it came through.
+   *
+   * @returns {Promise<{ ok: true } | { ok: false, reason: string }>}
+   *   `reason: 'empty'` when the form carried no file at all.
+   */
+  async function saveCover(request, book) {
+    // multipart is registered with attachFieldsToBody: 'keyValues', so a file
+    // arrives as a Buffer already capped at maxUploadBytes.
+    const uploaded = request.body?.cover;
+    if (!Buffer.isBuffer(uploaded) || uploaded.length === 0) {
+      return { ok: false, reason: 'empty' };
+    }
+
+    const stored = await storeCoverImage(uploaded, {
+      uploadDir: app.config.uploadDir,
+      maxBytes: app.config.maxUploadBytes,
+      crop: parseCropFields(request.body),
+    });
+    if (!stored.ok) {
+      if (stored.error) request.log.error({ err: stored.error }, 'cover upload failed');
+      return stored;
+    }
+
+    // Point the record at the new files first, then delete the old ones —
+    // never the other way round, so a failure cannot leave the record naming
+    // a file that is gone.
+    const previous = [book.cover_path, book.cover_thumb_path].filter(Boolean);
+    setBookCover(db, book.id, { coverPath: stored.coverPath, thumbPath: stored.thumbPath });
+    await removeCoverFiles(app.config.uploadDir, ...previous);
+
+    logAction(db, {
+      actor: request.staffUser,
+      action: 'book.cover.replace',
+      entity: 'book',
+      entityId: book.id,
+    });
+
+    return { ok: true };
+  }
 
   // ------------------------------------------------------------------- list
   app.get('/staff/books', async (request, reply) => {
@@ -131,6 +177,14 @@ export default async function staffBookRoutes(app) {
     });
 
     addFlash(request, 'success', 'staff.books.created', { title: parsed.data.title });
+
+    // The cover rides along with the title now. If it fails, the title still
+    // stands: a bad JPEG must not throw away metadata that was just typed in.
+    const cover = await saveCover(request, { id, cover_path: null, cover_thumb_path: null });
+    if (!cover.ok && cover.reason !== 'empty') {
+      addFlash(request, 'error', `staff.cover.error.${cover.reason}`);
+    }
+
     // Straight to copies: a title with no copies is invisible as "available",
     // so this is almost always the next thing the librarian needs.
     return reply.redirect(`/staff/books/${id}/copies`, 302);
@@ -177,6 +231,13 @@ export default async function staffBookRoutes(app) {
     });
 
     addFlash(request, 'success', 'staff.books.saved', { title: parsed.data.title });
+
+    // An empty cover field means "leave the cover alone", not "clear it".
+    const cover = await saveCover(request, book);
+    if (!cover.ok && cover.reason !== 'empty') {
+      addFlash(request, 'error', `staff.cover.error.${cover.reason}`);
+    }
+
     return reply.redirect(`/staff/books/${book.id}`, 302);
   });
 
@@ -185,37 +246,13 @@ export default async function staffBookRoutes(app) {
     const book = loadBook(db, request.params.id);
     if (!book) return reply.callNotFound();
 
-    // multipart is registered with attachFieldsToBody: 'keyValues', so the
-    // file arrives here as a Buffer already capped at maxUploadBytes.
-    const uploaded = request.body?.cover;
-    if (!Buffer.isBuffer(uploaded) || uploaded.length === 0) {
-      addFlash(request, 'error', 'staff.cover.error.empty');
+    // Kept for the first interface, which uploads a cover on its own rather
+    // than alongside the title.
+    const cover = await saveCover(request, book);
+    if (!cover.ok) {
+      addFlash(request, 'error', `staff.cover.error.${cover.reason}`);
       return reply.redirect(`/staff/books/${book.id}`, 302);
     }
-
-    const stored = await storeCoverImage(uploaded, {
-      uploadDir: app.config.uploadDir,
-      maxBytes: app.config.maxUploadBytes,
-    });
-
-    if (!stored.ok) {
-      if (stored.error) request.log.error({ err: stored.error }, 'cover upload failed');
-      addFlash(request, 'error', `staff.cover.error.${stored.reason}`);
-      return reply.redirect(`/staff/books/${book.id}`, 302);
-    }
-
-    // Replace, then delete the old files — never the other way round, so a
-    // failure cannot leave the record pointing at a file that is gone.
-    const previous = [book.cover_path, book.cover_thumb_path];
-    setBookCover(db, book.id, { coverPath: stored.coverPath, thumbPath: stored.thumbPath });
-    await removeCoverFiles(app.config.uploadDir, ...previous.filter(Boolean));
-
-    logAction(db, {
-      actor: request.staffUser,
-      action: 'book.cover.replace',
-      entity: 'book',
-      entityId: book.id,
-    });
 
     addFlash(request, 'success', 'staff.cover.saved');
     return reply.redirect(`/staff/books/${book.id}`, 302);

@@ -126,14 +126,20 @@ export async function buildApp({ config = defaultConfig, logger, db, onRoute } =
   // 'keyValues' also means the file reaches the handler as a Buffer, already
   // capped by limits.fileSize — an oversized upload is rejected by the
   // transport rather than buffered in full and rejected afterwards.
+  //
+  // The field and part counts are sized for the book form, which carries its
+  // cover now: a title, nine other fields, a row per author and a checkbox per
+  // category can pass twenty parts in a library with a full category list.
+  // They stay bounded — one file, each field capped by fieldSize — so this is
+  // a limit that fits the form rather than a limit removed.
   await app.register(fastifyMultipart, {
     attachFieldsToBody: 'keyValues',
     limits: {
       fileSize: config.maxUploadBytes,
       files: 1,
-      fields: 20,
+      fields: 60,
       fieldSize: 100_000,
-      parts: 30,
+      parts: 80,
     },
   });
 

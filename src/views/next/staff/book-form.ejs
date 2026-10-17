@@ -47,7 +47,11 @@
   <% } %>
 
   <section class="panel">
-    <form method="post" action="<%= book ? '/staff/books/' + book.id : '/staff/books' %>">
+    <%# Multipart because the cover is saved with the title rather than as a
+        second errand. Repeated names (authors, categories) survive it as
+        arrays, so nothing about how this form is read had to change. -%>
+    <form method="post" enctype="multipart/form-data"
+          action="<%= book ? '/staff/books/' + book.id : '/staff/books' %>">
       <input type="hidden" name="_csrf" value="<%= csrfToken %>">
 
       <div>
@@ -166,34 +170,44 @@
         <textarea id="field-description" name="description" rows="5"><%= values.description %></textarea>
       </div>
 
+      <%# The cover sits inside the main form, so one Save stores the title
+          and its cover together — and so a title can have one from the
+          moment it is created, which needs no id to exist yet. -%>
+      <fieldset>
+        <legend><%= t('staff.field.cover') %></legend>
+
+        <% if (book && book.cover_path) { %>
+          <img class="cover-current" src="/covers/<%= book.cover_thumb_path || book.cover_path %>"
+               alt="<%= t('book.coverAlt', { title: book.title }) %>">
+        <% } %>
+
+        <div>
+          <label class="field__label" for="field-cover">
+            <%= book && book.cover_path ? t('staff.cover.replace') : t('staff.cover.upload') %>
+          </label>
+          <span class="field__hint"><%= t('staff.cover.hint', { mb: maxUploadMb }) %></span>
+          <input type="file" id="field-cover" name="cover"
+                 accept="image/jpeg,image/png,image/webp">
+        </div>
+      </fieldset>
+
       <div class="btn-row">
         <button class="btn" type="submit"><%= t('common.save') %></button>
         <a class="btn btn--quiet" href="/staff/books"><%= t('common.cancel') %></a>
       </div>
     </form>
+
+    <%# Its own form: removing a cover is a different action from saving the
+        title, and nesting forms is not a thing HTML allows. -%>
+    <% if (book && book.cover_path) { %>
+      <form method="post" action="/staff/books/<%= book.id %>/cover/delete">
+        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+        <button class="btn btn--ghost btn--small" type="submit"><%= t('staff.cover.remove') %></button>
+      </form>
+    <% } %>
   </section>
 
   <% if (book) { %>
-    <section class="panel">
-      <h2><%= t('staff.field.cover') %></h2>
-      <form method="post" action="/staff/books/<%= book.id %>/cover" enctype="multipart/form-data">
-        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
-        <div>
-          <label class="field__label" for="cover">
-            <%= book.cover_path ? t('staff.cover.replace') : t('staff.cover.upload') %>
-          </label>
-          <span class="field__hint"><%= t('staff.cover.hint', { mb: maxUploadMb }) %></span>
-          <input type="file" id="cover" name="cover" accept="image/jpeg,image/png,image/webp">
-        </div>
-        <button class="btn" type="submit"><%= t('common.save') %></button>
-      </form>
-      <% if (book.cover_path) { %>
-        <form method="post" action="/staff/books/<%= book.id %>/cover/remove">
-          <input type="hidden" name="_csrf" value="<%= csrfToken %>">
-          <button class="btn btn--ghost btn--small" type="submit"><%= t('staff.cover.remove') %></button>
-        </form>
-      <% } %>
-    </section>
 
     <section class="panel">
       <h2><%= t('staff.books.manageCopies') %></h2>
