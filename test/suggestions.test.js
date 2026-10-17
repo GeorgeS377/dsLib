@@ -11,7 +11,7 @@ import { after, before, describe, it } from 'node:test';
 import { buildApp } from '../src/app.js';
 import { createBook } from '../src/db/queries/books.js';
 import { createBorrower } from '../src/db/queries/borrowers.js';
-import { normalize } from '../src/lib/normalize.js';
+import { BROWSER_FOLD_SOURCE, normalize } from '../src/lib/normalize.js';
 import { cleanupDir, makeTestDb, seedTestCatalogue, testConfig } from './helpers.js';
 import { login, makeStaffUser } from './staff-helpers.js';
 
@@ -45,8 +45,10 @@ const unescape = (s) =>
   s.replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&lt;/g, '<')
     .replace(/&gt;/g, '>').replace(/&amp;/g, '&');
 
+// Matched without assuming what else the tag carries — it gained the wording
+// for the screen-reader live region.
 const listIn = (body, id) =>
-  body.match(new RegExp(`<datalist id="${id}">([\\s\\S]*?)</datalist>`))?.[1];
+  body.match(new RegExp(`<datalist id="${id}"[^>]*>([\\s\\S]*?)</datalist>`))?.[1];
 
 describe('suggestions carry their folded form', () => {
   it('puts a data-fold on every option', async () => {
@@ -84,7 +86,7 @@ describe('suggestions carry their folded form', () => {
   it('still ships a native datalist, which is the no-scripting fallback', async () => {
     for (const [url, listId] of pages()) {
       const body = (await get(url)).body;
-      assert.ok(body.includes(`<datalist id="${listId}">`), `${url} lost its fallback list`);
+      assert.ok(listIn(body, listId) !== undefined, `${url} lost its fallback list`);
       assert.match(body, new RegExp(`list="${listId}"`), `${url}: no field points at it`);
     }
   });
@@ -103,5 +105,39 @@ describe('suggestions carry their folded form', () => {
         assert.match(field, /data-suggest/, `${url}: a field the script will not see: ${field}`);
       }
     }
+  });
+});
+
+describe('the combobox', () => {
+  const script = () => fs.readFileSync(path.join(process.cwd(), 'src/public/js/app.js'), 'utf8');
+
+  it('is wired up on load', () => {
+    assert.match(script(), /enableSuggestions\(\);/, 'the combobox never starts');
+  });
+
+  it('replaced the reader-only autofill', () => {
+    // One behaviour, one implementation: the old helper filled the class from
+    // data-class and knew nothing about folding.
+    assert.ok(!script().includes('enableReaderAutofill'), 'the old autofill is still there');
+    assert.ok(!script().includes('data-reader-name'), 'the old markup hook is still read');
+  });
+
+  it('ships the folding published by normalize.js, unchanged', () => {
+    // Pasted, not re-written. test/normalize.test.js runs both against the
+    // same Greek samples; this is what keeps the copy in app.js honest.
+    //
+    // Compared with indentation stripped, because the copy is indented to sit
+    // inside a function. Every statement, in order, still has to match.
+    const bare = (text) => text.split('\n').map((line) => line.trim()).filter(Boolean).join('\n');
+    assert.ok(
+      bare(script()).includes(bare(BROWSER_FOLD_SOURCE)),
+      'app.js does not contain the folding normalize.js publishes',
+    );
+  });
+
+  it('still fills the class when a reader is chosen', async () => {
+    const body = (await get(`/staff/loans/checkout?copy=${copyId}`)).body;
+    assert.match(body, /data-suggest-fills="new_borrower_class"/, 'nothing says what to fill');
+    assert.ok(body.includes('id="new_borrower_class"'), 'the field it fills is gone');
   });
 });

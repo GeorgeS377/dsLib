@@ -198,37 +198,183 @@ function enableLiveResults() {
 }
 
 /**
- * Fill in a reader's class once their name is chosen.
+ * Fold text the way the catalogue search does.
  *
- * The suggesting itself is the browser's: the name field is backed by a
- * datalist, so it offers known readers with no scripting at all. This only
- * saves the second keystroke — picking "Ελένη Σταθοπούλου" fills in Β1 —
- * and typing a class by hand still overrides it.
+ * Pasted verbatim from BROWSER_FOLD_SOURCE in src/lib/normalize.js, which is
+ * the authority. This file is served to the browser as written -- no bundler,
+ * no build step -- so it cannot import that module. test/normalize.test.js
+ * runs both against the same Greek samples and test/suggestions.test.js checks
+ * this copy still matches, so the two cannot drift apart unnoticed.
  */
-function enableReaderAutofill() {
-  const name = document.querySelector('[data-reader-name]');
-  const klass = document.querySelector('[data-reader-class]');
-  const list = name && document.getElementById(name.getAttribute('list'));
-  if (!name || !klass || !list) return;
+function foldGreek(value) {
+  if (value === null || value === undefined) return '';
+    return String(value)
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .toLowerCase()
+      .replaceAll('\u03c2', '\u03c3')
+      .replace(/[^\p{L}\p{N}]+/gu, ' ')
+      .trim();
+}
 
-  const classFor = new Map(
-    [...list.options].map((option) => [option.value, option.dataset.class || '']),
-  );
+/**
+ * Suggest as you type, matching Greek the way the catalogue search does.
+ *
+ * A native <datalist> is matched by the browser against the literal accented
+ * text, so "καζαντζακη" never reaches "Νίκος Καζαντζάκης" and the browser
+ * will not be talked out of it. This replaces the list with one we filter
+ * ourselves, on the folded form the server stamped onto each option.
+ *
+ * The datalist stays in the markup and stays wired to the field: with no
+ * scripting none of this runs and the librarian still gets suggestions, just
+ * accent-sensitive ones.
+ */
+function enableSuggestions() {
+  for (const input of document.querySelectorAll('[data-suggest]')) {
+    const source = document.getElementById(input.getAttribute('list'));
+    if (!source) continue;
 
-  name.addEventListener('input', () => {
-    const known = classFor.get(name.value);
-    // Only when the name is one we know, and only when the class is still
-    // empty or was itself filled in this way — never over something typed.
-    if (known === undefined) return;
-    if (klass.value && klass.dataset.filled !== 'yes') return;
+    const entries = [...source.options].map((option) => ({
+      value: option.value,
+      fold: option.dataset.fold || '',
+      extra: option.dataset.extra || '',
+    }));
+    if (entries.length === 0) continue;
 
-    klass.value = known;
-    klass.dataset.filled = 'yes';
-  });
+    // The field the chosen option also fills in -- a reader's class.
+    const fills = input.dataset.suggestFills
+      ? document.getElementById(input.dataset.suggestFills)
+      : null;
 
-  klass.addEventListener('input', () => {
-    delete klass.dataset.filled;
-  });
+    const wrap = document.createElement('div');
+    wrap.className = 'suggest';
+    input.parentNode.insertBefore(wrap, input);
+    wrap.append(input);
+
+    const list = document.createElement('ul');
+    list.className = 'suggest__list';
+    list.id = `${input.id || input.name}-suggest-list`;
+    list.setAttribute('role', 'listbox');
+    list.hidden = true;
+    wrap.append(list);
+
+    const status = document.createElement('p');
+    status.className = 'visually-hidden';
+    status.setAttribute('aria-live', 'polite');
+    wrap.append(status);
+
+    input.setAttribute('role', 'combobox');
+    input.setAttribute('aria-autocomplete', 'list');
+    input.setAttribute('aria-expanded', 'false');
+    input.setAttribute('aria-controls', list.id);
+    input.setAttribute('autocomplete', 'off');
+
+    let matches = [];
+    let active = -1;
+
+    const close = () => {
+      list.hidden = true;
+      list.replaceChildren();
+      input.setAttribute('aria-expanded', 'false');
+      input.removeAttribute('aria-activedescendant');
+      matches = [];
+      active = -1;
+    };
+
+    const highlight = () => {
+      [...list.children].forEach((row, index) => {
+        const on = index === active;
+        row.classList.toggle('is-active', on);
+        row.setAttribute('aria-selected', on ? 'true' : 'false');
+        if (on) {
+          input.setAttribute('aria-activedescendant', row.id);
+          row.scrollIntoView({ block: 'nearest' });
+        }
+      });
+    };
+
+    const choose = (entry) => {
+      input.value = entry.value;
+      // Never over something typed by hand: dataset.filled marks a value this
+      // put there, so only its own guesses get replaced.
+      if (fills && entry.extra && (!fills.value || fills.dataset.filled === 'yes')) {
+        fills.value = entry.extra;
+        fills.dataset.filled = 'yes';
+      }
+      close();
+    };
+
+    const open = () => {
+      const typed = foldGreek(input.value);
+      if (!typed) {
+        close();
+        return;
+      }
+
+      // Substring rather than prefix, so a surname finds a full name.
+      matches = entries.filter((entry) => entry.fold.includes(typed)).slice(0, 50);
+      // Said out loud for a screen reader, which cannot see the list appear.
+      status.textContent = matches.length === 0
+        ? (source.dataset.suggestNone || '')
+        : (source.dataset.suggestCount || '{n}').replace('{n}', String(matches.length));
+
+      if (matches.length === 0) {
+        close();
+        return;
+      }
+
+      list.replaceChildren(...matches.map((entry, index) => {
+        const row = document.createElement('li');
+        row.className = 'suggest__option';
+        row.id = `${list.id}-${index}`;
+        row.setAttribute('role', 'option');
+        row.setAttribute('aria-selected', 'false');
+        row.textContent = entry.extra ? `${entry.value} — ${entry.extra}` : entry.value;
+        row.addEventListener('mousedown', (event) => {
+          // mousedown, not click: blur would close the list first.
+          event.preventDefault();
+          choose(entry);
+        });
+        return row;
+      }));
+
+      list.hidden = false;
+      input.setAttribute('aria-expanded', 'true');
+      active = -1;
+      highlight();
+    };
+
+    input.addEventListener('input', open);
+    input.addEventListener('focus', open);
+    input.addEventListener('blur', () => { window.setTimeout(close, 120); });
+
+    input.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape') {
+        close();
+        return;
+      }
+      if (event.key === 'Enter' && active >= 0 && matches[active]) {
+        // Without this the form submits on the keystroke that was meant to
+        // pick a name.
+        event.preventDefault();
+        choose(matches[active]);
+        return;
+      }
+      if (event.key !== 'ArrowDown' && event.key !== 'ArrowUp') return;
+      if (list.hidden) {
+        open();
+        if (list.hidden) return;
+      }
+      event.preventDefault();
+      const step = event.key === 'ArrowDown' ? 1 : -1;
+      active = (active + step + matches.length) % matches.length;
+      highlight();
+    });
+
+    if (fills) {
+      fills.addEventListener('input', () => { delete fills.dataset.filled; });
+    }
+  }
 }
 
 /**
@@ -393,6 +539,6 @@ document.addEventListener('DOMContentLoaded', () => {
   focusHomeSearch();
   enableRepeatableFields();
   enableLiveResults();
-  enableReaderAutofill();
+  enableSuggestions();
   enableCoverCropper();
 });

@@ -1289,3 +1289,41 @@ tbody tr:last-child td {
 .cropper__zoom input[type="range"] {
   width: 100%;
 }
+
+/* --------------------------------------------------------------- suggestions
+
+   The list the combobox puts under a field. It replaces the browser's own
+   datalist dropdown, which cannot be taught to match Greek without its
+   accents, so it has to look like something you would type into. */
+.suggest {
+  position: relative;
+}
+
+.suggest__list {
+  position: absolute;
+  z-index: 20;
+  inset-inline: 0;
+  top: 100%;
+  margin: 2px 0 0;
+  padding: 0;
+  list-style: none;
+  background: var(--surface);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--r-control);
+  box-shadow: 0 6px 16px rgb(0 0 0 / 12%);
+  /* About eight rows, then scroll — a long class list should not cover the
+     rest of the form. */
+  max-height: 17rem;
+  overflow-y: auto;
+}
+
+.suggest__option {
+  padding: var(--s-2) var(--s-3);
+  cursor: pointer;
+}
+
+.suggest__option.is-active,
+.suggest__option:hover {
+  background: var(--blue);
+  color: #fff;
+}

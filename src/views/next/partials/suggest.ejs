@@ -16,7 +16,9 @@
   Accepts options as plain strings, or as { value, extra } where extra is a
   second thing to fill in once the option is chosen (a reader's class).
 -%>
-<datalist id="<%= id %>">
+<datalist id="<%= id %>"
+          data-suggest-none="<%= t('suggest.none') %>"
+          data-suggest-count="<%= t('suggest.count', { n: '{n}' }) %>">
   <% options.forEach(function (option) { -%>
     <% const value = typeof option === 'string' ? option : option.value; -%>
     <% const extra = typeof option === 'string' ? '' : (option.extra || ''); -%>
