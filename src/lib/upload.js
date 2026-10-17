@@ -63,15 +63,42 @@ export function sniffImageType(buffer) {
 }
 
 /**
+ * Read a crop rectangle out of submitted form fields.
+ *
+ * The four values are written by the cropper into hidden inputs, so they are
+ * untrusted like anything else off a form. Anything that is not four usable
+ * numbers reads as "no crop asked for" rather than as an error — see
+ * storeCoverImage for why that is the right answer here.
+ *
+ * @returns {{ x: number, y: number, width: number, height: number } | null}
+ */
+export function parseCropFields(body) {
+  const read = (name) => Number(body?.[name]);
+  const [x, y, width, height] = ['crop_x', 'crop_y', 'crop_w', 'crop_h'].map(read);
+
+  if (![x, y, width, height].every(Number.isFinite)) return null;
+  if (x < 0 || y < 0 || width <= 0 || height <= 0) return null;
+
+  return {
+    x: Math.floor(x),
+    y: Math.floor(y),
+    width: Math.floor(width),
+    height: Math.floor(height),
+  };
+}
+
+/**
  * Validate and store a cover image, writing a display copy and a thumbnail.
  *
  * @param {Buffer} buffer Raw uploaded bytes.
  * @param {object} options
  * @param {string} options.uploadDir Base upload directory (covers/ is created inside).
  * @param {number} options.maxBytes
+ * @param {{ x: number, y: number, width: number, height: number }} [options.crop]
+ *   Rectangle in source pixels to keep. Omit to store the whole image.
  * @returns {Promise<{ ok: true, coverPath: string, thumbPath: string } | { ok: false, reason: string }>}
  */
-export async function storeCoverImage(buffer, { uploadDir, maxBytes }) {
+export async function storeCoverImage(buffer, { uploadDir, maxBytes, crop }) {
   if (!Buffer.isBuffer(buffer) || buffer.length === 0) {
     return { ok: false, reason: 'empty' };
   }
@@ -96,6 +123,20 @@ export async function storeCoverImage(buffer, { uploadDir, maxBytes }) {
 
   if (image.width * image.height > MAX_PIXELS) {
     return { ok: false, reason: 'too_many_pixels' };
+  }
+
+  // Keep only the framed rectangle, if one was asked for. A rectangle that
+  // overhangs the image is trimmed to it, and one that misses the image
+  // entirely is dropped: these coordinates come from a hidden field, and a
+  // stale or mangled one should not stand between a librarian and a cover.
+  // The whole image is always a defensible thing to store; an error here is
+  // not.
+  if (crop) {
+    const left = Math.min(crop.x, image.width);
+    const top = Math.min(crop.y, image.height);
+    const w = Math.min(crop.width, image.width - left);
+    const h = Math.min(crop.height, image.height - top);
+    if (w >= 1 && h >= 1) image.crop({ x: left, y: top, w, h });
   }
 
   const coversDir = path.join(uploadDir, 'covers');
