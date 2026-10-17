@@ -10,7 +10,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { after, before, beforeEach, describe, it } from 'node:test';
 import { createBook, setBookCover } from '../src/db/queries/books.js';
-import { pruneCovers } from '../scripts/prune-covers.js';
+import { parseArgs, pruneCovers } from '../scripts/prune-covers.js';
 import { cleanupDir, makeTestDb, testConfig } from './helpers.js';
 
 let db; let dir; let uploadDir; let coversDir;
@@ -95,5 +95,27 @@ describe('pruning covers no book refers to', () => {
     fs.rmSync(coversDir, { recursive: true, force: true });
     const result = pruneCovers(db, { uploadDir, olderThanHours: 24 });
     assert.deepEqual(result, { removed: [], kept: 0 });
+  });
+});
+
+describe('reading the command line', () => {
+  it('treats npm swallowing --dry-run as a dry run', () => {
+    // `npm run prune-covers --dry-run` never reaches the script: npm eats the
+    // flag and sets npm_config_dry_run instead. Without this the command that
+    // looks safest is the one that deletes.
+    assert.equal(parseArgs([], { npm_config_dry_run: 'true' }).dryRun, true);
+  });
+
+  it('still reads the flag when it is passed through', () => {
+    assert.equal(parseArgs(['--dry-run'], {}).dryRun, true);
+  });
+
+  it('deletes when nothing asked for a dry run', () => {
+    assert.equal(parseArgs([], {}).dryRun, false);
+  });
+
+  it('reads an hours threshold', () => {
+    assert.equal(parseArgs(['--hours', '72'], {}).hours, 72);
+    assert.equal(parseArgs([], {}).hours, 24);
   });
 });

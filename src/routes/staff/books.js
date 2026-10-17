@@ -3,6 +3,8 @@
 // Every handler re-validates on the server. Every mutation is a POST guarded
 // by a CSRF token, ends in a redirect with a flash message (so a refresh does
 // not repeat it), and is written to the audit log.
+import fs from 'node:fs';
+import path from 'node:path';
 import { logAction } from '../../db/queries/audit.js';
 import {
   archiveBook,
@@ -36,6 +38,41 @@ export default async function staffBookRoutes(app) {
   const csrf = { preHandler: app.csrfProtection };
 
   /**
+   * The cover waiting out a rejected form, if it is genuinely available.
+   *
+   * `pendingCoverFrom` only checks the name is shaped like one this app
+   * writes. That is not enough on its own: the names are served publicly at
+   * /covers/ and come back off a form, so a request could name a file some
+   * other title is already using. Two rows would then point at one pair of
+   * files, and removing the cover from either would unlink files the other
+   * still names — quietly breaking a cover nobody touched.
+   *
+   * So a name is only honoured when no *other* title refers to it and the
+   * files are still on disk. The second check matters because prune-covers
+   * sweeps orphans older than a day: a form left open longer than that would
+   * otherwise save a title pointing at nothing.
+   */
+  function claimPending(body, book) {
+    const pending = pendingCoverFrom(body);
+    if (!pending) return null;
+
+    const ownedByAnother = db.get(
+      `SELECT id FROM book
+        WHERE (cover_path IN (?, ?) OR cover_thumb_path IN (?, ?))
+          AND id <> ?`,
+      pending.coverPath, pending.thumbPath,
+      pending.coverPath, pending.thumbPath,
+      book?.id ?? -1,
+    );
+    if (ownedByAnother) return null;
+
+    const coversDir = path.join(app.config.uploadDir, 'covers');
+    const bothPresent = [pending.coverPath, pending.thumbPath]
+      .every((name) => fs.existsSync(path.join(coversDir, name)));
+    return bothPresent ? pending : null;
+  }
+
+  /**
    * Store the cover that came with a submitted form, if one did.
    *
    * Shared by all three ways a cover arrives — creating a title, editing one,
@@ -54,7 +91,7 @@ export default async function staffBookRoutes(app) {
       // Nothing new chosen — but a cover may have been stored already while
       // the form was being corrected, in which case adopting it is the whole
       // point of having kept it.
-      const pending = pendingCoverFrom(request.body);
+      const pending = claimPending(request.body, book);
       if (!pending) return { ok: false, reason: 'empty' };
       return adopt(request, book, pending);
     }
@@ -66,12 +103,17 @@ export default async function staffBookRoutes(app) {
     });
     if (!stored.ok) {
       if (stored.error) request.log.error({ err: stored.error }, 'cover upload failed');
+      // The new file is unusable, but a cover kept from an earlier rejection
+      // is still good — saving the title with no cover at all would throw
+      // away work for a mistake that was only about the replacement.
+      const kept = claimPending(request.body, book);
+      if (kept) await adopt(request, book, kept);
       return stored;
     }
 
     // A new file beats anything kept from a rejected attempt, and the kept
     // one goes with it rather than lingering on disk.
-    const superseded = pendingCoverFrom(request.body);
+    const superseded = claimPending(request.body, book);
     if (superseded) {
       await removeCoverFiles(app.config.uploadDir, superseded.coverPath, superseded.thumbPath);
     }
@@ -403,7 +445,7 @@ export default async function staffBookRoutes(app) {
    * the worse trade.
    */
   async function rerenderForm(reply, { book, body, errors, duplicate, request }) {
-    let pending = pendingCoverFrom(body);
+    let pending = claimPending(body, book);
 
     const uploaded = body?.cover;
     if (Buffer.isBuffer(uploaded) && uploaded.length > 0) {

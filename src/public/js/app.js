@@ -62,6 +62,22 @@ function enableRepeatableFields() {
       if (!last) return;
 
       const clone = last.cloneNode(true);
+
+      // A row that has already been upgraded brings the combobox markup with
+      // it — the listbox, the live region, the ARIA wiring — but no
+      // listeners, and a second element with the same id. Undo all of it and
+      // upgrade the clone properly once it is in the document.
+      for (const wrapper of clone.querySelectorAll('.suggest')) {
+        const field = wrapper.querySelector('input');
+        if (!field) continue;
+        for (const attribute of [
+          'role', 'aria-autocomplete', 'aria-expanded', 'aria-controls', 'aria-activedescendant',
+        ]) {
+          field.removeAttribute(attribute);
+        }
+        wrapper.replaceWith(field);
+      }
+
       for (const input of clone.querySelectorAll('input')) {
         input.value = '';
         input.removeAttribute('id');
@@ -72,6 +88,7 @@ function enableRepeatableFields() {
       for (const error of clone.querySelectorAll('.field__error')) error.remove();
 
       list.append(clone);
+      for (const field of clone.querySelectorAll('[data-suggest]')) upgradeSuggestField(field);
       clone.querySelector('input')?.focus();
     });
   }
@@ -231,15 +248,41 @@ function foldGreek(value) {
  */
 function enableSuggestions() {
   for (const input of document.querySelectorAll('[data-suggest]')) {
-    const source = document.getElementById(input.getAttribute('list'));
-    if (!source) continue;
+    upgradeSuggestField(input);
+  }
+}
+
+/**
+ * Turn one field into a combobox over its datalist.
+ *
+ * Separate from the loop so a row added by the Add author button can be
+ * upgraded too — cloning a row copies the markup this builds but none of its
+ * listeners, which left the new field looking like a combobox and behaving
+ * like nothing at all.
+ */
+let suggestCount = 0;
+
+function upgradeSuggestField(input) {
+  {
+    // The list id survives in a data attribute: the `list` attribute itself
+    // is removed below, and a cloned row needs to find its options again.
+    const listId = input.getAttribute('list') || input.dataset.suggestList || '';
+    const source = document.getElementById(listId);
+    if (!source) return;
+    input.dataset.suggestList = listId;
 
     const entries = [...source.options].map((option) => ({
       value: option.value,
       fold: option.dataset.fold || '',
       extra: option.dataset.extra || '',
     }));
-    if (entries.length === 0) continue;
+    if (entries.length === 0) return;
+
+    // Only now that the replacement is certain: without this the browser's
+    // own datalist popup opens on top of ours — two dropdowns, different
+    // keyboard behaviour, and the native one matching only text spelled
+    // exactly. A field we bailed out on above keeps it and still suggests.
+    input.removeAttribute('list');
 
     // The field the chosen option also fills in -- a reader's class.
     const fills = input.dataset.suggestFills
@@ -253,7 +296,8 @@ function enableSuggestions() {
 
     const list = document.createElement('ul');
     list.className = 'suggest__list';
-    list.id = `${input.id || input.name}-suggest-list`;
+    suggestCount += 1;
+    list.id = `suggest-list-${suggestCount}`;
     list.setAttribute('role', 'listbox');
     list.hidden = true;
     wrap.append(list);

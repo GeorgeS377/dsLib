@@ -323,3 +323,130 @@ describe('a cover kept across a rejected form', () => {
     }
   });
 });
+
+describe('a pending cover cannot be used to reach another book\'s files', () => {
+  // The filenames come back off a form, so "is it shaped like one of ours"
+  // is not enough: it has to be a file that is waiting, not one a title is
+  // already using. Without that, passing a victim's filename made two rows
+  // name the same files, and deleting the cover from the second one unlinked
+  // the first one's cover while its row still pointed at it.
+  const seededIsbn = '9780141439518';
+
+  async function bookWithCover(title) {
+    await postMultipart('/staff/books', {
+      fields: { title },
+      file: { filename: 'c.jpg', contentType: 'image/jpeg', buffer: await jpeg() },
+      tokenFrom: '/staff/books/new',
+    });
+    return getBookById(db, bookNamed(normalizeish(title)).id);
+  }
+  const normalizeish = (t) => t.toLowerCase();
+
+  it('refuses a filename another title already owns', async () => {
+    const victim = await bookWithCover('Θύμα Εξωφύλλου');
+    assert.ok(victim.cover_path, 'the victim has no cover to steal');
+
+    const response = await postMultipart('/staff/books', {
+      fields: {
+        title: 'Κλέφτης Εξωφύλλου',
+        pending_cover: victim.cover_path,
+        pending_thumb: victim.cover_thumb_path,
+      },
+      tokenFrom: '/staff/books/new',
+    });
+    assert.equal(response.statusCode, 302);
+
+    const thief = getBookById(db, bookNamed('κλεφτησ').id);
+    assert.equal(thief.cover_path, null, 'one title adopted another title\'s cover');
+    assert.equal(
+      getBookById(db, victim.id).cover_path, victim.cover_path,
+      'the victim lost its cover',
+    );
+    assert.ok(
+      fs.existsSync(path.join(uploadDir, 'covers', victim.cover_path)),
+      'the victim\'s file was unlinked',
+    );
+  });
+
+  it('refuses it on the edit route too', async () => {
+    const victim = await bookWithCover('Δεύτερο Θύμα');
+    const other = await bookWithCover('Άλλος Τίτλος');
+
+    const response = await postMultipart(`/staff/books/${other.id}`, {
+      fields: {
+        title: 'Άλλος Τίτλος',
+        pending_cover: victim.cover_path,
+        pending_thumb: victim.cover_thumb_path,
+      },
+      tokenFrom: `/staff/books/${other.id}`,
+    });
+    assert.equal(response.statusCode, 302);
+    assert.equal(
+      getBookById(db, other.id).cover_path, other.cover_path,
+      'the edit route adopted another title\'s cover',
+    );
+    assert.ok(fs.existsSync(path.join(uploadDir, 'covers', victim.cover_path)));
+  });
+
+  it('still lets a title keep its own cover through a rejected edit', async () => {
+    // The guard must not refuse a book re-adopting what it already has.
+    const book = await bookWithCover('Δικό Του Εξώφυλλο');
+    const response = await postMultipart(`/staff/books/${book.id}`, {
+      fields: {
+        title: 'Δικό Του Εξώφυλλο',
+        pending_cover: book.cover_path,
+        pending_thumb: book.cover_thumb_path,
+      },
+      tokenFrom: `/staff/books/${book.id}`,
+    });
+    assert.equal(response.statusCode, 302);
+    assert.equal(getBookById(db, book.id).cover_path, book.cover_path, 'it lost its own cover');
+    assert.ok(fs.existsSync(path.join(uploadDir, 'covers', book.cover_path)));
+  });
+
+  it('ignores a pending cover whose files have been swept away', async () => {
+    // The sweep deletes orphans older than a day. A form left open longer
+    // than that would otherwise save a title pointing at nothing.
+    const first = await postMultipart('/staff/books', {
+      fields: { isbn: seededIsbn, title: 'Σκουπισμένο Εκκρεμές' },
+      file: { filename: 'c.jpg', contentType: 'image/jpeg', buffer: await jpeg() },
+      tokenFrom: '/staff/books/new',
+    });
+    const cover = first.body.match(/name="pending_cover" value="([^"]+)"/)[1];
+    const thumb = first.body.match(/name="pending_thumb" value="([^"]+)"/)[1];
+    fs.rmSync(path.join(uploadDir, 'covers', cover));
+    fs.rmSync(path.join(uploadDir, 'covers', thumb));
+
+    const second = await postMultipart('/staff/books', {
+      fields: { title: 'Σκουπισμένο Εκκρεμές', pending_cover: cover, pending_thumb: thumb },
+      tokenFrom: '/staff/books/new',
+    });
+    assert.equal(second.statusCode, 302);
+    assert.equal(
+      getBookById(db, bookNamed('σκουπισμενο').id).cover_path, null,
+      'the title was saved pointing at a file that is gone',
+    );
+  });
+
+  it('keeps the good kept cover when a newly chosen file is unusable', async () => {
+    const first = await postMultipart('/staff/books', {
+      fields: { isbn: seededIsbn, title: 'Καλό Κρατημένο' },
+      file: { filename: 'c.jpg', contentType: 'image/jpeg', buffer: await jpeg() },
+      tokenFrom: '/staff/books/new',
+    });
+    const cover = first.body.match(/name="pending_cover" value="([^"]+)"/)[1];
+    const thumb = first.body.match(/name="pending_thumb" value="([^"]+)"/)[1];
+
+    const second = await postMultipart('/staff/books', {
+      fields: { title: 'Καλό Κρατημένο', pending_cover: cover, pending_thumb: thumb },
+      // A PDF renamed .jpg — the good framed cover should not go with it.
+      file: { filename: 'bad.jpg', contentType: 'image/jpeg', buffer: Buffer.from('%PDF-1.4 not an image') },
+      tokenFrom: '/staff/books/new',
+    });
+    assert.equal(second.statusCode, 302);
+    assert.equal(
+      getBookById(db, bookNamed('καλο κρατημενο').id).cover_path, cover,
+      'the good kept cover was discarded along with the bad new file',
+    );
+  });
+});

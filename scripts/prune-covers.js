@@ -79,8 +79,20 @@ export function pruneCovers(db, { uploadDir, olderThanHours = 24, dryRun = false
   return { removed, kept };
 }
 
-function parseArgs(argv) {
-  const args = { dryRun: false, hours: 24 };
+/**
+ * Read the options, from the command line and from npm.
+ *
+ * `npm run prune-covers --dry-run` does not pass the flag along — npm claims
+ * it and sets npm_config_dry_run instead — so the script would see no flag
+ * and delete for real. That is the wrong way round for a footgun: the
+ * spelling that looks safest must not be the destructive one. Both forms are
+ * honoured, and `-- --dry-run` still works.
+ */
+export function parseArgs(argv, env = process.env) {
+  const args = {
+    dryRun: env.npm_config_dry_run === 'true' || env.npm_config_dry_run === '',
+    hours: 24,
+  };
   for (let i = 0; i < argv.length; i += 1) {
     if (argv[i] === '--dry-run') args.dryRun = true;
     if (argv[i] === '--hours') args.hours = Number(argv[i + 1]) || args.hours;
