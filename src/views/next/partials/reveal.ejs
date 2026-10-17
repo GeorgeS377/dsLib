@@ -1,0 +1,18 @@
+<%#
+  The show/hide control for a password field.
+
+  Rendered hidden and un-hidden by app.js, the same way the "add author"
+  button works: without scripting there is nothing to toggle, so offering the
+  button would be offering something that does not work.
+
+  Include it immediately after an <input type="password" data-reveal>.
+-%>
+<button class="btn btn--ghost btn--small reveal__toggle" type="button"
+        data-reveal-toggle
+        aria-label="<%= t('password.reveal') %>"
+        data-label-show="<%= t('password.reveal') %>"
+        data-label-hide="<%= t('password.hide') %>"
+        hidden>
+  <span data-reveal-icon-show><%- include('../../partials/icon', { name: 'eye', size: 17 }) %></span>
+  <span data-reveal-icon-hide hidden><%- include('../../partials/icon', { name: 'eye-off', size: 17 }) %></span>
+</button>

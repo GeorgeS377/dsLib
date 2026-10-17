@@ -325,6 +325,9 @@ export const staffUserFormSchema = z.object({
   email: z.union([z.literal(''), z.string().trim().email().max(200)]).optional(),
   role: z.enum(['admin', 'librarian']),
   password: z.string().min(1).max(1024).optional(),
+  // Asked for twice when a password is being set, because the person typing
+  // it cannot see it and will not be the one using it.
+  password_confirm: z.string().max(1024).optional(),
   is_active: checkbox,
 });
 

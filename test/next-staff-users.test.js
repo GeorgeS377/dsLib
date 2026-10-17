@@ -120,3 +120,50 @@ describe('deleting a staff account from the second interface', () => {
     assert.equal(page.headers.location, '/staff/users');
   });
 });
+
+describe('setting a password', () => {
+  it('asks for it twice when creating an account', async () => {
+    const body = (await get('/staff/users')).body;
+    assert.match(body, /name="password_confirm"/, 'no confirmation field');
+  });
+
+  it('refuses to create the account when the two do not match', async () => {
+    const before = listStaff(db).length;
+    const response = await post('/staff/users', {
+      username: 'mismatch',
+      display_name: 'Λάθος Επιβεβαίωση',
+      role: 'librarian',
+      password: 'a-good-enough-password',
+      password_confirm: 'a-different-password',
+    });
+    assert.equal(response.statusCode, 422);
+    assert.match(response.body, /password_mismatch|δεν ταιριάζ|do not match/i,
+      'nothing told the admin why it was refused');
+    assert.equal(listStaff(db).length, before, 'the account was created anyway');
+  });
+
+  it('creates it when they match', async () => {
+    const response = await post('/staff/users', {
+      username: 'matched',
+      display_name: 'Σωστή Επιβεβαίωση',
+      role: 'librarian',
+      password: 'a-good-enough-password',
+      password_confirm: 'a-good-enough-password',
+    });
+    assert.equal(response.statusCode, 302);
+    assert.ok(listStaff(db).some((u) => u.username === 'matched'), 'the account was not created');
+  });
+
+  it('offers to reveal what was typed, on every password field', async () => {
+    // Typing a password you cannot see, twice, into a field that must match
+    // is the situation the control exists for.
+    for (const url of ['/staff/users', '/staff/account']) {
+      const body = (await get(url)).body;
+      const fields = body.match(/<input[^>]*type="password"[^>]*>/g) ?? [];
+      assert.ok(fields.length > 0, `${url} has no password field`);
+      for (const field of fields) {
+        assert.match(field, /data-reveal/, `${url}: a password field with no reveal: ${field}`);
+      }
+    }
+  });
+});

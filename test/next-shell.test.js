@@ -226,3 +226,35 @@ describe('the second interface shell', () => {
     assert.ok(dark.body.includes('data-theme="dark"'));
   });
 });
+
+describe('the sign-in page', () => {
+  it('offers to reveal the password', async () => {
+    // Mistyping a password you cannot see is the commonest reason a sign-in
+    // fails, and this is the one page where it costs a lockout.
+    const page = await app.inject({
+      method: 'GET', url: '/staff/login', headers: { cookie: 'ui=next' },
+    });
+    assert.equal(page.statusCode, 200);
+    const field = page.body.match(/<input[^>]*type="password"[^>]*>/)?.[0];
+    assert.ok(field, 'no password field');
+    assert.match(field, /data-reveal/, 'the password cannot be revealed');
+  });
+});
+
+describe('every layout in the second interface', () => {
+  it('loads the script its pages are enhanced by', () => {
+    // The sign-in page is rendered by a layout of its own, which had no
+    // script tag — so the show-password control shipped, was never wired up,
+    // and sat there doing nothing. The public layout had the same hole once
+    // before, which is why this is checked across all of them rather than
+    // one at a time.
+    const dir = path.join(process.cwd(), 'src', 'views', 'next', 'layouts');
+    for (const file of fs.readdirSync(dir).filter((f) => f.endsWith('.ejs'))) {
+      const source = fs.readFileSync(path.join(dir, file), 'utf8');
+      assert.ok(
+        source.includes('/assets/js/app.js'),
+        `${file} renders pages that cannot run any enhancement`,
+      );
+    }
+  });
+});

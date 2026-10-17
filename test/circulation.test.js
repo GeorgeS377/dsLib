@@ -537,6 +537,7 @@ describe('staff account administration', () => {
         display_name: 'Νίκος Β.',
         role: 'librarian',
         password: 'a-reasonable-first-password',
+        password_confirm: 'a-reasonable-first-password',
       },
       { tokenFrom: '/staff/users' },
     );
@@ -566,6 +567,7 @@ describe('staff account administration', () => {
         display_name: 'Μαρία',
         role: 'librarian',
         password: 'a-reasonable-password-here',
+        password_confirm: 'a-reasonable-password-here',
       },
       { tokenFrom: '/staff/users' },
     );
@@ -580,6 +582,7 @@ describe('staff account administration', () => {
         display_name: 'Another',
         role: 'librarian',
         password: 'a-reasonable-password-here',
+        password_confirm: 'a-reasonable-password-here',
       },
       { tokenFrom: '/staff/users' },
     );

@@ -1327,3 +1327,27 @@ tbody tr:last-child td {
   background: var(--blue);
   color: #fff;
 }
+
+/* ------------------------------------------------------- password reveal
+
+   The field and its show/hide button on one row. The button sits beside the
+   field rather than over it: overlaying needs padding on the input to keep
+   the text clear of the icon, and that padding is wrong the moment the
+   button is hidden for someone with no scripting. */
+.reveal {
+  display: flex;
+  align-items: stretch;
+  gap: var(--s-2);
+}
+
+.reveal > input {
+  flex: 1;
+  min-width: 0;
+}
+
+.reveal__toggle {
+  flex: none;
+  display: inline-grid;
+  place-items: center;
+  padding-inline: var(--s-3);
+}

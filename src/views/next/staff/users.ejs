@@ -74,8 +74,23 @@
           <label class="field__label" for="password"><%= t('login.password') %></label>
           <span class="field__hint"><%= t('staff.account.passwordHint', { min: minPasswordLength }) %></span>
           <input type="password" id="password" name="password" required autocomplete="new-password"
+                 data-reveal
                  <%- errors.password ? 'aria-invalid="true"' : '' %>>
+          <%- include('../partials/reveal') %>
           <%- include('../partials/field-error', { hasT: hasT, code: errors.password, t: t }) %>
+        </div>
+
+        <div>
+          <%# Twice, because whoever types it cannot see it and is not the
+              person who will have to use it. -%>
+          <label class="field__label" for="password_confirm">
+            <%= t('staff.account.confirmPassword') %>
+          </label>
+          <input type="password" id="password_confirm" name="password_confirm" required
+                 autocomplete="new-password" data-reveal
+                 <%- errors.password_confirm ? 'aria-invalid="true"' : '' %>>
+          <%- include('../partials/reveal') %>
+          <%- include('../partials/field-error', { hasT: hasT, code: errors.password_confirm, t: t }) %>
         </div>
       <% } %>
 

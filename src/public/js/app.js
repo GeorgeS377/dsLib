@@ -577,6 +577,53 @@ function enableCoverCropper() {
   }
 }
 
+/**
+ * Let someone see the password they are typing.
+ *
+ * Mistyping something you cannot see is the commonest reason a sign-in
+ * fails, and here it costs a lockout after five tries. On the account forms
+ * it is worse: the password has to be typed twice and matched, by somebody
+ * who will not be the one using it.
+ *
+ * The control ships hidden and is un-hidden here, because with no scripting
+ * there is nothing to toggle and a button that does nothing is worse than no
+ * button. The field goes back to type="password" on submit, so a revealed
+ * password is never what the browser offers to remember.
+ */
+function enablePasswordReveal() {
+  for (const input of document.querySelectorAll('input[data-reveal]')) {
+    const toggle = input.parentNode?.querySelector('[data-reveal-toggle]');
+    if (!toggle) continue;
+
+    const wrap = document.createElement('div');
+    wrap.className = 'reveal';
+    input.parentNode.insertBefore(wrap, input);
+    wrap.append(input, toggle);
+    toggle.hidden = false;
+
+    const showIcon = toggle.querySelector('[data-reveal-icon-show]');
+    const hideIcon = toggle.querySelector('[data-reveal-icon-hide]');
+
+    const setShown = (shown) => {
+      input.type = shown ? 'text' : 'password';
+      toggle.setAttribute('aria-pressed', shown ? 'true' : 'false');
+      toggle.setAttribute(
+        'aria-label',
+        shown ? toggle.dataset.labelHide : toggle.dataset.labelShow,
+      );
+      if (showIcon) showIcon.hidden = shown;
+      if (hideIcon) hideIcon.hidden = !shown;
+    };
+
+    setShown(false);
+    toggle.addEventListener('click', () => setShown(input.type === 'password'));
+
+    // Never submit with the password on screen: the field would be a text
+    // input, which some browsers treat differently when offering to save it.
+    input.form?.addEventListener('submit', () => setShown(false));
+  }
+}
+
 document.addEventListener('DOMContentLoaded', () => {
   enableAutoSubmit();
   enableConfirmations();
@@ -585,4 +632,5 @@ document.addEventListener('DOMContentLoaded', () => {
   enableLiveResults();
   enableSuggestions();
   enableCoverCropper();
+  enablePasswordReveal();
 });

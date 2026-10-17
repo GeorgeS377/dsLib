@@ -108,10 +108,34 @@ describe('password policy', () => {
   });
 
   it('counts Greek characters correctly toward the minimum length', () => {
-    // 12 Greek characters, some accented — must count as 12, not as bytes.
+    // Greek characters, some accented — must count as characters, not bytes.
     assert.equal(checkPasswordStrength('αβγδεζηθικλμ').ok, true);
     assert.equal(checkPasswordStrength('άέήίόύώαβγδε').ok, true);
     assert.equal(checkPasswordStrength('αβγδε').ok, false);
+  });
+
+  it('asks for eight characters, and says so consistently', () => {
+    assert.equal(MIN_PASSWORD_LENGTH, 8);
+    assert.equal(checkPasswordStrength('x'.repeat(MIN_PASSWORD_LENGTH - 1)).ok, false);
+    // The check and the number the interface advertises must not drift apart;
+    // they were two separate literals before.
+    assert.equal(checkPasswordStrength('x'.repeat(MIN_PASSWORD_LENGTH)).ok, true);
+    assert.equal(checkPasswordStrength('αβγδεζηθ').ok, true);
+  });
+
+  it('still refuses the obvious short choices the shorter minimum lets in', () => {
+    // At twelve characters none of these could reach the blocklist at all —
+    // the length check caught them first. At eight they can, so the list has
+    // to cover them or lowering the minimum would quietly allow "password".
+    for (const obvious of [
+      'password', 'Password', '12345678', '123456789', 'qwertyui', 'qwerty123',
+      'abc12345', 'iloveyou', 'bibliothiki', 'βιβλιοθηκη', 'sxoleio1', 'admin123',
+    ]) {
+      assert.equal(
+        checkPasswordStrength(obvious).reason, 'too_common',
+        `"${obvious}" was accepted`,
+      );
+    }
   });
 
   it('rejects the most obvious choices, whatever the casing', () => {

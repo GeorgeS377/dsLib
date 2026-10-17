@@ -31,7 +31,8 @@
 
     <div>
       <label class="field__label" for="password"><%= t('login.password') %></label>
-      <input type="password" id="password" name="password" required autocomplete="current-password">
+      <input type="password" data-reveal id="password" name="password" required autocomplete="current-password">
+      <%- include('../partials/reveal') %>
     </div>
 
     <button class="btn full" type="submit" ><%= t('login.submit') %></button>

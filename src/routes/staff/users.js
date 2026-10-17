@@ -126,6 +126,11 @@ export default async function staffUserRoutes(app) {
       if (!strength.ok) {
         return rerenderUsers(reply, request.body, { password: strength.reason }, null);
       }
+      // Checked after the policy, so a password that fails both is reported
+      // as weak rather than as mistyped — the more useful of the two.
+      if (password !== (parsed.data.password_confirm ?? '')) {
+        return rerenderUsers(reply, request.body, { password_confirm: 'mismatch' }, null);
+      }
 
       const result = await createStaffUser(db, {
         username: parsed.data.username,
@@ -198,9 +203,16 @@ export default async function staffUserRoutes(app) {
       if (!user) return reply.callNotFound();
 
       const password = typeof request.body?.password === 'string' ? request.body.password : '';
+      const confirm = typeof request.body?.password_confirm === 'string'
+        ? request.body.password_confirm
+        : '';
       const strength = checkPasswordStrength(password);
       if (!strength.ok) {
         addFlash(request, 'error', `staff.users.error.password_${strength.reason}`);
+        return reply.redirect(`/staff/users/${user.id}`, 302);
+      }
+      if (password !== confirm) {
+        addFlash(request, 'error', 'staff.users.error.password_mismatch');
         return reply.redirect(`/staff/users/${user.id}`, 302);
       }
 

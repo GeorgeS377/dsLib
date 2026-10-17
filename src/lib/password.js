@@ -154,8 +154,8 @@ function normalizePassword(password) {
  * @returns {{ ok: true } | { ok: false, reason: 'too_short' | 'too_long' | 'too_common' }}
  */
 export function checkPasswordStrength(password) {
-  if (typeof password !== 'string' || password.normalize('NFC').length < 12) {
-    return { ok: false, reason: 'too_short', minLength: 12 };
+  if (typeof password !== 'string' || password.normalize('NFC').length < MIN_PASSWORD_LENGTH) {
+    return { ok: false, reason: 'too_short', minLength: MIN_PASSWORD_LENGTH };
   }
   if (password.length > 1024) return { ok: false, reason: 'too_long' };
 
@@ -166,14 +166,46 @@ export function checkPasswordStrength(password) {
   return { ok: true };
 }
 
-export const MIN_PASSWORD_LENGTH = 12;
+export const MIN_PASSWORD_LENGTH = 8;
 
 // A deliberately short list: enough to stop the laziest choices at account
 // creation without pretending to be a breach corpus.
 //
-// Every entry is at least MIN_PASSWORD_LENGTH characters. Anything shorter
-// would be unreachable here, because the length check above rejects it first.
+// The short entries matter more than the long ones. While the minimum was
+// twelve characters, "password" and "12345678" were unreachable — the length
+// check refused them first — so the list only needed long choices. At eight
+// they are reachable, and they are exactly what somebody picks when told
+// "at least eight characters".
 const COMMON_PASSWORDS = [
+  // Eight to eleven characters: only blockable since the minimum came down.
+  'password',
+  'password1',
+  'password123',
+  'passw0rd',
+  '12345678',
+  '123456789',
+  '1234567890',
+  'qwertyui',
+  'qwerty123',
+  'qwerty1234',
+  'abc12345',
+  'abcd1234',
+  'iloveyou',
+  'welcome1',
+  'welcome123',
+  'letmein1',
+  'admin123',
+  'admin1234',
+  'administrator1',
+  'library1',
+  'library123',
+  'librarian',
+  'bibliothiki',
+  'sxoleio1',
+  'sxoleio123',
+  'βιβλιοθηκη',
+  'σχολειο12',
+  'κωδικος1',
   'password1234',
   'passwordpassword',
   '123456789012',
