@@ -1,0 +1,25 @@
+<%#
+  A suggestion list, with each option's folded form attached.
+
+  Renders only the <datalist>, not the field, because the author row repeats:
+  several inputs share one list, and the inputs themselves differ too much
+  between pages (labels, maxlength, validation state) to be worth centralising.
+  A field opts in by carrying list="<id>" and data-suggest.
+
+  The native <datalist> is deliberate and stays. With no scripting it is what a
+  librarian gets — matching only on the literal accented text, but working.
+
+  data-fold is the same folding the catalogue search uses, computed by the
+  server so the browser never has to fold the option text itself. The browser
+  folds only what is typed. See src/lib/normalize.js.
+
+  Accepts options as plain strings, or as { value, extra } where extra is a
+  second thing to fill in once the option is chosen (a reader's class).
+-%>
+<datalist id="<%= id %>">
+  <% options.forEach(function (option) { -%>
+    <% const value = typeof option === 'string' ? option : option.value; -%>
+    <% const extra = typeof option === 'string' ? '' : (option.extra || ''); -%>
+    <option value="<%= value %>" data-fold="<%= fold(value) %>"<% if (extra) { %> data-extra="<%= extra %>" label="<%= extra %>"<% } %>></option>
+  <% }); -%>
+</datalist>

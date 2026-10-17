@@ -198,7 +198,9 @@ describe('suggesting authors already in the catalogue', () => {
     // option rather than being split into two.
     createBook(db, { title: 'Με Κόμμα', authorNames: ['Παπαδόπουλος, Γιώργος'] });
     const page = await get('/staff/books/new');
-    const options = [...page.body.matchAll(/<option value="([^"]*)"><\/option>/g)].map((m) => m[1]);
+    // Matched without assuming what else an option carries: options gained a
+    // data-fold attribute when suggestions learned Greek.
+    const options = [...page.body.matchAll(/<option value="([^"]*)"/g)].map((m) => m[1]);
     assert.ok(
       options.includes('Παπαδόπουλος, Γιώργος'),
       `the name was split: ${options.filter((o) => o.includes('Παπαδ'))}`,

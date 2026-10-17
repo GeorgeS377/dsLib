@@ -16,6 +16,7 @@ import ejs from 'ejs';
 import Fastify from 'fastify';
 import { config as defaultConfig } from './config.js';
 import { getDatabase } from './db/index.js';
+import { normalize } from './lib/normalize.js';
 import {
   LANG_COOKIE,
   SUPPORTED_LANGS,
@@ -344,6 +345,11 @@ export async function buildApp({ config = defaultConfig, logger, db, onRoute } =
       // Lets a template ask whether a specific message exists before falling
       // back to a generic one — see views/partials/field-error.ejs.
       hasT: hasTranslation,
+      // The same folding the catalogue search uses, so a suggestion list can
+      // stamp each option with the form the browser should match against —
+      // see views/next/partials/suggest.ejs. Exposed here rather than
+      // computed in each query so there is one place it can be forgotten.
+      fold: normalize,
       lang: request.lang,
       theme: request.theme,
       uiFlavour: request.uiFlavour,

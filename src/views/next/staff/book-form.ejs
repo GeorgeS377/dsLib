@@ -71,9 +71,11 @@
             work the moment the field is focused and cost nothing when they
             are not used. One option per author: a name with a comma in it is
             one person, and splitting on the comma would invent a second. -%>
-        <datalist id="author-options">
-          <% authorOptions.forEach(function (author) { %><option value="<%= author.name %>"></option><% }); %>
-        </datalist>
+        <%- include('../partials/suggest', {
+              id: 'author-options',
+              options: authorOptions.map(function (a) { return a.name; }),
+              fold: fold,
+            }) %>
         <div data-repeatable-list class="stack">
           <% values.authors.forEach(function (name, index) { %>
             <div data-repeatable-row>
@@ -82,14 +84,14 @@
               </label>
               <input type="text" id="field-author-<%= index %>" name="authors"
                      value="<%= name %>" maxlength="200" autocomplete="off"
-                     list="author-options">
+                     list="author-options" data-suggest>
             </div>
           <% }); %>
           <%# One spare row, so an author can be added with no scripting. -%>
           <div data-repeatable-row>
             <label class="visually-hidden" for="field-author-extra"><%= t('staff.field.addAuthor') %></label>
             <input type="text" id="field-author-extra" name="authors" value=""
-                   maxlength="200" autocomplete="off" list="author-options">
+                   maxlength="200" autocomplete="off" list="author-options" data-suggest>
           </div>
         </div>
         <button class="btn btn--ghost btn--small" type="button" data-repeatable-add hidden>
@@ -140,10 +142,10 @@
         </label>
         <span class="field__hint"><%= t('staff.field.languageHint') %></span>
         <input type="text" id="field-language" name="language" value="<%= values.language %>"
-               maxlength="40" list="language-options">
-        <datalist id="language-options">
-          <% languages.forEach(function (code) { %><option value="<%= code %>"></option><% }); %>
-        </datalist>
+               maxlength="40" list="language-options" data-suggest>
+        <%- include('../partials/suggest', {
+              id: 'language-options', options: languages, fold: fold,
+            }) %>
       </div>
 
       <fieldset id="field-categories">

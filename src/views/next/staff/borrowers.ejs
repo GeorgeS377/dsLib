@@ -87,12 +87,8 @@
           <span class="field__optional"><%= t('common.optional') %></span>
         </label>
         <input type="text" id="school_class" name="school_class" value="<%= values.school_class %>"
-               maxlength="60" list="class-options" autocomplete="off">
-        <datalist id="class-options">
-          <% classes.forEach(function (name) { %>
-            <option value="<%= name %>"></option>
-          <% }); %>
-        </datalist>
+               maxlength="60" list="class-options" data-suggest autocomplete="off">
+        <%- include('../partials/suggest', { id: 'class-options', options: classes, fold: fold }) %>
       </div>
 
       <button class="btn" type="submit"><%= t('staff.borrowers.add') %></button>
