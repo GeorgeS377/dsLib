@@ -56,7 +56,10 @@ const el = {
   'pagination.previous': 'Προηγούμενη',
   'pagination.next': 'Επόμενη',
   'pagination.page': 'Σελίδα {current} από {total}',
-  'pagination.results': '{count} αποτελέσματα',
+  'pagination.results': {
+    one: '{count} αποτέλεσμα',
+    other: '{count} αποτελέσματα',
+  },
   'pagination.resultsOne': '1 αποτέλεσμα',
 
   // --- Error pages ---
@@ -83,8 +86,14 @@ const el = {
     'Μόλις το προσωπικό της βιβλιοθήκης καταχωρίσει τα πρώτα βιβλία, θα εμφανιστούν εδώ.',
   'home.announcements': 'Ανακοινώσεις',
   'home.categories': 'Κατηγορίες',
-  'home.stats.titles': '{count} τίτλοι στον κατάλογο',
-  'home.stats.available': '{count} διαθέσιμα αντίτυπα',
+  'home.stats.titles': {
+    one: '{count} τίτλος στον κατάλογο',
+    other: '{count} τίτλοι στον κατάλογο',
+  },
+  'home.stats.available': {
+    one: '{count} διαθέσιμο αντίτυπο',
+    other: '{count} διαθέσιμα αντίτυπα',
+  },
   'home.stats.summary': '{titles} τίτλοι στον κατάλογο, {available} αντίτυπα διαθέσιμα τώρα.',
 
   // --- Search and browse ---
@@ -158,7 +167,10 @@ const el = {
   'categories.title': 'Κατηγορίες',
   'categories.lead': 'Περιηγηθείτε στον κατάλογο ανά θέμα.',
   'categories.empty': 'Δεν έχουν οριστεί κατηγορίες ακόμη.',
-  'categories.bookCount': '{count} βιβλία',
+  'categories.bookCount': {
+    one: '{count} βιβλίο',
+    other: '{count} βιβλία',
+  },
   'categories.bookCountOne': '1 βιβλίο',
   'authors.title': 'Συγγραφείς',
   'authors.lead': 'Περιηγηθείτε στον κατάλογο ανά συγγραφέα.',
@@ -227,7 +239,10 @@ const el = {
 
   // --- Dashboard ---
   'staff.dashboard.title': 'Επισκόπηση',
-  'staff.dashboard.overdueCount': '{count} βιβλία έπρεπε να έχουν γυρίσει.',
+  'staff.dashboard.overdueCount': {
+    one: '{count} βιβλίο έπρεπε να έχει γυρίσει.',
+    other: '{count} βιβλία έπρεπε να έχουν γυρίσει.',
+  },
   'staff.dashboard.overdueSee': 'Δείτε ποια',
   'staff.dashboard.quick': 'Γρήγορες ενέργειες',
   'staff.dashboard.recent': 'Πρόσφατες αλλαγές',
@@ -272,8 +287,10 @@ const el = {
   'staff.books.deleted': 'Ο τίτλος «{title}» διαγράφηκε οριστικά.',
   'staff.books.deleteTitle': 'Διαγραφή τίτλου',
   'staff.books.deleteConfirm': 'Οριστική διαγραφή του «{title}»;',
-  'staff.books.deleteWarning':
-    'Η ενέργεια αυτή δεν αναιρείται. Θα διαγραφούν και τα {count} αντίτυπα.',
+  'staff.books.deleteWarning': {
+    one: 'Η ενέργεια αυτή δεν αναιρείται. Θα διαγραφεί και το {count} αντίτυπο.',
+    other: 'Η ενέργεια αυτή δεν αναιρείται. Θα διαγραφούν και τα {count} αντίτυπα.',
+  },
   'staff.books.deleteBlocked.has_loans':
     'Ο τίτλος έχει ιστορικό δανεισμών και δεν μπορεί να διαγραφεί. Αρχειοθετήστε τον καλύτερα.',
   'staff.books.archiveAction': 'Αρχειοθέτηση',
@@ -352,11 +369,17 @@ const el = {
   'staff.copies.addManyHint':
     'Δημιουργεί αντίτυπα χωρίς barcode. Συμπληρώστε τα barcode ξεχωριστά σε κάθε αντίτυπο.',
   'staff.copies.added': 'Το αντίτυπο προστέθηκε.',
-  'staff.copies.addedMany': 'Προστέθηκαν {count} αντίτυπα.',
+  'staff.copies.addedMany': {
+    one: 'Προστέθηκε {count} αντίτυπο.',
+    other: 'Προστέθηκαν {count} αντίτυπα.',
+  },
   'staff.copies.saved': 'Το αντίτυπο αποθηκεύτηκε.',
   'staff.copies.saveAll': 'Αποθήκευση αλλαγών',
   'staff.copies.saveBeforePaging': 'Αποθηκεύστε πριν αλλάξετε σελίδα.',
-  'staff.copies.savedMany': 'Αποθηκεύτηκαν {count} αντίτυπα.',
+  'staff.copies.savedMany': {
+    one: 'Αποθηκεύτηκε {count} αντίτυπο.',
+    other: 'Αποθηκεύτηκαν {count} αντίτυπα.',
+  },
   'staff.copies.rowFailed.duplicate_barcode':
     'Το αντίτυπο «{barcode}» δεν αποθηκεύτηκε: το barcode χρησιμοποιείται ήδη.',
   'staff.copies.rowFailed.on_loan':
@@ -386,11 +409,16 @@ const el = {
   'staff.categories.add': 'Νέα κατηγορία',
   'staff.categories.created': 'Η κατηγορία «{name}» δημιουργήθηκε.',
   'staff.categories.saved': 'Η κατηγορία «{name}» αποθηκεύτηκε.',
-  'staff.categories.deleted': 'Η κατηγορία «{name}» διαγράφηκε ({count} τίτλοι αποσυνδέθηκαν).',
+  'staff.categories.deleted': {
+    one: 'Η κατηγορία «{name}» διαγράφηκε ({count} τίτλος αποσυνδέθηκε).',
+    other: 'Η κατηγορία «{name}» διαγράφηκε ({count} τίτλοι αποσυνδέθηκαν).',
+  },
   'staff.categories.deleteTitle': 'Διαγραφή κατηγορίας',
   'staff.categories.deleteConfirm': 'Διαγραφή της κατηγορίας «{name}»;',
-  'staff.categories.deleteExplain':
-    'Οι {count} τίτλοι της κατηγορίας δεν θα διαγραφούν — απλώς δεν θα ανήκουν πλέον σε αυτήν.',
+  'staff.categories.deleteExplain': {
+    one: 'Ο {count} τίτλος της κατηγορίας δεν θα διαγραφεί — απλώς δεν θα ανήκει πλέον σε αυτήν.',
+    other: 'Οι {count} τίτλοι της κατηγορίας δεν θα διαγραφούν — απλώς δεν θα ανήκουν πλέον σε αυτήν.',
+  },
   'staff.categories.empty': 'Δεν έχουν οριστεί κατηγορίες.',
   'staff.categories.slug': 'Διεύθυνση σελίδας',
   'staff.categories.slugHint': 'Παραμένει σταθερή μετά τη μετονομασία, ώστε οι σύνδεσμοι να δουλεύουν.',
@@ -398,7 +426,10 @@ const el = {
   'staff.authors.title': 'Συγγραφείς',
   'staff.authors.saved': 'Ο συγγραφέας «{name}» αποθηκεύτηκε.',
   'staff.authors.deleted': 'Ο συγγραφέας «{name}» διαγράφηκε.',
-  'staff.authors.deleteBlocked': 'Ο συγγραφέας έχει {count} τίτλους και δεν μπορεί να διαγραφεί.',
+  'staff.authors.deleteBlocked': {
+    one: 'Ο συγγραφέας έχει {count} τίτλο και δεν μπορεί να διαγραφεί.',
+    other: 'Ο συγγραφέας έχει {count} τίτλους και δεν μπορεί να διαγραφεί.',
+  },
   'staff.authors.empty': 'Δεν έχουν καταχωριστεί συγγραφείς.',
   'staff.authors.merge': 'Συγχώνευση',
   'staff.authors.mergeExplain':
@@ -418,7 +449,10 @@ const el = {
   'staff.search.emptyHint': 'Δοκιμάστε λιγότερες λέξεις ή διαφορετική ορθογραφία.',
   'staff.search.start': 'Τι ψάχνετε;',
   'staff.search.startHint': 'Γράψτε έναν τίτλο για δανεισμό, ή το όνομα ενός μαθητή για επιστροφή.',
-  'staff.search.holding': '{count} σε δανεισμό',
+  'staff.search.holding': {
+    one: '{count} σε δανεισμό',
+    other: '{count} σε δανεισμό',
+  },
   'staff.search.holdingNone': 'Κανένα βιβλίο σε δανεισμό',
   'staff.search.view': 'Δείτε',
   'staff.loans.title': 'Δανεισμοί',
@@ -454,16 +488,24 @@ const el = {
     'Καταχωρίζονται μόνο όνομα και τμήμα — τίποτα άλλο.',
   'staff.loans.recentReturns': 'Πρόσφατες επιστροφές',
   'staff.loans.checkinBySearch': 'Χωρίς barcode; Βρείτε τον μαθητή από την αναζήτηση:',
-  'staff.loans.selected': 'Επιλεγμένα αντίτυπα ({count})',
+  'staff.loans.selected': {
+    one: 'Επιλεγμένο αντίτυπο ({count})',
+    other: 'Επιλεγμένα αντίτυπα ({count})',
+  },
   'staff.loans.addCopy': 'Προσθήκη',
   'staff.loans.alreadySelected': 'Επιλεγμένο',
   'staff.loans.allSelected': 'Όλα επιλεγμένα',
   'staff.loans.availableOf': '{available} από {total} διαθέσιμα',
   'staff.loans.removeCopy': 'Αφαίρεση',
   'staff.loans.clearSelection': 'Καθαρισμός επιλογής',
-  'staff.loans.lendCount': 'Δανεισμός {count} αντιτύπων',
-  'staff.loans.checkedOutMany':
-    'Δανείστηκαν {count} αντίτυπα έως {date}. Αναγνώστης: {borrower}.',
+  'staff.loans.lendCount': {
+    one: 'Δανεισμός {count} αντιτύπου',
+    other: 'Δανεισμός {count} αντιτύπων',
+  },
+  'staff.loans.checkedOutMany': {
+    one: 'Δανείστηκε {count} αντίτυπο έως {date}. Αναγνώστης: {borrower}.',
+    other: 'Δανείστηκαν {count} αντίτυπα έως {date}. Αναγνώστης: {borrower}.',
+  },
   'staff.loans.refused.already_on_loan':
     'Το αντίτυπο «{copy}» δεν δανείστηκε: είναι ήδη σε δανεισμό.',
   'staff.loans.refused.copy_not_available':
@@ -511,8 +553,10 @@ const el = {
   'staff.borrowers.anonymizeBlocked':
     'Η ανωνυμοποίηση δεν είναι διαθέσιμη όσο ο αναγνώστης έχει βιβλία σε δανεισμό. '
     + 'Κλείστε πρώτα τους δανεισμούς.',
-  'staff.borrowers.anonymizeExplain':
-    'Το όνομα και το τμήμα αντικαθίστανται με «{placeholder}». Οι {count} δανεισμοί διατηρούνται ως ανώνυμες εγγραφές, ώστε οι αριθμοί να παραμείνουν σωστοί. Η ενέργεια δεν αναιρείται.',
+  'staff.borrowers.anonymizeExplain': {
+    one: 'Το όνομα και το τμήμα αντικαθίστανται με «{placeholder}». Ο {count} δανεισμός διατηρείται ως ανώνυμη εγγραφή, ώστε οι αριθμοί να παραμείνουν σωστοί. Η ενέργεια δεν αναιρείται.',
+    other: 'Το όνομα και το τμήμα αντικαθίστανται με «{placeholder}». Οι {count} δανεισμοί διατηρούνται ως ανώνυμες εγγραφές, ώστε οι αριθμοί να παραμείνουν σωστοί. Η ενέργεια δεν αναιρείται.',
+  },
   'staff.borrowers.anonymized': 'Η εγγραφή ανωνυμοποιήθηκε.',
   'staff.borrowers.deleteTitle': 'Διαγραφή αναγνώστη',
   'staff.borrowers.deleteConfirm': 'Διαγραφή της εγγραφής «{name}»;',
@@ -617,7 +661,10 @@ const en = {
   'pagination.previous': 'Previous',
   'pagination.next': 'Next',
   'pagination.page': 'Page {current} of {total}',
-  'pagination.results': '{count} results',
+  'pagination.results': {
+    one: '{count} result',
+    other: '{count} results',
+  },
   'pagination.resultsOne': '1 result',
 
   // --- Error pages ---
@@ -643,8 +690,14 @@ const en = {
   'home.recentEmptyHint': 'Once library staff add the first books, they will appear here.',
   'home.announcements': 'Announcements',
   'home.categories': 'Categories',
-  'home.stats.titles': '{count} titles in the catalogue',
-  'home.stats.available': '{count} copies available',
+  'home.stats.titles': {
+    one: '{count} title in the catalogue',
+    other: '{count} titles in the catalogue',
+  },
+  'home.stats.available': {
+    one: '{count} copy available',
+    other: '{count} copies available',
+  },
   'home.stats.summary': '{titles} titles in the catalogue, {available} copies on the shelf right now.',
 
   // --- Search and browse ---
@@ -718,7 +771,10 @@ const en = {
   'categories.title': 'Categories',
   'categories.lead': 'Browse the catalogue by subject.',
   'categories.empty': 'No categories have been set up yet.',
-  'categories.bookCount': '{count} books',
+  'categories.bookCount': {
+    one: '{count} book',
+    other: '{count} books',
+  },
   'categories.bookCountOne': '1 book',
   'authors.title': 'Authors',
   'authors.lead': 'Browse the catalogue by author.',
@@ -786,7 +842,10 @@ const en = {
 
   // --- Dashboard ---
   'staff.dashboard.title': 'Overview',
-  'staff.dashboard.overdueCount': '{count} books are past their date.',
+  'staff.dashboard.overdueCount': {
+    one: '{count} book is overdue.',
+    other: '{count} books are overdue.',
+  },
   'staff.dashboard.overdueSee': 'See which',
   'staff.dashboard.quick': 'Quick actions',
   'staff.dashboard.recent': 'Recent changes',
@@ -831,7 +890,10 @@ const en = {
   'staff.books.deleted': 'Title “{title}” permanently deleted.',
   'staff.books.deleteTitle': 'Delete title',
   'staff.books.deleteConfirm': 'Permanently delete “{title}”?',
-  'staff.books.deleteWarning': 'This cannot be undone. Its {count} copies will be deleted too.',
+  'staff.books.deleteWarning': {
+    one: 'This cannot be undone. Its {count} copy will be deleted too.',
+    other: 'This cannot be undone. Its {count} copies will be deleted too.',
+  },
   'staff.books.deleteBlocked.has_loans':
     'This title has loan history and cannot be deleted. Archive it instead.',
   'staff.books.archiveAction': 'Archive',
@@ -910,11 +972,17 @@ const en = {
   'staff.copies.addManyHint':
     'Creates copies with no barcode. Fill in each barcode individually afterwards.',
   'staff.copies.added': 'Copy added.',
-  'staff.copies.addedMany': '{count} copies added.',
+  'staff.copies.addedMany': {
+    one: '{count} copy added.',
+    other: '{count} copies added.',
+  },
   'staff.copies.saved': 'Copy saved.',
   'staff.copies.saveAll': 'Save changes',
   'staff.copies.saveBeforePaging': 'Save before changing page.',
-  'staff.copies.savedMany': '{count} copies saved.',
+  'staff.copies.savedMany': {
+    one: '{count} copy saved.',
+    other: '{count} copies saved.',
+  },
   'staff.copies.rowFailed.duplicate_barcode':
     'Copy “{barcode}” was not saved: that barcode is already in use.',
   'staff.copies.rowFailed.on_loan': 'Copy “{barcode}” was not saved: it is on loan.',
@@ -941,11 +1009,16 @@ const en = {
   'staff.categories.add': 'New category',
   'staff.categories.created': 'Category “{name}” created.',
   'staff.categories.saved': 'Category “{name}” saved.',
-  'staff.categories.deleted': 'Category “{name}” deleted ({count} titles detached).',
+  'staff.categories.deleted': {
+    one: 'Category “{name}” deleted ({count} title detached).',
+    other: 'Category “{name}” deleted ({count} titles detached).',
+  },
   'staff.categories.deleteTitle': 'Delete category',
   'staff.categories.deleteConfirm': 'Delete the category “{name}”?',
-  'staff.categories.deleteExplain':
-    'Its {count} titles will not be deleted — they simply stop belonging to this category.',
+  'staff.categories.deleteExplain': {
+    one: 'Its {count} title will not be deleted — it simply stops belonging to this category.',
+    other: 'Its {count} titles will not be deleted — they simply stop belonging to this category.',
+  },
   'staff.categories.empty': 'No categories have been set up.',
   'staff.categories.slug': 'URL',
   'staff.categories.slugHint': 'Stays the same after a rename, so existing links keep working.',
@@ -953,7 +1026,10 @@ const en = {
   'staff.authors.title': 'Authors',
   'staff.authors.saved': 'Author “{name}” saved.',
   'staff.authors.deleted': 'Author “{name}” deleted.',
-  'staff.authors.deleteBlocked': 'This author has {count} titles and cannot be deleted.',
+  'staff.authors.deleteBlocked': {
+    one: 'This author has {count} title and cannot be deleted.',
+    other: 'This author has {count} titles and cannot be deleted.',
+  },
   'staff.authors.empty': 'No authors have been recorded.',
   'staff.authors.merge': 'Merge',
   'staff.authors.mergeExplain':
@@ -973,7 +1049,10 @@ const en = {
   'staff.search.emptyHint': 'Try fewer words or a different spelling.',
   'staff.search.start': 'What are you looking for?',
   'staff.search.startHint': 'Type a title to lend it, or a student’s name to take a book back.',
-  'staff.search.holding': '{count} on loan',
+  'staff.search.holding': {
+    one: '{count} on loan',
+    other: '{count} on loan',
+  },
   'staff.search.holdingNone': 'No books on loan',
   'staff.search.view': 'View',
   'staff.loans.title': 'Loans',
@@ -1007,15 +1086,24 @@ const en = {
   'staff.loans.borrowerNewHint': 'Only a name and a class are recorded — nothing else.',
   'staff.loans.recentReturns': 'Recent returns',
   'staff.loans.checkinBySearch': 'No barcode? Find the student from the search:',
-  'staff.loans.selected': 'Selected copies ({count})',
+  'staff.loans.selected': {
+    one: 'Selected copy ({count})',
+    other: 'Selected copies ({count})',
+  },
   'staff.loans.addCopy': 'Add',
   'staff.loans.alreadySelected': 'Selected',
   'staff.loans.allSelected': 'All selected',
   'staff.loans.availableOf': '{available} of {total} available',
   'staff.loans.removeCopy': 'Remove',
   'staff.loans.clearSelection': 'Clear selection',
-  'staff.loans.lendCount': 'Lend {count} copies',
-  'staff.loans.checkedOutMany': '{count} copies lent to {borrower}, due {date}.',
+  'staff.loans.lendCount': {
+    one: 'Lend {count} copy',
+    other: 'Lend {count} copies',
+  },
+  'staff.loans.checkedOutMany': {
+    one: '{count} copy lent to {borrower}, due {date}.',
+    other: '{count} copies lent to {borrower}, due {date}.',
+  },
   'staff.loans.refused.already_on_loan':
     'Copy “{copy}” was not lent: it is already on loan.',
   'staff.loans.refused.copy_not_available':
@@ -1063,8 +1151,10 @@ const en = {
   'staff.borrowers.anonymizeBlocked':
     'Anonymizing is unavailable while this borrower has books on loan. '
     + 'Close the loans first.',
-  'staff.borrowers.anonymizeExplain':
-    'The name and class are replaced with “{placeholder}”. The {count} loans are kept as anonymous records so the figures stay correct. This cannot be undone.',
+  'staff.borrowers.anonymizeExplain': {
+    one: 'The name and class are replaced with “{placeholder}”. The {count} loan is kept as an anonymous record so the figures stay correct. This cannot be undone.',
+    other: 'The name and class are replaced with “{placeholder}”. The {count} loans are kept as anonymous records so the figures stay correct. This cannot be undone.',
+  },
   'staff.borrowers.anonymized': 'The record has been anonymized.',
   'staff.borrowers.deleteTitle': 'Delete borrower',
   'staff.borrowers.deleteConfirm': 'Delete the record for “{name}”?',
@@ -1139,7 +1229,20 @@ export const dictionaries = { el, en };
  */
 export function translate(lang, key, vars) {
   const dict = dictionaries[lang] ?? dictionaries.el;
-  const raw = dict[key] ?? dictionaries.el[key] ?? key;
+  const entry = dict[key] ?? dictionaries.el[key] ?? key;
+
+  // A key that counts things holds two strings rather than one. Greek and
+  // English agree on where the line falls — exactly one, against everything
+  // else, zero included — so one rule covers both. Without this the overdue
+  // banner read "1 βιβλία": a plural noun after the number one, which no
+  // Greek speaker would say.
+  //
+  // A caller that forgets to pass count gets the plural, which at least
+  // reads as a sentence.
+  const raw = typeof entry === 'object' && entry !== null
+    ? (Number(vars?.count) === 1 ? entry.one : entry.other)
+    : entry;
+
   if (!vars) return raw;
   return raw.replace(/\{(\w+)\}/g, (match, name) =>
     Object.hasOwn(vars, name) ? String(vars[name]) : match,

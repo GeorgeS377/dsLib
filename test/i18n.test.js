@@ -6,6 +6,7 @@ import { describe, it } from 'node:test';
 import {
   SUPPORTED_LANGS,
   dictionaries,
+  hasTranslation,
   langFromAcceptHeader,
   resolveLang,
   translate,
@@ -41,13 +42,23 @@ describe('i18n dictionaries', () => {
     }
   });
 
+  // A counting key holds { one, other }; everything else holds a string.
+  // Both checks below look at every form rather than skipping the pluralised
+  // keys, which would leave sixteen strings unchecked in each language.
+  const formsOf = (value) =>
+    typeof value === 'object' && value !== null
+      ? Object.entries(value).map(([form, text]) => [`.${form}`, text])
+      : [['', value]];
+
   it('has no empty translations', () => {
     for (const lang of SUPPORTED_LANGS) {
       for (const [key, value] of Object.entries(dictionaries[lang])) {
-        assert.ok(
-          typeof value === 'string' && value.trim().length > 0,
-          `${lang}.${key} is empty`,
-        );
+        for (const [suffix, text] of formsOf(value)) {
+          assert.ok(
+            typeof text === 'string' && text.trim().length > 0,
+            `${lang}.${key}${suffix} is empty`,
+          );
+        }
       }
     }
   });
@@ -57,13 +68,18 @@ describe('i18n dictionaries', () => {
     const [reference, ...others] = SUPPORTED_LANGS;
 
     for (const key of Object.keys(dictionaries[reference])) {
-      const expected = placeholders(dictionaries[reference][key]);
-      for (const lang of others) {
-        assert.deepEqual(
-          placeholders(dictionaries[lang][key] ?? ''),
-          expected,
-          `placeholder mismatch for ${key} in ${lang}`,
-        );
+      for (const [suffix, text] of formsOf(dictionaries[reference][key])) {
+        const expected = placeholders(text);
+        for (const lang of others) {
+          const counterpart = suffix
+            ? dictionaries[lang][key]?.[suffix.slice(1)]
+            : dictionaries[lang][key];
+          assert.deepEqual(
+            placeholders(counterpart ?? ''),
+            expected,
+            `placeholder mismatch for ${key}${suffix} in ${lang}`,
+          );
+        }
       }
     }
   });
@@ -129,5 +145,75 @@ describe('language resolution', () => {
   it('defaults to the configured language', () => {
     assert.equal(resolveLang({ query: {}, cookies: {}, headers: {} }, 'el').lang, 'el');
     assert.equal(resolveLang({ query: {}, cookies: {}, headers: {} }, 'en').lang, 'en');
+  });
+});
+
+describe('plural forms', () => {
+  // Greek and English both split one from everything else, so a key that
+  // counts things holds two strings rather than one. Without this the
+  // overdue banner read "1 βιβλία" — a plural noun after the number one,
+  // which no Greek speaker would say.
+  it('picks the singular when exactly one thing is counted', () => {
+    assert.equal(
+      translate('el', 'staff.dashboard.overdueCount', { count: 1 }),
+      '1 βιβλίο έπρεπε να έχει γυρίσει.',
+    );
+    assert.equal(
+      translate('en', 'staff.dashboard.overdueCount', { count: 1 }),
+      '1 book is overdue.',
+    );
+  });
+
+  it('picks the plural for none, two, and many', () => {
+    for (const count of [0, 2, 11, 100]) {
+      assert.match(
+        translate('el', 'staff.dashboard.overdueCount', { count }),
+        /βιβλία/,
+        `count ${count} did not read as plural`,
+      );
+    }
+  });
+
+  it('gives both languages both forms, for every counting key', () => {
+    // A key with one form in Greek and two in English would read correctly
+    // in one language and wrongly in the other.
+    for (const [lang, dict] of Object.entries(dictionaries)) {
+      for (const [key, value] of Object.entries(dict)) {
+        if (typeof value !== 'object' || value === null) continue;
+        assert.deepEqual(
+          Object.keys(value).sort(), ['one', 'other'],
+          `${lang}.${key} does not have exactly a singular and a plural`,
+        );
+        for (const form of ['one', 'other']) {
+          assert.equal(typeof value[form], 'string', `${lang}.${key}.${form} is not a string`);
+        }
+      }
+    }
+  });
+
+  it('keeps a counting key plural in both languages or neither', () => {
+    for (const key of Object.keys(dictionaries.el)) {
+      assert.equal(
+        typeof dictionaries.el[key] === 'object',
+        typeof dictionaries.en[key] === 'object',
+        `${key} is pluralised in one language but not the other`,
+      );
+    }
+  });
+
+  it('still substitutes the count itself', () => {
+    assert.match(translate('el', 'staff.dashboard.overdueCount', { count: 7 }), /\b7\b/);
+  });
+
+  it('falls back to the plural when nothing says how many', () => {
+    // A caller that forgets `count` should get readable text, not "[object
+    // Object]" and not a crash.
+    const text = translate('el', 'staff.dashboard.overdueCount', {});
+    assert.equal(typeof text, 'string');
+    assert.ok(!text.includes('object'), `got "${text}"`);
+  });
+
+  it('reports a plural key as existing', () => {
+    assert.equal(hasTranslation('staff.dashboard.overdueCount'), true);
   });
 });

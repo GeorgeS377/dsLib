@@ -24,7 +24,11 @@
     settings: 'M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6ZM19.4 15a1.6 1.6 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.6 1.6 0 0 0-2.7 1.1 2 2 0 1 1-4 0 1.6 1.6 0 0 0-2.7-1.1l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.6 1.6 0 0 0-1.1-2.7 2 2 0 1 1 0-4 1.6 1.6 0 0 0 1.1-2.7l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.6 1.6 0 0 0 1.8.3H8a1.6 1.6 0 0 0 1-1.5 2 2 0 1 1 4 0 1.6 1.6 0 0 0 2.7 1.1l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.6 1.6 0 0 0 1.1 2.7 2 2 0 1 1 0 4 1.6 1.6 0 0 0-1.2 1Z',
     lock: 'M7 10V7a5 5 0 0 1 10 0v3M5 10h14v10H5z',
     clock: 'M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18ZM12 7v5l3 2',
-    warning: 'M12 3 2 20h20L12 3ZM12 9v5M12 17.5h.01',
+    // Solid, unlike the rest: a warning has to register before it is read,
+    // and a thin outline in the same weight as every other icon does not.
+    // Drawn as one path with the bar and the dot punched out of the
+    // triangle, so the shape stays legible at 18px.
+    warning: 'M12 2.6a1.6 1.6 0 0 1 1.4.8l8.4 15.2a1.6 1.6 0 0 1-1.4 2.4H3.6a1.6 1.6 0 0 1-1.4-2.4L10.6 3.4a1.6 1.6 0 0 1 1.4-.8ZM11 8.8h2v6h-2zM12 16.4a1.15 1.15 0 1 0 0 2.3 1.15 1.15 0 0 0 0-2.3z',
     check: 'M4 12.5 9 17.5 20 6.5',
     archive: 'M3 4h18v4H3zM5 8v12h14V8M9.5 12h5',
     // Shelf of upright books — the cover placeholder.
@@ -51,9 +55,15 @@
   const iconLabel = typeof label === 'undefined' ? null : label;
   const extraClass = typeof iconClass === 'undefined' ? '' : ' ' + iconClass;
   const d = paths[name] || paths.book;
+  // Icons are outlines in one weight. These few are filled instead, because
+  // they stand for a state rather than a thing and have to read at a glance.
+  const solid = ['warning'].includes(name);
 -%>
 <svg class="icon<%= extraClass %>" width="<%= iconSize %>" height="<%= iconSize %>"
-     viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"
+     viewBox="0 0 24 24"
+     fill="<%= solid ? 'currentColor' : 'none' %>"
+     <% if (solid) { %>fill-rule="evenodd"<% } %>
+     stroke="<%= solid ? 'none' : 'currentColor' %>" stroke-width="1.6"
      stroke-linecap="round" stroke-linejoin="round"
      <% if (iconLabel) { %>role="img" aria-label="<%= iconLabel %>"<% } else { %>aria-hidden="true" focusable="false"<% } %>>
   <path d="<%= d %>"></path>
