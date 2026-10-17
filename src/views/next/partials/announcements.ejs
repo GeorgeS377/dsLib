@@ -10,8 +10,12 @@
     <ul class="stack list--plain mt-3">
       <% announcements.forEach(function (item) { %>
         <li class="announce__item">
-          <%- include('../../partials/icon', { name: 'tag', size: 16 }) %>
-          <div>
+          <%# The mark is centred against the notice and given a tile of its
+              own: loose beside the text at 16px it read as a stray glyph. -%>
+          <span class="announce__mark" aria-hidden="true">
+            <%- include('../../partials/icon', { name: 'tag', size: 17 }) %>
+          </span>
+          <div class="announce__body">
             <p class="announce__title"><%= item.title %></p>
             <% if (item.body) { %><p class="muted small"><%= item.body %></p><% } %>
             <% if (item.link_url) { %>

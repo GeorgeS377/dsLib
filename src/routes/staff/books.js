@@ -20,7 +20,7 @@ import {
   updateBook,
 } from '../../db/queries/books.js';
 import { listAuthorOptions } from '../../db/queries/authors.js';
-import { listAllCategories } from '../../db/queries/categories.js';
+import { createCategory, listAllCategories } from '../../db/queries/categories.js';
 import { addFlash } from '../../lib/flash.js';
 import { buildUrl, pageWindow, resultRange, withParams } from '../../lib/urls.js';
 import {
@@ -36,6 +36,39 @@ const PER_PAGE = 25;
 export default async function staffBookRoutes(app) {
   const db = app.db;
   const csrf = { preHandler: app.csrfProtection };
+
+
+  /** The chosen subjects, plus one just named, without repeating it. */
+  const withCategory = (ids, extra) =>
+    (extra === null ? (ids ?? []) : [...new Set([...(ids ?? []), extra])]);
+
+  /**
+   * The subject named on the book form, created if it is new.
+   *
+   * Sending a librarian to the subjects page and back is the wrong shape:
+   * the moment you discover a book needs a subject is the moment you are
+   * cataloguing it. A name already in use returns that subject rather than
+   * an error — typing one plainly means "this one", not "make a second".
+   *
+   * @returns {number|null} the subject's id, or null if nothing was named.
+   */
+  function categoryFromName(request, name) {
+    const trimmed = String(name ?? '').trim();
+    if (!trimmed) return null;
+
+    const made = createCategory(db, { name: trimmed });
+    if (made.ok) {
+      logAction(db, {
+        actor: request.staffUser,
+        action: 'category.create',
+        entity: 'category',
+        entityId: made.id,
+        detail: { name: trimmed, via: 'book form' },
+      });
+      return made.id;
+    }
+    return made.reason === 'duplicate' ? made.existing.id : null;
+  }
 
   /**
    * The cover waiting out a rejected form, if it is genuinely available.
@@ -237,8 +270,10 @@ export default async function staffBookRoutes(app) {
       }
     }
 
+    const named = categoryFromName(request, parsed.data.new_category);
     const id = createBook(db, {
       ...parsed.data,
+      categoryIds: withCategory(parsed.data.categoryIds, named),
       isbn13: isbn.isbn13,
       isbn10: isbn.isbn10,
     });
@@ -291,8 +326,10 @@ export default async function staffBookRoutes(app) {
       }
     }
 
+    const named = categoryFromName(request, parsed.data.new_category);
     updateBook(db, book.id, {
       ...parsed.data,
+      categoryIds: withCategory(parsed.data.categoryIds, named),
       isbn13: isbn.isbn13,
       isbn10: isbn.isbn10,
     });

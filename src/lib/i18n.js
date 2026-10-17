@@ -243,8 +243,8 @@ const el = {
   // --- Dashboard ---
   'staff.dashboard.title': 'Επισκόπηση',
   'staff.dashboard.overdueCount': {
-    one: '{count} βιβλίο έπρεπε να έχει γυρίσει.',
-    other: '{count} βιβλία έπρεπε να έχουν γυρίσει.',
+    one: '{count} βιβλίο θα έπρεπε να έχει γυρίσει.',
+    other: '{count} βιβλία θα έπρεπε να έχουν γυρίσει.',
   },
   'staff.dashboard.overdueSee': {
     one: 'Δείτε ποιο',
@@ -325,6 +325,9 @@ const el = {
   'staff.field.language': 'Γλώσσα',
   'staff.field.languageHint': 'Κωδικός δύο γραμμάτων, π.χ. el ή en.',
   'staff.field.description': 'Περιγραφή',
+  'staff.field.newCategory': 'Νέα κατηγορία',
+  'staff.field.newCategoryHint':
+    'Γράψτε ένα όνομα για να δημιουργηθεί και να μπει σε αυτόν τον τίτλο.',
   'staff.field.categories': 'Κατηγορίες',
   'staff.field.categoriesHint': 'Επιλέξτε όσες ταιριάζουν.',
   'staff.field.cover': 'Εξώφυλλο',
@@ -943,6 +946,9 @@ const en = {
   'staff.field.language': 'Language',
   'staff.field.languageHint': 'Two-letter code, e.g. el or en.',
   'staff.field.description': 'Description',
+  'staff.field.newCategory': 'New category',
+  'staff.field.newCategoryHint':
+    'Type a name to create it and put this title in it.',
   'staff.field.categories': 'Categories',
   'staff.field.categoriesHint': 'Tick as many as apply.',
   'staff.field.cover': 'Cover image',

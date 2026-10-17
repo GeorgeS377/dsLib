@@ -8,6 +8,11 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { after, before, describe, it } from 'node:test';
 import { buildApp } from '../src/app.js';
+import {
+  createAnnouncement,
+  deleteAnnouncement,
+  listAnnouncements,
+} from '../src/db/queries/announcements.js';
 import { createBorrower } from '../src/db/queries/borrowers.js';
 import { checkOut } from '../src/db/queries/loans.js';
 import { cleanupDir, cookieValue, makeTestDb, seedTestCatalogue, testConfig } from './helpers.js';
@@ -212,5 +217,33 @@ describe('what a public page must never show', () => {
     const response = await get(`/books/${fixtures.books.odyssey}`);
     assert.ok(response.body.includes('1 από 2 διαθέσιμα'), 'no availability count');
     assert.equal(response.body.match(/<tbody>/g), null, 'a per-copy table is back');
+  });
+});
+
+describe('the front page with announcements', () => {
+  it('puts the filters and the announcements side by side', async () => {
+    // Stacked, the announcements pushed the filters and the results down the
+    // page; they are two different things being read at once, not a sequence.
+    createAnnouncement(db, { title: 'Κλειστά την Τρίτη', isPublished: true });
+    const page = await get('/');
+    assert.equal(page.statusCode, 200);
+
+    assert.match(page.body, /class="home-split"/, 'the two are not in a shared row');
+
+    // Filters first in the source, so with no stylesheet and on a narrow
+    // screen the controls come before the notices rather than after them.
+    const filtersAt = page.body.indexOf('data-live-form');
+    const announceAt = page.body.indexOf('announce__item');
+    assert.ok(filtersAt > -1, 'the filters are missing');
+    assert.ok(announceAt > -1, 'the announcement is missing');
+    assert.ok(filtersAt < announceAt, 'the notices come before the controls');
+  });
+
+  it('shows no empty row when there is nothing announced', async () => {
+    // A row with one thing in it would leave the filters half-width for no
+    // reason.
+    for (const row of listAnnouncements(db)) deleteAnnouncement(db, row.id);
+    const page = await get('/');
+    assert.ok(!page.body.includes('home-split'), 'an empty half was still laid out');
   });
 });

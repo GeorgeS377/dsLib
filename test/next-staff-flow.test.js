@@ -6,7 +6,8 @@
 import assert from 'node:assert/strict';
 import { after, before, describe, it } from 'node:test';
 import { buildApp } from '../src/app.js';
-import { createBook } from '../src/db/queries/books.js';
+import { createBook, listBooks } from '../src/db/queries/books.js';
+import { listAllCategories } from '../src/db/queries/categories.js';
 import { createBorrower } from '../src/db/queries/borrowers.js';
 import { createCopy } from '../src/db/queries/copies.js';
 import { listLoans } from '../src/db/queries/loans.js';
@@ -205,5 +206,67 @@ describe('suggesting authors already in the catalogue', () => {
       options.includes('Παπαδόπουλος, Γιώργος'),
       `the name was split: ${options.filter((o) => o.includes('Παπαδ'))}`,
     );
+  });
+});
+
+describe('the shape of the book form', () => {
+  it('asks for the cover before the title', async () => {
+    // The cover is the thing a librarian is holding when they sit down with
+    // a new book, so it is the first thing the form asks for.
+    const body = (await get('/staff/books/new')).body;
+    const cover = body.indexOf('data-cropper-file');
+    const title = body.indexOf('id="field-title"');
+    assert.ok(cover > -1 && title > -1, 'a field is missing');
+    assert.ok(cover < title, 'the title still comes before the cover');
+  });
+
+  it('offers to name a new subject without leaving the form', async () => {
+    const body = (await get('/staff/books/new')).body;
+    assert.match(body, /name="new_category"/, 'no way to add a subject here');
+  });
+});
+
+describe('naming a new subject while adding a book', () => {
+  it('creates it and attaches it to the title', async () => {
+    const response = await post('/staff/books', {
+      title: 'Με Νέα Κατηγορία',
+      new_category: 'Αστρονομία',
+    }, { tokenFrom: '/staff/books/new' });
+    assert.equal(response.statusCode, 302);
+
+    const made = listAllCategories(db).find((c) => c.name === 'Αστρονομία');
+    assert.ok(made, 'the subject was not created');
+
+    const book = listBooks(db, { q: 'νεα κατηγορια' }).rows[0];
+    const linked = db.all('SELECT category_id FROM book_category WHERE book_id = ?', book.id);
+    assert.deepEqual(linked.map((r) => r.category_id), [made.id], 'it was not attached');
+  });
+
+  it('reuses a subject that already exists rather than refusing', async () => {
+    // Typing a name that is already there is not a mistake worth stopping
+    // for; it plainly means "this one".
+    const before = listAllCategories(db).length;
+    const existing = listAllCategories(db)[0];
+
+    const response = await post('/staff/books', {
+      title: 'Με Υπάρχουσα Κατηγορία',
+      new_category: existing.name.toUpperCase(),
+    }, { tokenFrom: '/staff/books/new' });
+    assert.equal(response.statusCode, 302);
+    assert.equal(listAllCategories(db).length, before, 'a duplicate subject was created');
+
+    const book = listBooks(db, { q: 'υπαρχουσα' }).rows[0];
+    const linked = db.all('SELECT category_id FROM book_category WHERE book_id = ?', book.id);
+    assert.deepEqual(linked.map((r) => r.category_id), [existing.id], 'it was not attached');
+  });
+
+  it('ignores an empty subject field', async () => {
+    const before = listAllCategories(db).length;
+    const response = await post('/staff/books', {
+      title: 'Χωρίς Νέα Κατηγορία',
+      new_category: '   ',
+    }, { tokenFrom: '/staff/books/new' });
+    assert.equal(response.statusCode, 302);
+    assert.equal(listAllCategories(db).length, before, 'whitespace made a subject');
   });
 });

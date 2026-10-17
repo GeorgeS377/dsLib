@@ -1189,16 +1189,8 @@ tbody tr:last-child td {
   padding: 0;
 }
 
-.announce__item {
-  display: flex;
-  gap: var(--s-3);
-  align-items: flex-start;
+.announce__body {
   color: var(--ink-muted);
-}
-
-.announce__title {
-  font-weight: 600;
-  color: var(--ink);
 }
 
 .visually-hidden {
@@ -1350,4 +1342,53 @@ tbody tr:last-child td {
   display: inline-grid;
   place-items: center;
   padding-inline: var(--s-3);
+}
+
+/* ------------------------------------------------------------- home split
+
+   Filters and announcements, side by side. They are read at the same moment
+   rather than one after the other, and stacking them pushed the books
+   themselves below the fold. The filters take the room because they hold
+   five controls; the announcements are a column of short notices. */
+.home-split {
+  display: grid;
+  gap: var(--s-5);
+  align-items: start;
+}
+
+@media (min-width: 64rem) {
+  .home-split {
+    grid-template-columns: minmax(0, 2fr) minmax(16rem, 1fr);
+  }
+}
+
+/* --------------------------------------------------------- announcements */
+
+.announce__item {
+  display: flex;
+  gap: var(--s-3);
+  /* Centred against the title line rather than the whole notice: aligned to
+     the top it floated beside nothing when a notice ran to several lines. */
+  align-items: center;
+}
+
+.announce__mark {
+  flex: none;
+  width: 30px;
+  height: 30px;
+  display: grid;
+  place-items: center;
+  border-radius: var(--r-control);
+  background: var(--orange-pale);
+  color: var(--orange-ink);
+}
+
+.announce__title {
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.announce__item + .announce__item {
+  padding-top: var(--s-3);
+  border-top: 1px solid var(--line);
 }

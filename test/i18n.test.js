@@ -156,7 +156,7 @@ describe('plural forms', () => {
   it('picks the singular when exactly one thing is counted', () => {
     assert.equal(
       translate('el', 'staff.dashboard.overdueCount', { count: 1 }),
-      '1 βιβλίο έπρεπε να έχει γυρίσει.',
+      '1 βιβλίο θα έπρεπε να έχει γυρίσει.',
     );
     assert.equal(
       translate('en', 'staff.dashboard.overdueCount', { count: 1 }),
@@ -256,6 +256,18 @@ describe('plural forms', () => {
     });
     assert.ok(one.includes('1 τίτλος'), one);
     assert.ok(one.includes('1 διαθέσιμο αντίτυπο'), one);
+  });
+
+  it('says a book should have come back, not that it did', () => {
+    // "έπρεπε να έχει γυρίσει" states that it was due; "θα έπρεπε" is what a
+    // librarian actually says about a book still out.
+    for (const count of [1, 5]) {
+      assert.match(
+        translate('el', 'staff.dashboard.overdueCount', { count }),
+        /θα έπρεπε/,
+        `count ${count}`,
+      );
+    }
   });
 
   it('reports a plural key as existing', () => {

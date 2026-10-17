@@ -199,6 +199,9 @@ export const bookFormSchema = z
     description: trimmed(10_000),
     authors: z.union([z.string(), z.array(z.string())]).optional(),
     categories: manyIds,
+    // A subject named on the book form rather than on the subjects page.
+    // Optional, and ignored when blank.
+    new_category: trimmed(100),
   })
   .transform((data) => ({
     ...data,

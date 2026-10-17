@@ -26,7 +26,9 @@
         <span class="bar__mark">
           <%- include('../../partials/icon', { name: 'book', size: 15 }) %>
         </span>
-        <span><%= t('staff.area') %></span>
+        <%# The library's name, not the admin area's: nobody has signed in
+            yet, so this is still the front door. -%>
+        <span><%= libraryName %></span>
       </a>
       <a class="bar__who plain" href="/" >
         <%- include('../../partials/icon', { name: 'chevron-left', size: 15 }) %>

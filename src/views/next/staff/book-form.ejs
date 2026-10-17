@@ -49,6 +49,59 @@
           action="<%= book ? '/staff/books/' + book.id : '/staff/books' %>">
       <input type="hidden" name="_csrf" value="<%= csrfToken %>">
 
+      <%# First, because it is the thing the librarian is holding when they sit
+          down with a new book. It lives inside the main form so one Save
+          stores the title and its cover together, which also means a title
+          can have one from the moment it is created. -%>
+      <fieldset>
+        <legend><%= t('staff.field.cover') %></legend>
+
+        <%# A cover that survived a refused submit. The file input beside it is
+            empty — a browser will not refill one — so without this the framing
+            would be silently gone and the title saved bare. -%>
+        <% const kept = typeof pendingCover !== 'undefined' && pendingCover; %>
+        <% if (kept) { %>
+          <input type="hidden" name="pending_cover" value="<%= kept.coverPath %>">
+          <input type="hidden" name="pending_thumb" value="<%= kept.thumbPath %>">
+          <img class="cover-current" src="/covers/<%= kept.thumbPath %>"
+               alt="<%= t('staff.field.cover') %>">
+          <p class="field__hint"><%= t('staff.cover.kept') %></p>
+        <% } else if (book && book.cover_path) { %>
+          <img class="cover-current" src="/covers/<%= book.cover_thumb_path || book.cover_path %>"
+               alt="<%= t('book.coverAlt', { title: book.title }) %>">
+        <% } %>
+
+        <%# The stage is hidden until a file is chosen, and stays hidden with
+            no scripting — where the whole image uploads, as it always has.
+            The four coordinates are what the server crops to. -%>
+        <div class="cropper" data-cropper>
+          <div>
+            <label class="field__label" for="field-cover">
+              <%= book && book.cover_path ? t('staff.cover.replace') : t('staff.cover.upload') %>
+            </label>
+            <span class="field__hint"><%= t('staff.cover.hint', { mb: maxUploadMb }) %></span>
+            <input type="file" id="field-cover" name="cover" data-cropper-file
+                   accept="image/jpeg,image/png,image/webp">
+          </div>
+
+          <div class="cropper__stage" data-cropper-stage hidden>
+            <p class="field__hint"><%= t('staff.cover.dragHint') %></p>
+            <canvas class="cropper__canvas" data-cropper-canvas
+                    aria-label="<%= t('staff.cover.frame') %>"></canvas>
+            <div class="cropper__zoom">
+              <label class="field__label" for="field-cover-zoom"><%= t('staff.cover.zoom') %></label>
+              <input type="range" id="field-cover-zoom" min="1" max="4" step="0.01" value="1"
+                     data-cropper-zoom>
+            </div>
+          </div>
+
+          <input type="hidden" name="crop_x" data-cropper-x>
+          <input type="hidden" name="crop_y" data-cropper-y>
+          <input type="hidden" name="crop_w" data-cropper-w>
+          <input type="hidden" name="crop_h" data-cropper-h>
+        </div>
+      </fieldset>
+
       <div>
         <label class="field__label" for="field-title"><%= t('staff.field.title') %></label>
         <input type="text" id="field-title" name="title" value="<%= values.title %>" required
@@ -152,6 +205,26 @@
         <legend><%= t('staff.field.categories') %>
           <span class="field__optional"><%= t('common.optional') %></span>
         </legend>
+        <%# Naming a new subject here rather than sending the librarian to
+            another page and back: the moment you discover a book needs one is
+            the moment you are cataloguing it. A name already in use attaches
+            that one instead of refusing — typing it plainly means "this one". -%>
+        <div>
+          <label class="field__label" for="field-new_category">
+            <%= t('staff.field.newCategory') %>
+            <span class="field__optional"><%= t('common.optional') %></span>
+          </label>
+          <span class="field__hint"><%= t('staff.field.newCategoryHint') %></span>
+          <input type="text" id="field-new_category" name="new_category"
+                 value="<%= values.new_category || '' %>" maxlength="100"
+                 list="category-options" data-suggest autocomplete="off">
+          <%- include('../partials/suggest', {
+                id: 'category-options',
+                options: categories.map(function (c) { return c.name; }),
+                fold: fold,
+              }) %>
+        </div>
+
         <% if (categories.length === 0) { %>
           <p class="field__hint"><a href="/staff/categories"><%= t('staff.categories.add') %></a></p>
         <% } else { %>
@@ -174,58 +247,6 @@
         </label>
         <textarea id="field-description" name="description" rows="5"><%= values.description %></textarea>
       </div>
-
-      <%# The cover sits inside the main form, so one Save stores the title
-          and its cover together — and so a title can have one from the
-          moment it is created, which needs no id to exist yet. -%>
-      <fieldset>
-        <legend><%= t('staff.field.cover') %></legend>
-
-        <%# A cover that survived a refused submit. The file input beside it is
-            empty — a browser will not refill one — so without this the framing
-            would be silently gone and the title saved bare. -%>
-        <% const kept = typeof pendingCover !== 'undefined' && pendingCover; %>
-        <% if (kept) { %>
-          <input type="hidden" name="pending_cover" value="<%= kept.coverPath %>">
-          <input type="hidden" name="pending_thumb" value="<%= kept.thumbPath %>">
-          <img class="cover-current" src="/covers/<%= kept.thumbPath %>"
-               alt="<%= t('staff.field.cover') %>">
-          <p class="field__hint"><%= t('staff.cover.kept') %></p>
-        <% } else if (book && book.cover_path) { %>
-          <img class="cover-current" src="/covers/<%= book.cover_thumb_path || book.cover_path %>"
-               alt="<%= t('book.coverAlt', { title: book.title }) %>">
-        <% } %>
-
-        <%# The stage is hidden until a file is chosen, and stays hidden with
-            no scripting — where the whole image uploads, as it always has.
-            The four coordinates are what the server crops to. -%>
-        <div class="cropper" data-cropper>
-          <div>
-            <label class="field__label" for="field-cover">
-              <%= book && book.cover_path ? t('staff.cover.replace') : t('staff.cover.upload') %>
-            </label>
-            <span class="field__hint"><%= t('staff.cover.hint', { mb: maxUploadMb }) %></span>
-            <input type="file" id="field-cover" name="cover" data-cropper-file
-                   accept="image/jpeg,image/png,image/webp">
-          </div>
-
-          <div class="cropper__stage" data-cropper-stage hidden>
-            <p class="field__hint"><%= t('staff.cover.dragHint') %></p>
-            <canvas class="cropper__canvas" data-cropper-canvas
-                    aria-label="<%= t('staff.cover.frame') %>"></canvas>
-            <div class="cropper__zoom">
-              <label class="field__label" for="field-cover-zoom"><%= t('staff.cover.zoom') %></label>
-              <input type="range" id="field-cover-zoom" min="1" max="4" step="0.01" value="1"
-                     data-cropper-zoom>
-            </div>
-          </div>
-
-          <input type="hidden" name="crop_x" data-cropper-x>
-          <input type="hidden" name="crop_y" data-cropper-y>
-          <input type="hidden" name="crop_w" data-cropper-w>
-          <input type="hidden" name="crop_h" data-cropper-h>
-        </div>
-      </fieldset>
 
       <div class="btn-row">
         <button class="btn" type="submit"><%= t('common.save') %></button>

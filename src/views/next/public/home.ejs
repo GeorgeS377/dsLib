@@ -33,12 +33,20 @@
     </p>
   </section>
 
-  <%- include('../partials/announcements', { t: t, announcements: announcements }) %>
+  <%# Filters and announcements are two different things being read at the
+      same moment, not a sequence — stacked, the announcements pushed the
+      filters and the books themselves down the page. Side by side above
+      64rem, stacked below it, and the row only exists when there is
+      something to announce. -%>
+  <% const hasNotices = announcements && announcements.length > 0; %>
+  <div class="<%= hasNotices ? 'home-split' : '' %>">
+    <%- include('../partials/filters', {
+          query: query, categories: categories, authors: authors, years: years,
+          languages: languages, action: '/', hasFilters: hasFilters,
+          clearUrl: clearUrl, t: t }) %>
 
-  <%- include('../partials/filters', {
-        query: query, categories: categories, authors: authors, years: years,
-        languages: languages, action: '/', hasFilters: hasFilters,
-        clearUrl: clearUrl, t: t }) %>
+    <%- include('../partials/announcements', { t: t, announcements: announcements }) %>
+  </div>
 
   <%# Everything below updates as you type. The same markup is what a plain
       form submission renders, so the two can never drift apart. -%>
