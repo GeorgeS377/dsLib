@@ -231,6 +231,162 @@ function enableReaderAutofill() {
   });
 }
 
+/**
+ * Frame a cover before it is uploaded.
+ *
+ * The browser decides *what* rectangle to keep; the server does the keeping.
+ * Four hidden fields carry the rectangle in source pixels alongside the
+ * original file, so the image is still decoded and re-encoded in exactly one
+ * place — which is what strips EXIF and guarantees the bytes served are never
+ * the bytes uploaded. Exporting the canvas would have moved that boundary into
+ * the browser for no gain.
+ *
+ * With no scripting none of this runs, no coordinates are sent, and the whole
+ * image uploads exactly as it did before.
+ */
+function enableCoverCropper() {
+  for (const root of document.querySelectorAll('[data-cropper]')) {
+    const file = root.querySelector('[data-cropper-file]');
+    const stage = root.querySelector('[data-cropper-stage]');
+    const canvas = root.querySelector('[data-cropper-canvas]');
+    const zoomInput = root.querySelector('[data-cropper-zoom]');
+    const fields = {
+      x: root.querySelector('[data-cropper-x]'),
+      y: root.querySelector('[data-cropper-y]'),
+      w: root.querySelector('[data-cropper-w]'),
+      h: root.querySelector('[data-cropper-h]'),
+    };
+    if (!file || !stage || !canvas || !zoomInput) continue;
+    if (!Object.values(fields).every(Boolean)) continue;
+
+    // A cover is taller than it is wide; 2:3 matches the stored display size.
+    const frameW = 240;
+    const frameH = 360;
+    const context = canvas.getContext('2d');
+    const ratio = window.devicePixelRatio || 1;
+    canvas.width = frameW * ratio;
+    canvas.height = frameH * ratio;
+    context.scale(ratio, ratio);
+
+    let image = null;
+    let zoom = 1;
+    let ox = 0;
+    let oy = 0;
+
+    // How many canvas pixels one source pixel occupies. Starts at whatever
+    // makes the image just cover the frame, so there is never a blank edge.
+    const scale = () => Math.max(frameW / image.width, frameH / image.height) * zoom;
+
+    const clamp = () => {
+      const k = scale();
+      ox = Math.min(0, Math.max(frameW - image.width * k, ox));
+      oy = Math.min(0, Math.max(frameH - image.height * k, oy));
+    };
+
+    const publish = () => {
+      const k = scale();
+      fields.x.value = String(Math.max(0, Math.round(-ox / k)));
+      fields.y.value = String(Math.max(0, Math.round(-oy / k)));
+      fields.w.value = String(Math.round(frameW / k));
+      fields.h.value = String(Math.round(frameH / k));
+    };
+
+    const draw = () => {
+      if (!image) return;
+      clamp();
+      const k = scale();
+      context.clearRect(0, 0, frameW, frameH);
+      context.drawImage(image, ox, oy, image.width * k, image.height * k);
+      publish();
+    };
+
+    const clear = () => {
+      image = null;
+      stage.hidden = true;
+      canvas.removeAttribute('tabindex');
+      for (const field of Object.values(fields)) field.value = '';
+    };
+
+    file.addEventListener('change', () => {
+      const chosen = file.files && file.files[0];
+      if (!chosen) {
+        clear();
+        return;
+      }
+
+      // A data: URL, not createObjectURL — the policy allows "img-src 'self'
+      // data:" and has no blob:, so an object URL would simply not load.
+      const reader = new FileReader();
+      reader.addEventListener('load', () => {
+        const loaded = new Image();
+        loaded.addEventListener('load', () => {
+          image = loaded;
+          zoom = 1;
+          zoomInput.value = '1';
+          // Centre it, then let clamp() pull it back if it would show an edge.
+          const k = Math.max(frameW / image.width, frameH / image.height);
+          ox = (frameW - image.width * k) / 2;
+          oy = (frameH - image.height * k) / 2;
+          stage.hidden = false;
+          // Focusable only once there is something to frame.
+          canvas.setAttribute('tabindex', '0');
+          draw();
+        });
+        loaded.addEventListener('error', clear);
+        loaded.src = reader.result;
+      });
+      reader.addEventListener('error', clear);
+      reader.readAsDataURL(chosen);
+    });
+
+    zoomInput.addEventListener('input', () => {
+      if (!image) return;
+      // Zoom about the middle of the frame, so the part being looked at is
+      // the part that stays put.
+      const before = scale();
+      const cx = (frameW / 2 - ox) / before;
+      const cy = (frameH / 2 - oy) / before;
+      zoom = Number(zoomInput.value) || 1;
+      const after = scale();
+      ox = frameW / 2 - cx * after;
+      oy = frameH / 2 - cy * after;
+      draw();
+    });
+
+    let dragging = null;
+    canvas.addEventListener('pointerdown', (event) => {
+      if (!image) return;
+      dragging = { x: event.clientX - ox, y: event.clientY - oy };
+      canvas.setPointerCapture(event.pointerId);
+    });
+    canvas.addEventListener('pointermove', (event) => {
+      if (!dragging) return;
+      ox = event.clientX - dragging.x;
+      oy = event.clientY - dragging.y;
+      draw();
+    });
+    for (const end of ['pointerup', 'pointercancel']) {
+      canvas.addEventListener(end, () => { dragging = null; });
+    }
+
+    // Framing without a pointer.
+    canvas.addEventListener('keydown', (event) => {
+      if (!image) return;
+      const step = event.shiftKey ? 20 : 5;
+      const moves = {
+        ArrowLeft: [step, 0], ArrowRight: [-step, 0],
+        ArrowUp: [0, step], ArrowDown: [0, -step],
+      };
+      const move = moves[event.key];
+      if (!move) return;
+      event.preventDefault();
+      ox += move[0];
+      oy += move[1];
+      draw();
+    });
+  }
+}
+
 document.addEventListener('DOMContentLoaded', () => {
   enableAutoSubmit();
   enableConfirmations();
@@ -238,4 +394,5 @@ document.addEventListener('DOMContentLoaded', () => {
   enableRepeatableFields();
   enableLiveResults();
   enableReaderAutofill();
+  enableCoverCropper();
 });

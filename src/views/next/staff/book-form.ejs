@@ -181,13 +181,34 @@
                alt="<%= t('book.coverAlt', { title: book.title }) %>">
         <% } %>
 
-        <div>
-          <label class="field__label" for="field-cover">
-            <%= book && book.cover_path ? t('staff.cover.replace') : t('staff.cover.upload') %>
-          </label>
-          <span class="field__hint"><%= t('staff.cover.hint', { mb: maxUploadMb }) %></span>
-          <input type="file" id="field-cover" name="cover"
-                 accept="image/jpeg,image/png,image/webp">
+        <%# The stage is hidden until a file is chosen, and stays hidden with
+            no scripting — where the whole image uploads, as it always has.
+            The four coordinates are what the server crops to. -%>
+        <div class="cropper" data-cropper>
+          <div>
+            <label class="field__label" for="field-cover">
+              <%= book && book.cover_path ? t('staff.cover.replace') : t('staff.cover.upload') %>
+            </label>
+            <span class="field__hint"><%= t('staff.cover.hint', { mb: maxUploadMb }) %></span>
+            <input type="file" id="field-cover" name="cover" data-cropper-file
+                   accept="image/jpeg,image/png,image/webp">
+          </div>
+
+          <div class="cropper__stage" data-cropper-stage hidden>
+            <p class="field__hint"><%= t('staff.cover.dragHint') %></p>
+            <canvas class="cropper__canvas" data-cropper-canvas
+                    aria-label="<%= t('staff.cover.frame') %>"></canvas>
+            <div class="cropper__zoom">
+              <label class="field__label" for="field-cover-zoom"><%= t('staff.cover.zoom') %></label>
+              <input type="range" id="field-cover-zoom" min="1" max="4" step="0.01" value="1"
+                     data-cropper-zoom>
+            </div>
+          </div>
+
+          <input type="hidden" name="crop_x" data-cropper-x>
+          <input type="hidden" name="crop_y" data-cropper-y>
+          <input type="hidden" name="crop_w" data-cropper-w>
+          <input type="hidden" name="crop_h" data-cropper-h>
         </div>
       </fieldset>
 

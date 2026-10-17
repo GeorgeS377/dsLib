@@ -1243,3 +1243,49 @@ tbody tr:last-child td {
 .push {
   margin-inline-start: auto;
 }
+
+/* ------------------------------------------------------------------ cropper
+
+   Framing a cover before it uploads. The canvas is the frame: what it shows
+   is what gets stored, so it is drawn at the proportions of a cover rather
+   than of the photo that went into it. */
+.cover-current {
+  display: block;
+  width: 120px;
+  height: auto;
+  border: 1px solid var(--line);
+  border-radius: var(--r-control);
+}
+
+.cropper__canvas {
+  display: block;
+  /* 2:3, matching the stored display size and the frame the script draws. */
+  width: 240px;
+  height: 360px;
+  max-width: 100%;
+  border: 1px solid var(--line);
+  border-radius: var(--r-control);
+  background: var(--sunken);
+  cursor: grab;
+  /* Without this a drag scrolls the page on a tablet instead of moving the
+     image, which makes the cropper unusable exactly where dragging is the
+     only way to use it. */
+  touch-action: none;
+}
+
+.cropper__canvas:active {
+  cursor: grabbing;
+}
+
+.cropper__canvas:focus-visible {
+  outline: 2px solid var(--blue);
+  outline-offset: 2px;
+}
+
+.cropper__zoom {
+  max-width: 240px;
+}
+
+.cropper__zoom input[type="range"] {
+  width: 100%;
+}

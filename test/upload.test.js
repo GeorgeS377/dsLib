@@ -39,6 +39,13 @@ describe('parseCropFields', () => {
     );
   });
 
+  it('reads empty fields as no crop, which is what a scripting-off form sends', () => {
+    // The hidden inputs are always submitted; with no script to fill them they
+    // arrive empty. Number('') is 0, which is finite — the zero-size check is
+    // what stops that reading as a crop of nothing.
+    assert.equal(parseCropFields({ crop_x: '', crop_y: '', crop_w: '', crop_h: '' }), null);
+  });
+
   it('returns null when any coordinate is missing, negative, zero-sized or not a number', () => {
     for (const body of [
       {},
