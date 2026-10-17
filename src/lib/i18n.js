@@ -548,6 +548,10 @@ const el = {
   'staff.users.created': 'Ο χρήστης «{username}» δημιουργήθηκε.',
   'staff.users.saved': 'Ο χρήστης «{username}» αποθηκεύτηκε.',
   'staff.users.deleted': 'Ο χρήστης «{username}» διαγράφηκε.',
+  'staff.users.deleteConfirm': 'Διαγραφή του λογαριασμού «{username}»;',
+  'staff.users.deleteExplain':
+    'Ο λογαριασμός διαγράφεται και οι ανοιχτές συνεδρίες του τερματίζονται αμέσως. '
+    + 'Το ιστορικό ενεργειών παραμένει, με το όνομα χρήστη καταγεγραμμένο.',
   'staff.users.passwordReset': 'Ο κωδικός του «{username}» άλλαξε.',
   'staff.users.resetPassword': 'Νέος κωδικός',
   'staff.users.active': 'Ενεργός',
@@ -1093,6 +1097,10 @@ const en = {
   'staff.users.created': 'User “{username}” created.',
   'staff.users.saved': 'User “{username}” saved.',
   'staff.users.deleted': 'User “{username}” deleted.',
+  'staff.users.deleteConfirm': 'Delete the account “{username}”?',
+  'staff.users.deleteExplain':
+    'The account is removed and any open sessions end immediately. '
+    + 'The audit trail stays, with the username recorded on it.',
   'staff.users.passwordReset': 'Password for “{username}” changed.',
   'staff.users.resetPassword': 'New password',
   'staff.users.active': 'Active',

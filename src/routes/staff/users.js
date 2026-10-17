@@ -220,6 +220,29 @@ export default async function staffUserRoutes(app) {
       return reply.redirect('/staff/users', 302);
     });
 
+    /**
+     * Confirm before removing an account.
+     *
+     * Every other destructive action in the second interface asks on a page
+     * of its own rather than in a dialog, so the question survives having no
+     * scripting. The first interface keeps its inline button and has no such
+     * page, so it is sent back to the list rather than shown a template it
+     * does not have.
+     */
+    adminScope.get('/staff/users/:id/delete', async (request, reply) => {
+      if (request.uiFlavour !== 'next') return reply.redirect('/staff/users', 302);
+
+      const user = listStaff(db).find((u) => u.id === Number(request.params.id));
+      if (!user) return reply.callNotFound();
+      // Asking the question at all would imply it could be answered.
+      if (user.id === request.staffUser.id) return reply.redirect('/staff/users', 302);
+
+      return reply.renderStaff('staff/user-delete', {
+        title: reply.locals.t('staff.users.deleteConfirm', { username: user.username }),
+        user,
+      });
+    });
+
     adminScope.post('/staff/users/:id/delete', csrf, async (request, reply) => {
       const user = listStaff(db).find((u) => u.id === Number(request.params.id));
       if (!user) return reply.callNotFound();

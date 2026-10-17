@@ -22,6 +22,13 @@
           <span class="pill pill--warn"><%= t('staff.users.mustChange') %></span>
         <% } %>
         <a class="btn btn--ghost btn--small" href="/staff/users/<%= user.id %>"><%= t('common.edit') %></a>
+        <%# No way to delete yourself: the route refuses it, and a button that
+            only exists to be refused is worse than no button. -%>
+        <% if (user.id !== staffUser.id) { %>
+          <a class="btn btn--ghost btn--small" href="/staff/users/<%= user.id %>/delete">
+            <%= t('common.delete') %>
+          </a>
+        <% } %>
       </div>
     <% }); %>
   </div>
