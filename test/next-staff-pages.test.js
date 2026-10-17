@@ -8,6 +8,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { after, before, describe, it } from 'node:test';
 import { buildApp } from '../src/app.js';
+import { createBorrower } from '../src/db/queries/borrowers.js';
 import { cleanupDir, makeTestDb, seedTestCatalogue, testConfig } from './helpers.js';
 import { login, makeStaffUser } from './staff-helpers.js';
 
@@ -16,12 +17,16 @@ let db;
 let dir;
 let fixtures;
 let session;
+let borrowerId;
 
 before(async () => {
   const setup = testConfig();
   dir = setup.dir;
   db = makeTestDb();
   fixtures = seedTestCatalogue(db);
+  // Nothing else seeds a reader, and the breadcrumb check below needs a
+  // reader page that actually renders rather than one that 404s past it.
+  borrowerId = createBorrower(db, { displayName: 'Μαρία Αναγνώστη', schoolClass: 'Α2' }).id;
   await makeStaffUser(db);
   app = await buildApp({ config: setup.config, logger: false, db });
   await app.ready();
@@ -130,6 +135,34 @@ describe('every staff page in the second interface', () => {
     // and nothing linked to it.
     const response = await get('/staff/account/password');
     assert.equal(response.statusCode, 404, 'the duplicate account page is still there');
+  });
+
+  it('carries no breadcrumb that only repeats the top bar', async () => {
+    // A single link back to the list goes where the highlighted tab already
+    // goes, so it is a blue link that buys nothing.
+    for (const url of [
+      '/staff/books/new',
+      `/staff/books/${fixtures.books.odyssey}`,
+      `/staff/borrowers/${borrowerId}`,
+    ]) {
+      const response = await get(url);
+      assert.equal(response.statusCode, 200, `${url} did not render`);
+      const crumbs = response.body.match(/<nav[^>]*class="small muted"[^>]*>/g) ?? [];
+      assert.deepEqual(crumbs, [], `${url} still has a redundant breadcrumb`);
+    }
+  });
+
+  it('keeps the breadcrumb that says something the top bar cannot', async () => {
+    // "Κατάλογος · <title>" is two levels deep; the top bar can only express
+    // the first. Removing this one would cost a real way back.
+    const response = await get(`/staff/books/${fixtures.books.odyssey}/copies`);
+    const crumb = response.body.match(/<nav[^>]*class="small muted"[^>]*>([\s\S]*?)<\/nav>/)?.[1];
+    assert.ok(crumb, 'the copies trail went with the redundant ones');
+    assert.ok(crumb.includes('href="/staff/books"'), 'the trail lost its first level');
+    assert.ok(
+      crumb.includes(`href="/staff/books/${fixtures.books.odyssey}"`),
+      'the trail lost the title it belongs to',
+    );
   });
 
   it('keeps every form in one column with its submit set apart', async () => {

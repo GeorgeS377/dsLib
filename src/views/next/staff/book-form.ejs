@@ -8,12 +8,7 @@
 -%>
 <div class="stack-lg">
 
-  <div>
-    <nav aria-label="<%= t('nav.breadcrumb') %>" class="small muted">
-      <a href="/staff/books"><%= t('staff.books.title') %></a>
-    </nav>
-    <h1 class="mt-2"><%= book ? book.title : t('staff.books.new') %></h1>
-  </div>
+  <h1><%= book ? book.title : t('staff.books.new') %></h1>
 
   <% if (book && book.archived_at) { %>
     <div class="flash flash--warning" role="status">
