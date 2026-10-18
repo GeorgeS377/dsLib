@@ -1,0 +1,20 @@
+<%#
+  The square mark beside the library's name in the bar.
+
+  A school that uploads its own icon gets it here as well as in the browser
+  tab: the mark is the same badge in both places, and having the tab show the
+  school crest while the page kept a stock book would read as a mistake.
+
+  The alt is empty on purpose. The library's name sits immediately beside it
+  in the same link, so a screen reader announcing the image too would say the
+  name twice.
+
+  Expects: brandIcon.
+-%>
+<span class="bar__mark<%= brandIcon ? ' bar__mark--image' : '' %>">
+  <% if (brandIcon) { %>
+    <img src="/brand/<%= brandIcon.replace(/\.png$/, '') %>-32.png" alt="" width="24" height="24">
+  <% } else { %>
+    <%- include('../../partials/icon', { name: 'book', size: 15 }) %>
+  <% } %>
+</span>

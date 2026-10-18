@@ -15,9 +15,7 @@
 <header class="bar">
   <div class="wrap bar__inner">
     <a class="bar__brand" href="<%= staffUser ? '/staff' : '/' %>">
-      <span class="bar__mark">
-        <%- include('../../partials/icon', { name: 'book', size: 15 }) %>
-      </span>
+      <%- include('./brand-mark', { brandIcon: brandIcon }) %>
       <span><%= staffUser ? t('staff.area') : libraryName %></span>
     </a>
 

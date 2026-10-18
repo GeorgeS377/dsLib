@@ -25,7 +25,8 @@ import {
   translatorFor,
 } from './lib/i18n.js';
 import { SqliteSessionStore } from './lib/session-store.js';
-import { libraryName } from './lib/settings.js';
+import { libraryIcon, libraryName } from './lib/settings.js';
+import { brandIconFile, isSafeIconName } from './lib/upload.js';
 import {
   UI_COOKIE,
   VIEW_COOKIE,
@@ -253,6 +254,39 @@ export async function buildApp({ config = defaultConfig, logger, db, onRoute } =
     maxAge: config.isProduction ? '7d' : 0,
   });
 
+  // The library's own icon, written by the setup page and the library
+  // settings page. Same arrangement as covers below, for the same reasons.
+  fs.mkdirSync(path.join(config.uploadDir, 'icons'), { recursive: true, mode: 0o750 });
+  await app.register(fastifyStatic, {
+    root: path.join(config.uploadDir, 'icons'),
+    prefix: '/brand/',
+    index: false,
+    list: false,
+    decorateReply: false,
+    maxAge: config.isProduction ? '30d' : 0,
+    serveDotFiles: false,
+  });
+
+  // Browsers ask for this whether or not any markup mentions it, so answering
+  // with the school's icon is what stops a stock book turning up in a
+  // bookmark bar. A PNG is served from the .ico path deliberately: every
+  // browser in use reads the bytes rather than the extension, and generating
+  // a real ICO would mean a second encoder for no gain.
+  app.get('/favicon.ico', async (_request, reply) => {
+    const icon = usableBrandIcon(app.db, config);
+    if (!icon) {
+      // The bytes, not a redirect to them: a favicon is fetched on a cold
+      // visit to every page, and two round trips for an icon that has not
+      // changed since the application was written is one too many.
+      return reply
+        .type('image/svg+xml')
+        .send(fs.createReadStream(path.join(config.projectRoot, 'src', 'public', 'icon.svg')));
+    }
+    return reply
+      .type('image/png')
+      .send(fs.createReadStream(path.join(config.uploadDir, 'icons', brandIconFile(icon, 32))));
+  });
+
   // Uploaded cover images, served read-only from outside the source tree.
   // Files here are written by the upload handler, which re-encodes every
   // image, so nothing user-supplied is served back verbatim.
@@ -362,6 +396,11 @@ export async function buildApp({ config = defaultConfig, logger, db, onRoute } =
       // The database's name when one has been saved in the browser, the
       // environment's otherwise — see src/lib/settings.js for the rule.
       libraryName: libraryName(app.db, config),
+      // The school's own icon, or null for the one that ships with the
+      // application. Null is also the answer for a name that is not the shape
+      // we write and for a file that is not on disk: a database restored
+      // without its uploads must render pages, not break them.
+      brandIcon: usableBrandIcon(app.db, config),
       currentPath: request.url,
       langUrl: (target) => withQueryParam(request.url, 'lang', target),
       themeUrl: (target) => withQueryParam(request.url, 'theme', target),
@@ -447,6 +486,27 @@ export async function buildApp({ config = defaultConfig, logger, db, onRoute } =
   });
 
   return app;
+}
+
+/**
+ * The library's uploaded icon, if there is really one to serve.
+ *
+ * Three ways there is not, and all three are ordinary rather than exceptional:
+ * nobody has uploaded one; the stored value is not a name this application
+ * writes, which is what a hand-edited row or an older format looks like; or
+ * the name is right but the file is not there, which is what restoring a
+ * database backup without its uploads looks like. Each answers null, and the
+ * templates fall back to the icon that ships in the repository — so the worst
+ * case is a stock book rather than a broken page.
+ *
+ * @returns {string | null}
+ */
+function usableBrandIcon(db, config) {
+  const name = libraryIcon(db);
+  if (!name || !isSafeIconName(name)) return null;
+  return fs.existsSync(path.join(config.uploadDir, 'icons', brandIconFile(name, 32)))
+    ? name
+    : null;
 }
 
 /** Render one of the error templates, falling back to plain text. */

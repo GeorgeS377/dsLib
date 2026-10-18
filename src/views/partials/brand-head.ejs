@@ -1,0 +1,22 @@
+<%#
+  The tab icon, for every layout in both interfaces.
+
+  One partial rather than a line in each <head>: there are six layouts, and
+  the last time a line like this was maintained six times over, one of them
+  was missed and nobody noticed until a page was opened in a browser.
+
+  `brandIcon` is the stored name when a school has uploaded its own and the
+  file is actually on disk — see the locals in src/app.js. Otherwise it is
+  null and the icon that ships with the application is used, which is the
+  state every fresh deployment is in.
+
+  Expects: brandIcon.
+-%>
+<% if (brandIcon) { %>
+  <% const base = brandIcon.replace(/\.png$/, ''); %>
+  <link rel="icon" type="image/png" sizes="32x32" href="/brand/<%= base %>-32.png">
+  <link rel="icon" type="image/png" sizes="512x512" href="/brand/<%= base %>-512.png">
+  <link rel="apple-touch-icon" href="/brand/<%= base %>-180.png">
+<% } else { %>
+  <link rel="icon" href="/assets/icon.svg" type="image/svg+xml">
+<% } %>

@@ -252,6 +252,21 @@ main {
   flex: none;
 }
 
+/* A school's own icon fills the badge instead of sitting on the orange: the
+   orange is this application's mark, and painting it behind somebody else's
+   crest would read as a border nobody chose. Overflow is hidden so a square
+   image still takes the badge's corner radius. */
+.bar__mark--image {
+  background: none;
+  overflow: hidden;
+}
+
+.bar__mark--image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
 .bar__links {
   display: flex;
   gap: var(--s-4);

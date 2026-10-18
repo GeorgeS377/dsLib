@@ -219,6 +219,148 @@ export async function removeCoverFiles(uploadDir, ...names) {
   }
 }
 
+/*
+  The library's own icon.
+  ------------------------------------------------------------------------
+
+  Same threat model as a cover, same answers — so the same pipeline, rather
+  than a second one that would have to be audited separately. Three
+  differences, each for a reason:
+
+    * PNG output at fixed square sizes, because this is a favicon and a mark
+      in a bar, both of which are drawn at a known size.
+    * With no crop rectangle the image is squared off centre-first. A cover
+      may legitimately be any shape; an icon squashed to fit is just wrong,
+      and somebody with scripting off never sends a rectangle.
+    * Its own name shape, and its own guard. isSafeStoredName is what keeps a
+      submitted cover field from naming a file outside covers/; widening it
+      to .png would let a cover name an icon and an icon name a cover.
+*/
+
+/** Square sizes written for every stored icon: favicon, touch icon, large. */
+export const BRAND_ICON_SIZES = [32, 180, 512];
+
+/** The file that backs one stored icon at one size. */
+export function brandIconFile(iconName, size) {
+  return iconName.replace(/\.png$/, `-${size}.png`);
+}
+
+/**
+ * Validate and store the library's icon, writing one square PNG per size in
+ * BRAND_ICON_SIZES.
+ *
+ * @param {Buffer} buffer Raw uploaded bytes.
+ * @param {object} options
+ * @param {string} options.uploadDir Base upload directory (icons/ is created inside).
+ * @param {number} options.maxBytes
+ * @param {{ x: number, y: number, width: number, height: number }} [options.crop]
+ *   Rectangle in source pixels to keep. Omit to square the image off centre.
+ * @returns {Promise<{ ok: true, iconName: string } | { ok: false, reason: string }>}
+ */
+export async function storeBrandIcon(buffer, { uploadDir, maxBytes, crop }) {
+  if (!Buffer.isBuffer(buffer) || buffer.length === 0) {
+    return { ok: false, reason: 'empty' };
+  }
+  if (buffer.length > maxBytes) {
+    return { ok: false, reason: 'too_large' };
+  }
+  if (!sniffImageType(buffer)) {
+    return { ok: false, reason: 'unsupported_type' };
+  }
+
+  let image;
+  try {
+    image = await Jimp.read(buffer);
+  } catch {
+    return { ok: false, reason: 'unreadable' };
+  }
+
+  if (image.width * image.height > MAX_PIXELS) {
+    return { ok: false, reason: 'too_many_pixels' };
+  }
+
+  // A rectangle that overhangs or misses the image is trimmed rather than
+  // refused, for the reason storeCoverImage gives: these numbers come from a
+  // hidden field, and a stale one should not stand between a person and their
+  // icon. A rectangle left with no area falls through to the centre square.
+  let squared = false;
+  if (crop) {
+    const left = Math.min(crop.x, image.width);
+    const top = Math.min(crop.y, image.height);
+    const w = Math.min(crop.width, image.width - left);
+    const h = Math.min(crop.height, image.height - top);
+    if (w >= 1 && h >= 1) {
+      image.crop({ x: left, y: top, w, h });
+      squared = true;
+    }
+  }
+
+  // Centre square: whichever edge is shorter becomes both.
+  if (!squared && image.width !== image.height) {
+    const edge = Math.min(image.width, image.height);
+    image.crop({
+      x: Math.floor((image.width - edge) / 2),
+      y: Math.floor((image.height - edge) / 2),
+      w: edge,
+      h: edge,
+    });
+  }
+
+  const dir = path.join(uploadDir, 'icons');
+  await fs.mkdir(dir, { recursive: true, mode: 0o750 });
+
+  const iconName = `${crypto.randomUUID()}.png`;
+  const written = [];
+
+  try {
+    for (const size of BRAND_ICON_SIZES) {
+      const variant = image.clone();
+      // Never upscale: a 64px logo blown up to 512 is worse than a small one.
+      if (variant.width > size) variant.resize({ w: size, h: size });
+      const file = brandIconFile(iconName, size);
+      await fs.writeFile(path.join(dir, file), await variant.getBuffer('image/png'), {
+        mode: 0o640,
+      });
+      written.push(file);
+    }
+  } catch (error) {
+    await removeFiles(dir, written);
+    return { ok: false, reason: 'write_failed', error };
+  }
+
+  return { ok: true, iconName };
+}
+
+/** Delete every size of a stored icon. Quiet about files already gone. */
+export async function removeBrandIcon(uploadDir, iconName) {
+  if (!isSafeIconName(iconName)) return;
+  await removeFiles(
+    path.join(uploadDir, 'icons'),
+    BRAND_ICON_SIZES.map((size) => brandIconFile(iconName, size)),
+  );
+}
+
+/** Unlink a list of bare filenames inside one directory, ignoring absences. */
+async function removeFiles(dir, names) {
+  for (const name of names) {
+    try {
+      await fs.unlink(path.join(dir, name));
+    } catch {
+      // Already gone, which is the state we wanted.
+    }
+  }
+}
+
+/**
+ * A stored icon filename: the UUID form storeBrandIcon writes, and nothing
+ * else. The per-size files derive from it, so this is the only shape that
+ * ever needs to survive a round trip through the database or a form.
+ */
+export function isSafeIconName(name) {
+  if (typeof name !== 'string' || name.length === 0 || name.length > 100) return false;
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\.png$/.test(name);
+}
+
 /**
  * A stored cover filename: the UUID form this module writes, and nothing
  * else. Rejects separators, traversal and absolute paths.

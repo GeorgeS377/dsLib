@@ -11,7 +11,7 @@
   <title><%= typeof title !== 'undefined' && title ? title + ' · ' + libraryName : libraryName %></title>
   <meta name="description" content="<%= typeof metaDescription !== 'undefined' ? metaDescription : t('footer.catalogue') %>">
   <link rel="stylesheet" href="/assets/css/app.css">
-  <link rel="icon" href="/assets/icon.svg" type="image/svg+xml">
+  <%- include('../partials/brand-head', { brandIcon: brandIcon }) %>
 </head>
 <body>
   <a class="skip-link" href="#main"><%= t('nav.skip') %></a>

@@ -9,7 +9,7 @@
       belt and braces. -%>
   <meta name="robots" content="noindex, nofollow">
   <link rel="stylesheet" href="/assets/css/app.css">
-  <link rel="icon" href="/assets/icon.svg" type="image/svg+xml">
+  <%- include('../partials/brand-head', { brandIcon: brandIcon }) %>
 </head>
 <body>
   <a class="skip-link" href="#main"><%= t('nav.skip') %></a>

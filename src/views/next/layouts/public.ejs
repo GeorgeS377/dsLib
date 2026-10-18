@@ -18,7 +18,7 @@
   <title><%= typeof title !== 'undefined' && title ? title + ' · ' + libraryName : libraryName %></title>
   <meta name="description" content="<%= typeof metaDescription !== 'undefined' ? metaDescription : t('footer.catalogue') %>">
   <link rel="stylesheet" href="<%= stylesheet %>">
-  <link rel="icon" href="/assets/icon.svg" type="image/svg+xml">
+  <%- include('../../partials/brand-head', { brandIcon: brandIcon }) %>
 </head>
 <body>
   <a class="skip-link" href="#main"><%= t('nav.skip') %></a>
@@ -26,9 +26,7 @@
   <header class="bar">
     <div class="wrap bar__inner">
       <a class="bar__brand" href="/">
-        <span class="bar__mark">
-          <%- include('../../partials/icon', { name: 'book', size: 15 }) %>
-        </span>
+        <%- include('../partials/brand-mark', { brandIcon: brandIcon }) %>
         <span><%= libraryName %></span>
       </a>
 
