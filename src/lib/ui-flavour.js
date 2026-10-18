@@ -14,7 +14,7 @@ import path from 'node:path';
 
 export const UI_COOKIE = 'ui';
 export const UI_FLAVOURS = ['classic', 'next'];
-export const DEFAULT_FLAVOUR = 'classic';
+export const DEFAULT_FLAVOUR = 'next';
 
 /** The directory inside the view root holding the second interface. */
 const NEXT_DIR = 'next';
