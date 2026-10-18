@@ -64,21 +64,74 @@ export async function createStaffUser(
   if (getStaffByUsername(db, trimmed)) return { ok: false, reason: 'duplicate_username' };
 
   const passwordHash = await hashPassword(password);
+  return insertStaffUser(db, {
+    username: trimmed,
+    email,
+    passwordHash,
+    displayName,
+    role,
+    mustChangePassword,
+  });
+}
+
+/**
+ * The insert itself, with the hash already computed.
+ *
+ * Separated out because hashing is asynchronous and inserting is not, and
+ * claimFirstAdmin below needs the insert to happen inside a transaction that
+ * no await can interleave with.
+ */
+function insertStaffUser(
+  db,
+  { username, email, passwordHash, displayName, role = 'librarian', mustChangePassword = false },
+) {
   const timestamp = now();
   const result = db.run(
     `INSERT INTO staff_user (username, email, password_hash, display_name, role,
                              must_change_password, created_at, updated_at)
      VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-    trimmed,
+    username,
     email?.trim() || null,
     passwordHash,
-    String(displayName ?? '').trim() || trimmed,
+    String(displayName ?? '').trim() || username,
     role,
     mustChangePassword ? 1 : 0,
     timestamp,
     timestamp,
   );
   return { ok: true, id: Number(result.lastInsertRowid) };
+}
+
+/**
+ * Create the library's first administrator, and only if it really is the
+ * first.
+ *
+ * The browser setup page is open to anyone while a library has no accounts,
+ * so two people — or two tabs — can both pass that check, both wait on the
+ * password hash, and both arrive here. Node runs one request at a time until
+ * it awaits, and hashing is the await: without this guard the second insert
+ * would succeed and the library would come into existence with two
+ * administrators, one of whom nobody expected.
+ *
+ * The count and the insert therefore share one transaction, and the caller
+ * hashes beforehand so nothing can interleave between them.
+ *
+ * @returns {{ ok: true, id: number } | { ok: false, reason: 'already_claimed' | 'duplicate_username' }}
+ */
+export function claimFirstAdmin(db, { username, displayName, passwordHash }) {
+  const trimmed = String(username ?? '').trim();
+  return db.transaction(() => {
+    if ((db.value('SELECT COUNT(*) FROM staff_user') ?? 0) > 0) {
+      return { ok: false, reason: 'already_claimed' };
+    }
+    if (getStaffByUsername(db, trimmed)) return { ok: false, reason: 'duplicate_username' };
+    return insertStaffUser(db, {
+      username: trimmed,
+      passwordHash,
+      displayName,
+      role: 'admin',
+    });
+  });
 }
 
 export async function setStaffPassword(db, id, password) {

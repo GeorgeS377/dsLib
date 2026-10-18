@@ -15,7 +15,12 @@ import { Jimp } from 'jimp';
 import { buildApp } from '../src/app.js';
 import { listAllCategories } from '../src/db/queries/categories.js';
 import { createStaffUser, listStaff } from '../src/db/queries/staff.js';
-import { defaultLoanDays, invalidateSettings } from '../src/lib/settings.js';
+import {
+  defaultLoanDays,
+  invalidateSettings,
+  libraryName,
+  setupCompletedAt,
+} from '../src/lib/settings.js';
 import { cleanupDir, makeTestDb, testConfig } from './helpers.js';
 import { TEST_PASSWORD, cookieHeader, csrfFrom } from './staff-helpers.js';
 
@@ -45,6 +50,7 @@ beforeEach(() => {
   db.exec('DELETE FROM setting');
   db.exec('DELETE FROM book_category');
   db.exec('DELETE FROM category');
+  db.exec('DELETE FROM audit_log');
   invalidateSettings(db);
 });
 
@@ -452,5 +458,217 @@ describe('step 2', () => {
     await get('/setup/catalogue');
     await postCatalogue({ next: '1', loan_days: '14' });
     assert.equal(listStaff(db).length, 0);
+  });
+});
+
+describe('step 3', () => {
+  const account = {
+    username: 'maria',
+    display_name: 'Μαρία',
+    password: 'a-long-enough-test-passphrase',
+    password_confirm: 'a-long-enough-test-passphrase',
+  };
+
+  const postAccount = (fields) =>
+    post('/setup/account', fields, { tokenFrom: '/setup/account' });
+
+  const auditRows = () => db.all("SELECT * FROM audit_log WHERE action = 'staff.create'");
+
+  it('creates one administrator and lands on the dashboard', async () => {
+    const response = await postAccount(account);
+    assert.equal(response.statusCode, 302);
+    assert.equal(response.headers.location, '/staff');
+
+    const staff = listStaff(db);
+    assert.equal(staff.length, 1);
+    assert.equal(staff[0].username, 'maria');
+    assert.equal(staff[0].role, 'admin');
+  });
+
+  it('signs the teacher in, with no second trip through the login form', async () => {
+    const response = await postAccount(account);
+    const cookie = cookieHeader(response, 'ui=next');
+    const dashboard = await app.inject({ method: 'GET', url: '/staff', headers: { cookie } });
+    assert.equal(dashboard.statusCode, 200);
+  });
+
+  it('sets ui=next so the teacher continues in the interface they just used', async () => {
+    const response = await postAccount(account);
+    const cookies = [].concat(response.headers['set-cookie'] ?? []).join(';');
+    assert.match(cookies, /\bui=next\b/);
+  });
+
+  it('writes an audit row naming setup as the way in', async () => {
+    await postAccount(account);
+    const rows = auditRows();
+    assert.equal(rows.length, 1);
+    assert.equal(rows[0].username, 'maria');
+    assert.equal(JSON.parse(rows[0].detail).via, 'setup');
+  });
+
+  it('keeps the password out of the audit row', async () => {
+    await postAccount(account);
+    assert.ok(!auditRows()[0].detail.includes('passphrase'));
+  });
+
+  it('stamps when setup was completed', async () => {
+    await postAccount(account);
+    assert.match(setupCompletedAt(db) ?? '', /^\d{4}-\d{2}-\d{2}/);
+  });
+
+  it('closes setup for good', async () => {
+    await postAccount(account);
+    for (const url of ['/setup', '/setup/library', '/setup/catalogue', '/setup/account']) {
+      const page = await get(url);
+      assert.equal(page.statusCode, 302, url);
+      assert.equal(page.headers.location, '/staff/login', url);
+    }
+  });
+
+  it('refuses a password under 8 characters', async () => {
+    const response = await postAccount({ ...account, password: 'abcdefg', password_confirm: 'abcdefg' });
+    assert.equal(response.statusCode, 200);
+    assert.match(response.body, /field__error|aria-invalid="true"/);
+    assert.equal(listStaff(db).length, 0);
+  });
+
+  it('refuses a password on the blocklist', async () => {
+    const response = await postAccount({ ...account, password: 'password', password_confirm: 'password' });
+    assert.equal(response.statusCode, 200);
+    assert.equal(listStaff(db).length, 0);
+  });
+
+  it('refuses two entries that do not match', async () => {
+    const response = await postAccount({ ...account, password_confirm: 'something-else-entirely' });
+    assert.equal(response.statusCode, 200);
+    assert.match(response.body, /field__error|aria-invalid="true"/);
+    assert.equal(listStaff(db).length, 0);
+  });
+
+  it('refuses a username that is not plain ASCII', async () => {
+    // Usernames stay unambiguous at the login prompt; the display name
+    // carries the Greek spelling.
+    const response = await postAccount({ ...account, username: 'μαρία' });
+    assert.equal(response.statusCode, 200);
+    assert.equal(listStaff(db).length, 0);
+  });
+
+  it('keeps the username and display name when the password is refused', async () => {
+    const response = await postAccount({ ...account, password: 'short', password_confirm: 'short' });
+    assert.match(response.body, /value="maria"/);
+    assert.match(response.body, /value="Μαρία"/);
+  });
+
+  it('never echoes the refused password back into the form', async () => {
+    const response = await postAccount({ ...account, password: 'short', password_confirm: 'short' });
+    assert.ok(!response.body.includes('value="short"'));
+  });
+
+  it('keeps the name, icon and categories when the password is refused', async () => {
+    await post('/setup/library', { library_name: '5ο Γυμνάσιο Ηρακλείου Αττικής' });
+    await get('/setup/catalogue');
+    await postAccount({ ...account, password: 'short', password_confirm: 'short' });
+
+    assert.match(libraryName(db, config), /5ο Γυμνάσιο/);
+    assert.equal(listAllCategories(db).length, 4);
+  });
+
+  it('creates no second administrator when two requests race', async () => {
+    // Both pass the gate, both await the password hash, both try to insert.
+    const first = await get('/setup/account');
+    const second = await get('/setup/account');
+
+    const fire = (page, username) =>
+      app.inject({
+        method: 'POST',
+        url: '/setup/account',
+        headers: {
+          cookie: cookieHeader(page, 'ui=next'),
+          'content-type': 'application/x-www-form-urlencoded',
+        },
+        payload: new URLSearchParams({
+          _csrf: csrfFrom(page.body),
+          ...account,
+          username,
+        }).toString(),
+      });
+
+    const [a, b] = await Promise.all([fire(first, 'maria'), fire(second, 'kostas')]);
+
+    assert.equal(listStaff(db).length, 1, 'two administrators were created');
+    const codes = [a.statusCode, b.statusCode].sort();
+    assert.deepEqual(codes, [302, 302]);
+    // The loser is sent to the sign-in page, not shown a failure.
+    const locations = [a.headers.location, b.headers.location].sort();
+    assert.deepEqual(locations, ['/staff', '/staff/login']);
+  });
+
+  it('has no email field', async () => {
+    const page = await get('/setup/account');
+    assert.ok(!page.body.includes('name="email"'));
+  });
+
+  it('offers a reveal control for the password', async () => {
+    const page = await get('/setup/account');
+    assert.match(page.body, /data-reveal/);
+  });
+
+  it('offers a link back to step 2', async () => {
+    const page = await get('/setup/account');
+    assert.match(page.body, /href="\/setup\/catalogue"/);
+  });
+
+  it('requires a CSRF token', async () => {
+    const response = await app.inject({
+      method: 'POST',
+      url: '/setup/account',
+      headers: { cookie: 'ui=next', 'content-type': 'application/x-www-form-urlencoded' },
+      payload: new URLSearchParams(account).toString(),
+    });
+    assert.equal(response.statusCode, 403);
+  });
+});
+
+describe('the boot log', () => {
+  /**
+   * Boot an app and return everything it logged.
+   *
+   * Fastify 5 wants a configuration object for `logger`, so the capture is a
+   * stream rather than a fake logger object.
+   */
+  async function bootWith(seedAccount) {
+    const setup = testConfig();
+    const freshDb = makeTestDb();
+    if (seedAccount) {
+      await createStaffUser(freshDb, {
+        username: 'already',
+        password: TEST_PASSWORD,
+        displayName: 'Ήδη',
+        role: 'admin',
+      });
+    }
+
+    const written = [];
+    const freshApp = await buildApp({
+      config: setup.config,
+      logger: { level: 'info', stream: { write: (chunk) => written.push(chunk) } },
+      db: freshDb,
+    });
+    await freshApp.ready();
+    await freshApp.close();
+    freshDb.close();
+    cleanupDir(setup.dir);
+    return written.join('');
+  }
+
+  it('says setup is still open on a library with no accounts', async () => {
+    // So an admin can tell at a glance whether the teacher got there first.
+    const output = await bootWith(false);
+    assert.match(output, /\/setup is open/);
+  });
+
+  it('says nothing about an open setup once the library has an account', async () => {
+    const output = await bootWith(true);
+    assert.ok(!/\/setup is open/.test(output), output);
   });
 });

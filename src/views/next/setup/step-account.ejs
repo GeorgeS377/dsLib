@@ -1,0 +1,71 @@
+<%#
+  Setup, step 3: the account the teacher will sign in with from now on.
+
+  Last of the three, because creating it is the one thing on this page that
+  cannot be undone, and because it is what closes setup for good. There is no
+  notice saying so: the step says what it is for, and a warning about a
+  consequence nobody asked about would only make a plain form feel risky.
+
+  No email field. It is optional on an account, this step already has four
+  boxes, and it can be filled in afterwards from the account page.
+
+  Expects: step, values, errors, minPasswordLength, csrfToken.
+-%>
+<form class="panel setup" method="post" action="/setup/account">
+  <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+
+  <%- include('../partials/setup-progress', { step: step, t: t }) %>
+
+  <div>
+    <h1><%= t('setup.account.heading') %></h1>
+    <p class="muted mt-2"><%= t('setup.account.lead') %></p>
+  </div>
+
+  <div>
+    <label class="field__label" for="setup-username"><%= t('setup.account.username') %></label>
+    <span class="field__hint"><%= t('setup.account.usernameHint') %></span>
+    <input type="text" id="setup-username" name="username" required autofocus
+           autocomplete="username" autocapitalize="none" spellcheck="false"
+           maxlength="60" placeholder="maria" value="<%= values.username %>"
+           <% if (errors.username) { %>aria-invalid="true"<% } %>>
+    <%- include('../partials/field-error', { code: errors.username, t: t, hasT: hasT }) %>
+  </div>
+
+  <div>
+    <label class="field__label" for="setup-display-name"><%= t('setup.account.displayName') %></label>
+    <input type="text" id="setup-display-name" name="display_name" required
+           maxlength="200" placeholder="Μαρία" value="<%= values.display_name %>"
+           <% if (errors.display_name) { %>aria-invalid="true"<% } %>>
+    <%- include('../partials/field-error', { code: errors.display_name, t: t, hasT: hasT }) %>
+  </div>
+
+  <%#
+    Never re-filled after a refusal, unlike the two boxes above: a browser
+    will not restore a password field, and echoing one back into the HTML
+    would write it into every cache and history entry between here and there.
+  -%>
+  <div>
+    <label class="field__label" for="setup-password"><%= t('setup.account.password') %></label>
+    <span class="field__hint"><%= t('setup.account.passwordHint', { count: minPasswordLength, n: minPasswordLength }) %></span>
+    <input type="password" data-reveal id="setup-password" name="password" required
+           autocomplete="new-password"
+           <% if (errors.password) { %>aria-invalid="true"<% } %>>
+    <%- include('../partials/reveal') %>
+    <%- include('../partials/field-error', { code: errors.password, t: t, hasT: hasT }) %>
+  </div>
+
+  <div>
+    <label class="field__label" for="setup-password-confirm">
+      <%= t('setup.account.passwordConfirm') %>
+    </label>
+    <input type="password" id="setup-password-confirm" name="password_confirm" required
+           autocomplete="new-password"
+           <% if (errors.password_confirm) { %>aria-invalid="true"<% } %>>
+    <%- include('../partials/field-error', { code: errors.password_confirm, t: t, hasT: hasT }) %>
+  </div>
+
+  <div class="btn-row setup__actions">
+    <a class="btn btn--quiet btn--small" href="/setup/catalogue"><%= t('setup.back') %></a>
+    <button class="btn" type="submit"><%= t('setup.done') %></button>
+  </div>
+</form>

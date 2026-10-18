@@ -16,6 +16,7 @@ import ejs from 'ejs';
 import Fastify from 'fastify';
 import { config as defaultConfig } from './config.js';
 import { getDatabase } from './db/index.js';
+import { countStaff } from './db/queries/staff.js';
 import { normalize } from './lib/normalize.js';
 import {
   LANG_COOKIE,
@@ -25,7 +26,7 @@ import {
   translatorFor,
 } from './lib/i18n.js';
 import { SqliteSessionStore } from './lib/session-store.js';
-import { libraryIcon, libraryName } from './lib/settings.js';
+import { libraryIcon, libraryName, setupCompletedAt } from './lib/settings.js';
 import { brandIconFile, isSafeIconName } from './lib/upload.js';
 import {
   UI_COOKIE,
@@ -200,6 +201,27 @@ export async function buildApp({ config = defaultConfig, logger, db, onRoute } =
       maxAge: config.sessionIdleMs,
     },
   });
+
+  /*
+    Whether the library has been claimed yet, said out loud at boot.
+
+    The browser setup page is open to anyone while a library has no accounts
+    — deliberately, because a fresh library holds nothing worth taking. The
+    cost of that choice is that an admin cannot otherwise tell whether the
+    teacher they sent the link to is the person who used it. This line, plus
+    the audit row the setup page writes, is what makes a claim visible instead
+    of silent.
+  */
+  if (countStaff(app.db) === 0) {
+    app.log.warn(
+      'This library has no staff accounts yet, so browser setup at /setup is open ' +
+        'to anyone who can reach it. Send the link to the person who should own ' +
+        'the library, and check the audit log afterwards if you are unsure who used it.',
+    );
+  } else {
+    const completed = setupCompletedAt(app.db);
+    if (completed) app.log.info({ setupCompletedAt: completed }, 'library claimed');
+  }
 
   if (config.isProduction && !config.trustProxy) {
     app.log.warn(

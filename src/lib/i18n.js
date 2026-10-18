@@ -230,6 +230,19 @@ const el = {
   'setup.catalogue.remove': 'Αφαίρεση «{name}»',
   'setup.catalogue.loanLabel': 'Προεπιλεγμένη διάρκεια δανεισμού',
   'setup.catalogue.days': 'ημέρες',
+  'setup.account.title': 'Ο λογαριασμός σας',
+  'setup.account.heading': 'Ο λογαριασμός σας',
+  'setup.account.lead': 'Με αυτόν μπαίνετε στο προσωπικό.',
+  'setup.account.username': 'Όνομα χρήστη',
+  'setup.account.usernameHint': 'Λατινικά γράμματα και αριθμοί — με αυτό συνδέεστε.',
+  'setup.account.displayName': 'Ονοματεπώνυμο',
+  'setup.account.password': 'Κωδικός',
+  'setup.account.passwordHint': {
+    one: 'Τουλάχιστον {n} χαρακτήρας.',
+    other: 'Τουλάχιστον {n} χαρακτήρες.',
+  },
+  'setup.account.passwordConfirm': 'Επιβεβαίωση κωδικού',
+  'setup.done': 'Έτοιμο',
 
   // --- Staff shell ---
   'staff.area': 'Διαχείριση βιβλιοθήκης',
@@ -879,6 +892,19 @@ const en = {
   'setup.catalogue.remove': 'Remove “{name}”',
   'setup.catalogue.loanLabel': 'Default loan period',
   'setup.catalogue.days': 'days',
+  'setup.account.title': 'Your account',
+  'setup.account.heading': 'Your account',
+  'setup.account.lead': 'This is how you will sign in to the staff area.',
+  'setup.account.username': 'Username',
+  'setup.account.usernameHint': 'Latin letters and digits — this is what you sign in with.',
+  'setup.account.displayName': 'Full name',
+  'setup.account.password': 'Password',
+  'setup.account.passwordHint': {
+    one: 'At least {n} character.',
+    other: 'At least {n} characters.',
+  },
+  'setup.account.passwordConfirm': 'Confirm password',
+  'setup.done': 'Done',
 
   // --- Staff shell ---
   'staff.area': 'Library administration',

@@ -35,11 +35,21 @@ import {
   getCategoryById,
   listAllCategories,
 } from '../db/queries/categories.js';
+import { logAction } from '../db/queries/audit.js';
 import { getSetting } from '../db/queries/settings.js';
-import { countStaff } from '../db/queries/staff.js';
+import { claimFirstAdmin, countStaff } from '../db/queries/staff.js';
+import { now } from '../db/index.js';
+import { SESSION_KEYS } from '../lib/auth.js';
+import { MIN_PASSWORD_LENGTH, checkPasswordStrength, hashPassword } from '../lib/password.js';
 import { SETTING_KEYS, defaultLoanDays, saveSetting } from '../lib/settings.js';
+import { UI_COOKIE } from '../lib/ui-flavour.js';
 import { parseCropFields, storeBrandIcon } from '../lib/upload.js';
-import { catalogueSetupSchema, librarySetupSchema } from '../lib/validation.js';
+import {
+  catalogueSetupSchema,
+  fieldErrors,
+  librarySetupSchema,
+  staffUserFormSchema,
+} from '../lib/validation.js';
 
 /*
   The list the teacher starts from.
@@ -237,6 +247,104 @@ export default async function setupRoutes(app) {
       loanDays: loanDays ?? String(defaultLoanDays(db, app.config)),
       loanError,
       focusAdd,
+    });
+  }
+
+  // ---------------------------------------------------- step 3: the account
+  //
+  // Last, and alone, because it is the only thing here that cannot be undone
+  // — and because it is what closes the page. Everything before it is a
+  // setting a librarian can change later from Ρυθμίσεις.
+  app.get('/setup/account', async (_request, reply) => renderAccountStep(reply));
+
+  app.post(
+    '/setup/account',
+    { ...rateLimit, preHandler: app.csrfProtection },
+    async (request, reply) => {
+      const body = request.body ?? {};
+      const values = {
+        username: typeof body.username === 'string' ? body.username.trim() : '',
+        display_name: typeof body.display_name === 'string' ? body.display_name.trim() : '',
+      };
+
+      // The wizard asks for no email: it is optional on an account, the step
+      // already has four boxes, and it can be added later on the account page.
+      const parsed = staffUserFormSchema.safeParse({
+        ...values,
+        role: 'admin',
+        is_active: true,
+      });
+
+      if (!parsed.success) {
+        return renderAccountStep(reply, { values, errors: fieldErrors(parsed.error) });
+      }
+
+      const password = typeof body.password === 'string' ? body.password : '';
+      const strength = checkPasswordStrength(password);
+      if (!strength.ok) {
+        return renderAccountStep(reply, { values, errors: { password: strength.reason } });
+      }
+      if (password !== body.password_confirm) {
+        return renderAccountStep(reply, { values, errors: { password_confirm: 'mismatch' } });
+      }
+
+      // Hashed out here so the claim below is one uninterrupted transaction.
+      const passwordHash = await hashPassword(password);
+      const claimed = claimFirstAdmin(db, {
+        username: parsed.data.username,
+        displayName: parsed.data.display_name,
+        passwordHash,
+      });
+
+      if (!claimed.ok) {
+        // Somebody else finished setup while this form was open. There is
+        // nothing to fix and nothing to explain: the library has an account
+        // now, and the sign-in page is where that leads.
+        if (claimed.reason === 'already_claimed') return reply.redirect('/staff/login', 302);
+        return renderAccountStep(reply, { values, errors: { username: claimed.reason } });
+      }
+
+      logAction(db, {
+        actor: { id: claimed.id, username: parsed.data.username },
+        action: 'staff.create',
+        entity: 'staff_user',
+        entityId: claimed.id,
+        // `via` and the address are what make a claim visible: if a stranger
+        // got to the link before the teacher, this row is how anyone finds out.
+        detail: { role: 'admin', via: 'setup', ip: request.ip },
+      });
+
+      saveSetting(db, SETTING_KEYS.setupCompletedAt, now());
+
+      // Straight in. Sending a teacher who has just chosen a password to a
+      // login form to type it again would be asking them to prove they were
+      // paying attention.
+      await request.session.regenerate();
+      request.session.set(SESSION_KEYS.staffUserId, claimed.id);
+      request.session.set(SESSION_KEYS.loggedInAt, Date.now());
+
+      // They set this library up in the new interface; dropping them into the
+      // old one on the next page would read as a different application.
+      reply.setCookie(UI_COOKIE, 'next', {
+        path: '/',
+        httpOnly: true,
+        sameSite: 'lax',
+        secure: app.config.isProduction,
+        maxAge: 365 * 24 * 60 * 60,
+      });
+
+      return reply.redirect('/staff', 302);
+    },
+  );
+
+  function renderAccountStep(reply, { values = { username: '', display_name: '' }, errors = {} } = {}) {
+    return reply.renderSetup('setup/step-account', {
+      title: reply.locals.t('setup.account.title'),
+      csrfToken: reply.generateCsrf(),
+      step: 3,
+      values,
+      errors,
+      minPasswordLength: MIN_PASSWORD_LENGTH,
     });
   }
 
