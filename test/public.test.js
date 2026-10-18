@@ -286,7 +286,10 @@ describe('book detail page', () => {
     const response = await get(`/books/${fixtures.books.austen}`);
     assert.ok(response.body.includes('Μη διαθέσιμο'));
     // Its one copy is in for repair, so none of them counts as available.
-    assert.ok(response.body.includes('0 από 1 διαθέσιμα'));
+    // Matched without the plural ending: the second interface agrees the
+    // count with the number, so one copy is "1 διαθέσιμο" there and
+    // "1 διαθέσιμα" in the first. The figures are the claim being tested.
+    assert.match(response.body, /0 από 1 διαθέσιμ[οα]/);
   });
 
   it('returns 404 for an archived, unknown or malformed id', async () => {
@@ -404,12 +407,16 @@ describe('markup matches what the CSP allows', () => {
     }
   });
 
-  it('carries no navigation links in the public header', () => {
+  it('carries no navigation links in the public header (first interface)', () => {
     // Browsing happens on one catalogue page with filters; a nav row would be
     // a second route to the same books. Categories and authors stay reachable
     // from the footer.
+    //
+    // The second interface decided otherwise and puts Κατάλογος, Κατηγορίες
+    // and Συγγραφείς in its bar, so this is pinned to the first. Its own
+    // shell is covered by test/next-shell.test.js.
     return (async () => {
-      const response = await get('/books');
+      const response = await get('/books', { headers: { cookie: 'ui=classic' } });
       const header = response.body.slice(
         response.body.indexOf('<header'),
         response.body.indexOf('</header>'),
@@ -424,15 +431,17 @@ describe('markup matches what the CSP allows', () => {
     })();
   });
 
-  it('shows the header search everywhere except the home page', async () => {
+  it('shows the header search everywhere except the home page (first interface)', async () => {
     // The home page has its own prominent field; two would be the same
-    // control twice on one screen.
-    const home = await get('/');
+    // control twice on one screen. `id="header-q"` is the first interface's
+    // markup; the second builds its header search differently and is covered
+    // by test/next-public.test.js.
+    const home = await get('/', { headers: { cookie: 'ui=classic' } });
     assert.ok(!home.body.includes('id="header-q"'), 'the home page duplicates the search box');
     assert.match(home.body, /data-autofocus/, 'the home page lost its own search box');
 
     for (const url of ['/books', '/categories', '/authors']) {
-      const response = await get(url);
+      const response = await get(url, { headers: { cookie: 'ui=classic' } });
       assert.ok(response.body.includes('id="header-q"'), `${url} has no header search`);
     }
   });
@@ -476,7 +485,7 @@ describe('what public pages must never expose (acceptance 8)', () => {
   it('shows no due dates on the public book page', async () => {
     const response = await get(`/books/${fixtures.books.iliad}`);
     // The copy counts as unavailable, but the page never says when it is back.
-    assert.ok(response.body.includes('0 από 1 διαθέσιμα'));
+    assert.match(response.body, /0 από 1 διαθέσιμ[οα]/);
     assert.ok(!/\d{4}-\d{2}-\d{2}T/.test(response.body), 'a timestamp leaked onto the page');
     assert.ok(!/\d{4}-\d{2}-\d{2}/.test(response.body), 'a due date leaked onto the page');
   });
