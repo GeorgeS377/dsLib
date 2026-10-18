@@ -246,6 +246,9 @@ describe('the session itself', () => {
       SESSION_SECRET: 'a-production-secret-that-is-long-enough-yes',
     });
     const prodDb = makeTestDb();
+    // An account, so the sign-in form renders: a library with none now sends
+    // /staff/login to the browser setup, and a redirect issues no session.
+    await makeStaffUser(prodDb);
     const prodApp = await buildApp({ config: setup.config, logger: false, db: prodDb });
     await prodApp.ready();
 
@@ -558,14 +561,19 @@ describe('login behaviour', () => {
     }
   });
 
-  it('tells a fresh installation how to create the first account', async () => {
+  it('sends a fresh installation to the browser setup', async () => {
+    // This used to print the create-admin command, which is the right answer
+    // for the admin on the server and useless to the teacher they sent the
+    // link to. create-admin still exists and is still documented; the sign-in
+    // page now points at the setup the visitor came here to do.
     const emptyDb = makeTestDb();
     const setup = testConfig();
     const freshApp = await buildApp({ config: setup.config, logger: false, db: emptyDb });
     await freshApp.ready();
 
     const response = await freshApp.inject({ method: 'GET', url: '/staff/login' });
-    assert.ok(response.body.includes('create-admin'));
+    assert.equal(response.statusCode, 302);
+    assert.equal(response.headers.location, '/setup');
     // And there is certainly no account to log into.
     assert.equal(emptyDb.value('SELECT COUNT(*) FROM staff_user'), 0);
 

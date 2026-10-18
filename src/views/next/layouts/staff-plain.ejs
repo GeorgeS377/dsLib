@@ -30,10 +30,17 @@
             yet, so this is still the front door. -%>
         <span><%= libraryName %></span>
       </a>
-      <a class="bar__who plain" href="/" >
-        <%- include('../../partials/icon', { name: 'chevron-left', size: 15 }) %>
-        <%= t('staff.viewPublicSite') %>
-      </a>
+      <%# During first-run setup there is no public site worth going back to
+          and no account to sign out of, so the corner names what is
+          happening instead of offering a way out of it. -%>
+      <% if (typeof setupStep !== 'undefined') { %>
+        <span class="bar__who faint"><%= t('setup.bar') %></span>
+      <% } else { %>
+        <a class="bar__who plain" href="/" >
+          <%- include('../../partials/icon', { name: 'chevron-left', size: 15 }) %>
+          <%= t('staff.viewPublicSite') %>
+        </a>
+      <% } %>
     </div>
   </header>
 

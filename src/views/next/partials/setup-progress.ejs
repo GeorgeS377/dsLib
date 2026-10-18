@@ -1,0 +1,17 @@
+<%#
+  Where you are in setup: a label over a three-segment rule.
+
+  Not dots. An orange rule is already how this interface says "this is the
+  one you are on" — it is the mark under the current page in the bar — so
+  reusing it means the device needs no learning.
+
+  Expects: step (1, 2 or 3), t.
+-%>
+<div>
+  <span class="label"><%= t('setup.step', { current: step, total: 3 }) %></span>
+  <div class="setup__progress">
+    <% for (let n = 1; n <= 3; n += 1) { %>
+      <span<%= n <= step ? ' class="is-done"' : '' %>></span>
+    <% } %>
+  </div>
+</div>

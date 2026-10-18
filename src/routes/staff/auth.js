@@ -24,6 +24,14 @@ export default async function authRoutes(app) {
       return reply.redirect(safeRedirect(request.query?.next) ?? '/staff', 302);
     }
 
+    // A library with no accounts has nothing this form can open. It used to
+    // print the create-admin command, which is the right answer for the admin
+    // and useless to the teacher they sent the link to — so now it sends them
+    // to the setup they were coming here to do.
+    if (countStaff(db) === 0) {
+      return reply.redirect('/setup', 302);
+    }
+
     return reply.renderPlain(
       'staff/login',
       {

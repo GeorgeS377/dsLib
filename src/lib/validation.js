@@ -349,6 +349,25 @@ export const authorFormSchema = z.object({
   name: z.string().trim().min(1, 'required').max(200),
 });
 
+/*
+  First-run setup.
+
+  The library's name is required. There is no sensible silent fallback: an
+  unnamed library shows an empty bar and a blank browser tab, and the box
+  carries the example as a placeholder rather than a value precisely so that
+  pressing Συνέχεια without typing is a question, not a default.
+
+  The ceiling matches LIBRARY_NAME_MAX_LENGTH in src/lib/settings.js, which is
+  where a stored row is validated on the way back out.
+*/
+export const librarySetupSchema = z.object({
+  library_name: z.string().trim().min(1, 'required').max(120, 'too_long'),
+});
+
+export const catalogueSetupSchema = z.object({
+  loan_days: z.coerce.number().int('invalid').min(1, 'out_of_range').max(365, 'out_of_range'),
+});
+
 /**
  * Turn a zod error into a map of field name to error code, for rendering
  * field-level messages. Codes are translated in the templates, so no message

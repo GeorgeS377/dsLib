@@ -1,0 +1,86 @@
+<%#
+  Setup, step 1: what the library is called and what icon it wears.
+
+  Icon on top as a large square tile, name underneath — the shape a GNOME or
+  macOS first-run assistant uses, in this interface's own materials: square
+  panel, square tile, 4px only on the button and the box, orange as the rule.
+
+  The field label sits on the left like every other form in the application.
+  A centred label was tried and was the only one of its kind on the site.
+
+  Expects: step, name, nameError, iconError, maxUploadMb, csrfToken, brandIcon.
+-%>
+<form class="panel setup" method="post" action="/setup/library" enctype="multipart/form-data">
+  <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+
+  <%- include('../partials/setup-progress', { step: step, t: t }) %>
+
+  <%#
+    The same cropper the book form uses, with a square frame instead of a
+    cover's 2:3 — one control, so there is one place where framing an image
+    can be got wrong. The stage stays hidden until a file is chosen, and stays
+    hidden for good with no scripting, where the whole image uploads and the
+    server squares it off centre.
+  -%>
+  <div class="setup__icon cropper" data-cropper
+       data-cropper-width="200" data-cropper-height="200">
+    <div class="setup__tile<%= brandIcon ? ' setup__tile--image' : '' %>">
+      <% if (brandIcon) { %>
+        <img src="/brand/<%= brandIcon.replace(/\.png$/, '') %>-512.png" alt="">
+      <% } else { %>
+        <%- include('../../partials/icon', { name: 'book', size: 56 }) %>
+      <% } %>
+    </div>
+
+    <div>
+      <label class="btn btn--ghost btn--small setup__choose" for="setup-icon">
+        <%= t('setup.library.chooseImage') %>
+      </label>
+      <%#
+        The native control is the only thing that works with no scripting, so
+        it is the control — hidden, with its own label styled as the button.
+      -%>
+      <input class="visually-hidden" type="file" id="setup-icon" name="icon"
+             accept="image/png,image/jpeg,image/webp" data-cropper-file>
+      <p class="field__hint setup__iconHint"><%= t('setup.library.imageHint') %></p>
+      <%- include('../partials/field-error', { code: iconError, t: t, hasT: hasT }) %>
+    </div>
+
+    <div class="cropper__stage" data-cropper-stage hidden>
+      <p class="field__hint"><%= t('staff.cover.dragHint') %></p>
+      <canvas class="cropper__canvas" data-cropper-canvas
+              aria-label="<%= t('setup.library.frame') %>"></canvas>
+      <div class="cropper__zoom">
+        <label class="field__label" for="setup-icon-zoom"><%= t('staff.cover.zoom') %></label>
+        <input type="range" id="setup-icon-zoom" min="1" max="4" step="0.01" value="1"
+               data-cropper-zoom>
+      </div>
+    </div>
+
+    <input type="hidden" name="crop_x" data-cropper-x>
+    <input type="hidden" name="crop_y" data-cropper-y>
+    <input type="hidden" name="crop_w" data-cropper-w>
+    <input type="hidden" name="crop_h" data-cropper-h>
+  </div>
+
+  <hr class="setup__rule">
+
+  <div>
+    <h1><%= t('setup.library.heading') %></h1>
+    <p class="muted mt-2"><%= t('setup.library.lead') %></p>
+  </div>
+
+  <div>
+    <label class="field__label" for="library-name"><%= t('setup.library.nameLabel') %></label>
+    <input type="text" id="library-name" name="library_name" required autofocus
+           maxlength="120"
+           placeholder="<%= t('setup.library.namePlaceholder') %>"
+           value="<%= name %>"
+           <% if (nameError) { %>aria-invalid="true"<% } %>>
+    <%- include('../partials/field-error', { code: nameError, t: t, hasT: hasT }) %>
+  </div>
+
+  <div class="btn-row setup__actions">
+    <button class="btn push" type="submit"><%= t('setup.continue') %></button>
+  </div>
+</form>

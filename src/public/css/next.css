@@ -25,6 +25,7 @@
     6. Pills, flashes and states
     7. Tables
     8. Utilities
+    9. First-run setup
 */
 
 /* ------------------------------------------------------------- 1. Tokens */
@@ -1500,4 +1501,93 @@ tbody tr:last-child td {
     white-space: nowrap;
     border: 0;
   }
+}
+
+/* ------------------------------------------------------ 9. First-run setup */
+
+/*
+  The setup panel is narrower than a normal page and centred, because each
+  step asks one thing. The icon sits on top as a large square tile with the
+  name under it — the shape of a GNOME or macOS first-run assistant, drawn
+  with this interface's own materials rather than theirs: a square tile at the
+  control radius, not a rounded badge, and the orange that marks the current
+  page in the bar reused as the progress rule.
+*/
+.setup {
+  max-width: 30rem;
+  margin-inline: auto;
+}
+
+.setup__progress {
+  display: flex;
+  gap: var(--s-1);
+  margin-top: var(--s-2);
+}
+
+.setup__progress > span {
+  height: 2px;
+  flex: 1;
+  background: var(--line-strong);
+}
+
+.setup__progress > span.is-done {
+  background: var(--orange);
+}
+
+.setup__icon {
+  text-align: center;
+}
+
+.setup__tile {
+  width: 96px;
+  height: 96px;
+  margin-inline: auto;
+  border-radius: var(--r-control);
+  background: var(--orange);
+  color: #fff;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+}
+
+/* A school's own image fills the tile; the orange is this application's mark
+   and has no business framing somebody else's crest. */
+.setup__tile--image {
+  background: var(--sunken);
+}
+
+.setup__tile img,
+.setup__tile canvas {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* The file input itself is hidden and its label is the button: the native
+   control is the only thing that works with scripting off, and a label is
+   what lets it look like every other button here. */
+.setup__choose {
+  margin-top: var(--s-3);
+}
+
+.setup__iconHint {
+  margin-top: var(--s-2);
+}
+
+.setup__rule {
+  border: 0;
+  border-top: 1px solid var(--line);
+}
+
+.setup__actions {
+  justify-content: space-between;
+}
+
+/* The icon cropper's stage is square, and centred under the tile it will
+   replace. The cover cropper's own rules size by the canvas, so only the
+   centring differs. */
+.setup__icon .cropper__stage {
+  display: grid;
+  justify-items: center;
 }

@@ -454,9 +454,15 @@ function enableCoverCropper() {
     if (!file || !stage || !canvas || !zoomInput) continue;
     if (!Object.values(fields).every(Boolean)) continue;
 
-    // A cover is taller than it is wide; 2:3 matches the stored display size.
-    const frameW = 240;
-    const frameH = 360;
+    /*
+      The frame's shape comes from the markup, because two places crop an
+      image and they want different shapes: a book cover is taller than it is
+      wide (2:3, matching the stored display size), and the library's icon is
+      square. Defaulting to the cover's shape keeps the book form's markup as
+      it was.
+    */
+    const frameW = Number(root.dataset.cropperWidth) || 240;
+    const frameH = Number(root.dataset.cropperHeight) || 360;
     const context = canvas.getContext('2d');
     const ratio = window.devicePixelRatio || 1;
     canvas.width = frameW * ratio;

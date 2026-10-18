@@ -200,6 +200,25 @@ const el = {
     'Δεν υπάρχει ακόμη λογαριασμός προσωπικού. Δημιουργήστε τον πρώτο από τον διακομιστή με:',
   'login.mustChangePassword': 'Πρέπει να βάλετε νέο κωδικό.',
 
+  // --- First-run setup ---
+  //
+  // The teacher reading these has never seen the software before, so they say
+  // what happens rather than naming the thing that happens: "το όνομα
+  // φαίνεται πάνω σε κάθε σελίδα", not "ρύθμιση ονόματος".
+  'setup.bar': 'Εγκατάσταση',
+  'setup.step': 'ΒΗΜΑ {current} ΑΠΟ {total}',
+  'setup.continue': 'Συνέχεια',
+  'setup.back': 'Πίσω',
+  'setup.library.title': 'Η βιβλιοθήκη σας',
+  'setup.library.heading': 'Η βιβλιοθήκη σας',
+  'setup.library.lead':
+    'Το όνομα και το εικονίδιο φαίνονται στην μπάρα πάνω και στην καρτέλα του browser.',
+  'setup.library.nameLabel': 'Όνομα βιβλιοθήκης',
+  'setup.library.namePlaceholder': '5ο Γυμνάσιο Ηρακλείου Αττικής',
+  'setup.library.chooseImage': 'Επιλογή εικόνας…',
+  'setup.library.imageHint': 'PNG ή JPG. Θα κοπεί σε τετράγωνο.',
+  'setup.library.frame': 'Προεπισκόπηση εικονιδίου',
+
   // --- Staff shell ---
   'staff.area': 'Διαχείριση βιβλιοθήκης',
   'staff.logout': 'Αποσύνδεση',
@@ -821,6 +840,21 @@ const en = {
   'login.expired': 'Your session has expired. Please sign in again.',
   'login.noAccounts': 'No staff account exists yet. Create the first one on the server with:',
   'login.mustChangePassword': 'You need to set a new password.',
+
+  // --- First-run setup ---
+  'setup.bar': 'Setup',
+  'setup.step': 'STEP {current} OF {total}',
+  'setup.continue': 'Continue',
+  'setup.back': 'Back',
+  'setup.library.title': 'Your library',
+  'setup.library.heading': 'Your library',
+  'setup.library.lead':
+    'The name and the icon appear in the bar at the top and in the browser tab.',
+  'setup.library.nameLabel': 'Library name',
+  'setup.library.namePlaceholder': 'Lincoln Middle School',
+  'setup.library.chooseImage': 'Choose an image…',
+  'setup.library.imageHint': 'PNG or JPG. It will be cropped to a square.',
+  'setup.library.frame': 'Icon preview',
 
   // --- Staff shell ---
   'staff.area': 'Library administration',

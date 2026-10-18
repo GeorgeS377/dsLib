@@ -37,6 +37,7 @@ import {
 } from './lib/ui-flavour.js';
 import healthRoutes from './routes/health.js';
 import publicRoutes from './routes/public/index.js';
+import setupRoutes from './routes/setup.js';
 import staffRoutes from './routes/staff/index.js';
 
 const ONE_YEAR_SECONDS = 365 * 24 * 60 * 60;
@@ -441,12 +442,32 @@ export async function buildApp({ config = defaultConfig, logger, db, onRoute } =
     );
   });
 
+  /**
+   * Render a first-run setup step.
+   *
+   * The one place in the application that ignores the interface flavour. The
+   * first interface is retiring and was never given a setup page, and the
+   * default flavour is still the old one — so a teacher following the admin's
+   * link on a fresh deployment would otherwise meet a 500 or a half-rendered
+   * page. `setupStep` tells the plain layout to put "Εγκατάσταση" where the
+   * sign-out would be: nobody has an account to sign out of yet.
+   */
+  app.decorateReply('renderSetup', function renderSetup(template, data = {}) {
+    const resolve = (name) => resolveTemplate('next', name, { viewsRoot });
+    return this.view(
+      resolve(template),
+      { ...this.locals, setupStep: data.step ?? 1, ...data },
+      { layout: resolve('layouts/staff-plain.ejs') },
+    );
+  });
+
   // Routes resolve their own template names through the same rule, so a page
   // rendered outside the decorators still lands in the right interface.
   app.decorate('viewsRoot', viewsRoot);
 
   // --- Routes -------------------------------------------------------------
   await app.register(healthRoutes);
+  await app.register(setupRoutes);
   await app.register(staffRoutes);
   await app.register(publicRoutes);
 
