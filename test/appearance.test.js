@@ -1,5 +1,12 @@
 // Theme, icons and the filter bar — the parts of the interface a design
 // review flagged. These exist so the fixes cannot quietly regress.
+//
+// Pinned to ?ui=classic. Every assertion here is about the first interface's
+// markup, and several describe rules the second interface deliberately
+// reversed: the theme control moved out of the header into the footer, and
+// the filters fold away on a phone. The second interface's own equivalents
+// are covered by test/next-shell.test.js and test/next-public.test.js. When
+// the first interface is finally removed, this file goes with it.
 import assert from 'node:assert/strict';
 import { after, before, describe, it } from 'node:test';
 import { buildApp } from '../src/app.js';
@@ -30,7 +37,13 @@ after(async () => {
   cleanupDir(dir);
 });
 
-const get = (url, options = {}) => app.inject({ method: 'GET', url, ...options });
+const get = (url, options = {}) =>
+  app.inject({
+    method: 'GET',
+    url,
+    ...options,
+    headers: { cookie: 'ui=classic', ...(options.headers ?? {}) },
+  });
 
 describe('theme', () => {
   it('serves light by default', async () => {
@@ -82,7 +95,7 @@ describe('theme', () => {
   it('offers the toggle on public and staff pages', async () => {
     assert.match((await get('/books')).body, /class="theme-toggle"/);
 
-    const session = await login(app);
+    const session = await login(app, { ui: 'classic' });
     assert.match((await session.get('/staff')).body, /class="theme-toggle"/);
   });
 
@@ -97,7 +110,7 @@ describe('theme', () => {
 
 describe('icons', () => {
   it('uses no emoji anywhere in the interface', async () => {
-    const session = await login(app);
+    const session = await login(app, { ui: 'classic' });
     const pages = [
       ['/', (await get('/')).body],
       ['/books', (await get('/books')).body],
@@ -184,7 +197,7 @@ describe('header and footer layout', () => {
   });
 
   it('gives the staff area one top bar, not two stacked ones', async () => {
-    const session = await login(app);
+    const session = await login(app, { ui: 'classic' });
     const body = (await session.get('/staff')).body;
 
     const bars = body.match(/<header\b/g) ?? [];
@@ -206,7 +219,7 @@ describe('header and footer layout', () => {
   });
 
   it('marks sign out as destructive', async () => {
-    const session = await login(app);
+    const session = await login(app, { ui: 'classic' });
     const body = (await session.get('/staff')).body;
     const form = body.slice(body.indexOf('action="/staff/logout"'));
     assert.match(
@@ -225,7 +238,7 @@ describe('header and footer layout', () => {
     assert.ok(!anonBar.includes('/staff/logout'), 'the sign-in page offers sign out');
     assert.ok(!anonBar.includes('staff-tabs'), 'the sign-in page shows the staff tabs');
 
-    const session = await login(app);
+    const session = await login(app, { ui: 'classic' });
     const signedIn = await session.get('/staff');
     const bar = signedIn.body.slice(0, signedIn.body.indexOf('</header>'));
     assert.ok(bar.includes('staff-bar__public'), 'no way back when signed in');
@@ -337,7 +350,7 @@ describe('catalogue filters', () => {
 
 describe('lending without a barcode', () => {
   it('finds copies by title', async () => {
-    const session = await login(app);
+    const session = await login(app, { ui: 'classic' });
     const response = await session.get(`/staff/loans/checkout?q=${encodeURIComponent('οδυσσεια')}`);
     assert.equal(response.statusCode, 200);
     assert.ok(response.body.includes('Οδύσσεια'));
@@ -345,7 +358,7 @@ describe('lending without a barcode', () => {
   });
 
   it('finds copies by author, in any Greek casing', async () => {
-    const session = await login(app);
+    const session = await login(app, { ui: 'classic' });
     for (const q of ['Όμηρος', 'ομηροσ', 'ΟΜΗΡΟΣ']) {
       const response = await session.get(`/staff/loans/checkout?q=${encodeURIComponent(q)}`);
       assert.ok(response.body.includes('Οδύσσεια'), `"${q}" found nothing`);
@@ -354,7 +367,7 @@ describe('lending without a barcode', () => {
 
   it('lends a copy that has no barcode at all', async () => {
     // The case the barcode-only flow could never handle.
-    const session = await login(app);
+    const session = await login(app, { ui: 'classic' });
     const copy = createCopy(db, fixtures.books.iliad, { shelfLocation: 'Α1-09' });
     assert.ok(copy.ok);
 
@@ -377,7 +390,7 @@ describe('lending without a barcode', () => {
   });
 
   it('offers no Choose action for a copy that is already out', async () => {
-    const session = await login(app);
+    const session = await login(app, { ui: 'classic' });
     const copy = db.get("SELECT id FROM copy WHERE barcode = 'T-0003'");
     await session.post(
       '/staff/loans/checkout',
@@ -402,7 +415,7 @@ describe('lending without a barcode', () => {
   });
 
   it('still accepts a scanned barcode', async () => {
-    const session = await login(app);
+    const session = await login(app, { ui: 'classic' });
     const response = await session.get('/staff/loans/checkout?barcode=T-0002');
     assert.equal(response.statusCode, 200);
     assert.ok(response.body.includes('Οδύσσεια'));
@@ -410,7 +423,7 @@ describe('lending without a barcode', () => {
   });
 
   it('reports a search that matches nothing', async () => {
-    const session = await login(app);
+    const session = await login(app, { ui: 'classic' });
     const response = await session.get('/staff/loans/checkout?q=zzznothingmatches');
     assert.ok(response.body.includes('Δεν βρέθηκαν βιβλία'));
   });
@@ -418,7 +431,7 @@ describe('lending without a barcode', () => {
   it('shows a checkout refusal where the librarian is looking', async () => {
     // The reason comes from checkOut(), by which point the barcode lookup
     // field is off screen — an error attached to it would never be seen.
-    const session = await login(app);
+    const session = await login(app, { ui: 'classic' });
     const copy = db.get("SELECT id FROM copy WHERE barcode = 'T-0004'");
     const response = await session.post(
       '/staff/loans/checkout',

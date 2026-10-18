@@ -46,9 +46,14 @@ export function csrfFrom(body) {
  * requests, plus a helper that submits forms with a valid CSRF token.
  *
  * @param {import('fastify').FastifyInstance} app
- * @param {{ username?: string, password?: string }} [credentials]
+ * @param {{ username?: string, password?: string, ui?: string }} [credentials]
+ *   `ui` pins the interface for every request made through the returned
+ *   helpers — for suites that are about one of the two specifically.
  */
-export async function login(app, { username = 'maria', password = TEST_PASSWORD } = {}) {
+export async function login(
+  app,
+  { username = 'maria', password = TEST_PASSWORD, ui = null } = {},
+) {
   const form = await app.inject({ method: 'GET', url: '/staff/login' });
   const token = csrfFrom(form.body);
   const cookies = cookieHeader(form);
@@ -61,7 +66,9 @@ export async function login(app, { username = 'maria', password = TEST_PASSWORD 
   });
 
   assert.equal(response.statusCode, 302, `login failed: ${response.statusCode}`);
-  const session = cookieHeader(response, cookies);
+  const session = ui
+    ? `${cookieHeader(response, cookies)}; ui=${ui}`
+    : cookieHeader(response, cookies);
 
   return {
     cookie: session,
