@@ -218,6 +218,18 @@ const el = {
   'setup.library.chooseImage': 'Επιλογή εικόνας…',
   'setup.library.imageHint': 'PNG ή JPG. Θα κοπεί σε τετράγωνο.',
   'setup.library.frame': 'Προεπισκόπηση εικονιδίου',
+  'setup.catalogue.title': 'Κατηγορίες και δανεισμός',
+  'setup.catalogue.heading': 'Κατηγορίες και δανεισμός',
+  'setup.catalogue.lead':
+    'Βάλτε τις κατηγορίες που χρησιμοποιείτε. Προσθέτετε κι άλλες όποτε θέλετε.',
+  'setup.catalogue.categoriesLabel': 'Κατηγορίες',
+  'setup.catalogue.none': 'Δεν έμεινε καμία κατηγορία. Προσθέστε όποια θέλετε παρακάτω.',
+  'setup.catalogue.addLabel': 'Νέα κατηγορία',
+  'setup.catalogue.addPlaceholder': 'Προσθήκη κατηγορίας…',
+  'setup.catalogue.add': 'Προσθήκη',
+  'setup.catalogue.remove': 'Αφαίρεση «{name}»',
+  'setup.catalogue.loanLabel': 'Προεπιλεγμένη διάρκεια δανεισμού',
+  'setup.catalogue.days': 'ημέρες',
 
   // --- Staff shell ---
   'staff.area': 'Διαχείριση βιβλιοθήκης',
@@ -855,6 +867,18 @@ const en = {
   'setup.library.chooseImage': 'Choose an image…',
   'setup.library.imageHint': 'PNG or JPG. It will be cropped to a square.',
   'setup.library.frame': 'Icon preview',
+  'setup.catalogue.title': 'Categories and lending',
+  'setup.catalogue.heading': 'Categories and lending',
+  'setup.catalogue.lead':
+    'Set up the categories you use. You can add more whenever you like.',
+  'setup.catalogue.categoriesLabel': 'Categories',
+  'setup.catalogue.none': 'No categories left. Add the ones you want below.',
+  'setup.catalogue.addLabel': 'New category',
+  'setup.catalogue.addPlaceholder': 'Add a category…',
+  'setup.catalogue.add': 'Add',
+  'setup.catalogue.remove': 'Remove “{name}”',
+  'setup.catalogue.loanLabel': 'Default loan period',
+  'setup.catalogue.days': 'days',
 
   // --- Staff shell ---
   'staff.area': 'Library administration',

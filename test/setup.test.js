@@ -15,7 +15,7 @@ import { Jimp } from 'jimp';
 import { buildApp } from '../src/app.js';
 import { listAllCategories } from '../src/db/queries/categories.js';
 import { createStaffUser, listStaff } from '../src/db/queries/staff.js';
-import { invalidateSettings } from '../src/lib/settings.js';
+import { defaultLoanDays, invalidateSettings } from '../src/lib/settings.js';
 import { cleanupDir, makeTestDb, testConfig } from './helpers.js';
 import { TEST_PASSWORD, cookieHeader, csrfFrom } from './staff-helpers.js';
 
@@ -131,7 +131,7 @@ describe('the setup gate', () => {
 
   it('redirects every setup page to the login page once an account exists', async () => {
     await claim();
-    for (const url of ['/setup', '/setup/library']) {
+    for (const url of ['/setup', '/setup/library', '/setup/catalogue']) {
       const page = await get(url);
       assert.equal(page.statusCode, 302, url);
       assert.equal(page.headers.location, '/staff/login', url);
@@ -314,5 +314,143 @@ describe('step 1', () => {
     await post('/setup/library', { library_name: 'Μόνο όνομα' });
     assert.equal(listStaff(db).length, 0);
     assert.equal(listAllCategories(db).length, 0);
+  });
+});
+
+describe('step 2', () => {
+  const categoryNames = () => listAllCategories(db).map((row) => row.name);
+
+  const idOf = (name) => listAllCategories(db).find((row) => row.name === name)?.id;
+
+  const postCatalogue = (fields) =>
+    post('/setup/catalogue', fields, { tokenFrom: '/setup/catalogue' });
+
+  it('starts with a short starter list already created', async () => {
+    await get('/setup/catalogue');
+    assert.deepEqual(categoryNames().sort(), ['Επιστήμες', 'Ιστορία', 'Λογοτεχνία', 'Παιδικά']);
+  });
+
+  it('creates the starter list once, not again on every visit', async () => {
+    await get('/setup/catalogue');
+    await get('/setup/catalogue');
+    assert.equal(categoryNames().length, 4);
+  });
+
+  it('does not resurrect a starter category the teacher removed', async () => {
+    await get('/setup/catalogue');
+    await postCatalogue({ remove: String(idOf('Ιστορία')) });
+    await get('/setup/catalogue');
+    assert.ok(!categoryNames().includes('Ιστορία'));
+  });
+
+  it('adds a typed category with no JavaScript and shows it', async () => {
+    await get('/setup/catalogue');
+    const response = await postCatalogue({ add: '1', category_name: 'Μυθολογία' });
+    assert.equal(response.statusCode, 200);
+    assert.match(response.body, /Μυθολογία/);
+    assert.ok(categoryNames().includes('Μυθολογία'));
+  });
+
+  it('refuses a category that already exists under folding', async () => {
+    // 'ιστορια' beside 'Ιστορία' is the same subject twice.
+    await get('/setup/catalogue');
+    const response = await postCatalogue({ add: '1', category_name: 'ΙΣΤΟΡΙΑ' });
+    assert.equal(response.statusCode, 200);
+    assert.match(response.body, /field__error/);
+    assert.equal(categoryNames().filter((name) => name === 'ΙΣΤΟΡΙΑ').length, 0);
+  });
+
+  it('ignores an empty add rather than complaining', async () => {
+    await get('/setup/catalogue');
+    const response = await postCatalogue({ add: '1', category_name: '   ' });
+    assert.equal(response.statusCode, 200);
+    assert.equal(categoryNames().length, 4);
+  });
+
+  it('removes a category when its × is submitted', async () => {
+    await get('/setup/catalogue');
+    const response = await postCatalogue({ remove: String(idOf('Παιδικά')) });
+    assert.equal(response.statusCode, 200);
+    assert.ok(!categoryNames().includes('Παιδικά'));
+  });
+
+  it('shrugs at a removal of something that is not there', async () => {
+    await get('/setup/catalogue');
+    const response = await postCatalogue({ remove: '98765' });
+    assert.equal(response.statusCode, 200);
+    assert.equal(categoryNames().length, 4);
+  });
+
+  it('shrugs at a removal that is not even a number', async () => {
+    await get('/setup/catalogue');
+    const response = await postCatalogue({ remove: '../../etc/passwd' });
+    assert.equal(response.statusCode, 200);
+    assert.equal(categoryNames().length, 4);
+  });
+
+  it('offers 14 days to begin with', async () => {
+    const page = await get('/setup/catalogue');
+    assert.match(page.body, /value="14"/);
+  });
+
+  it('saves the loan period and moves to step 3', async () => {
+    await get('/setup/catalogue');
+    const response = await postCatalogue({ next: '1', loan_days: '21' });
+    assert.equal(response.statusCode, 302);
+    assert.equal(response.headers.location, '/setup/account');
+    assert.equal(defaultLoanDays(db, config), 21);
+  });
+
+  it('refuses a loan period outside 1 to 365', async () => {
+    await get('/setup/catalogue');
+    for (const bad of ['0', '-3', '400', 'abc', '']) {
+      const response = await postCatalogue({ next: '1', loan_days: bad });
+      assert.equal(response.statusCode, 200, bad);
+      assert.match(response.body, /field__error|aria-invalid="true"/, bad);
+    }
+    assert.equal(defaultLoanDays(db, config), config.defaultLoanDays);
+  });
+
+  it('keeps the categories when the loan period is refused', async () => {
+    await get('/setup/catalogue');
+    await postCatalogue({ add: '1', category_name: 'Μυθολογία' });
+    const response = await postCatalogue({ next: '1', loan_days: '0' });
+    assert.equal(response.statusCode, 200);
+    assert.match(response.body, /Μυθολογία/);
+    assert.ok(categoryNames().includes('Μυθολογία'));
+  });
+
+  it('prefills the saved loan period when the step is re-entered', async () => {
+    await get('/setup/catalogue');
+    await postCatalogue({ next: '1', loan_days: '7' });
+    const page = await get('/setup/catalogue');
+    assert.match(page.body, /value="7"/);
+  });
+
+  it('offers a link back to step 1', async () => {
+    const page = await get('/setup/catalogue');
+    assert.match(page.body, /href="\/setup\/library"/);
+  });
+
+  it('shows the name chosen in step 1 in the bar', async () => {
+    await post('/setup/library', { library_name: '5ο Γυμνάσιο Ηρακλείου Αττικής' });
+    const page = await get('/setup/catalogue');
+    assert.match(page.body, /5ο Γυμνάσιο Ηρακλείου Αττικής/);
+  });
+
+  it('requires a CSRF token', async () => {
+    const response = await app.inject({
+      method: 'POST',
+      url: '/setup/catalogue',
+      headers: { cookie: 'ui=next', 'content-type': 'application/x-www-form-urlencoded' },
+      payload: new URLSearchParams({ next: '1', loan_days: '14' }).toString(),
+    });
+    assert.equal(response.statusCode, 403);
+  });
+
+  it('creates no account of its own', async () => {
+    await get('/setup/catalogue');
+    await postCatalogue({ next: '1', loan_days: '14' });
+    assert.equal(listStaff(db).length, 0);
   });
 });

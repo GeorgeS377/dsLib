@@ -29,11 +29,26 @@
 // because it is the only irreversible act in the sequence, and because a
 // refused password must not be able to lose the name, the icon or the
 // categories that came before it.
+import {
+  createCategory,
+  deleteCategory,
+  getCategoryById,
+  listAllCategories,
+} from '../db/queries/categories.js';
 import { getSetting } from '../db/queries/settings.js';
 import { countStaff } from '../db/queries/staff.js';
-import { SETTING_KEYS, saveSetting } from '../lib/settings.js';
+import { SETTING_KEYS, defaultLoanDays, saveSetting } from '../lib/settings.js';
 import { parseCropFields, storeBrandIcon } from '../lib/upload.js';
-import { librarySetupSchema } from '../lib/validation.js';
+import { catalogueSetupSchema, librarySetupSchema } from '../lib/validation.js';
+
+/*
+  The list the teacher starts from.
+
+  Short on purpose. A long checklist invites picking rather than thinking, and
+  what a school shelves is not something this file can know — so these are
+  four obvious ones to delete from, not a taxonomy to adopt.
+*/
+export const STARTER_CATEGORIES = ['Λογοτεχνία', 'Ιστορία', 'Επιστήμες', 'Παιδικά'];
 
 /**
  * Is the library still unclaimed?
@@ -126,6 +141,102 @@ export default async function setupRoutes(app) {
       nameError,
       iconError,
       maxUploadMb: Math.round(app.config.maxUploadBytes / (1024 * 1024)),
+    });
+  }
+
+  // ------------------------------------- step 2: categories and loan period
+  //
+  // The categories are a list the teacher builds, not a menu they pick from.
+  // A few are there to begin with so the page is not an empty box, each goes
+  // with its ×, and the field adds whatever this school actually shelves.
+  //
+  // All three things the step can do — add, remove, continue — are submit
+  // buttons in one form, and there is no JavaScript behind any of them. The
+  // only thing an enhancement could buy is skipping one round trip on a page
+  // a school sees once; the shortcut it invites — striking a chip out of the
+  // DOM without telling the server — would put a list on screen that
+  // disagrees with the list in the database.
+  app.get('/setup/catalogue', async (_request, reply) => {
+    seedStarterCategories();
+    return renderCatalogueStep(reply);
+  });
+
+  app.post(
+    '/setup/catalogue',
+    { ...rateLimit, preHandler: app.csrfProtection },
+    async (request, reply) => {
+      const body = request.body ?? {};
+
+      if (body.add !== undefined) {
+        const name = typeof body.category_name === 'string' ? body.category_name.trim() : '';
+        // Nothing typed is not a mistake worth a message: the teacher pressed
+        // the button to see what it did.
+        if (name === '') return renderCatalogueStep(reply);
+
+        const created = createCategory(db, { name });
+        return renderCatalogueStep(reply, {
+          categoryError: created.ok ? null : created.reason,
+          categoryName: created.ok ? '' : name,
+          // Back in the box they were just typing in, so adding three
+          // subjects is type-enter-type-enter rather than type-enter-reach.
+          focusAdd: true,
+        });
+      }
+
+      if (body.remove !== undefined) {
+        // Straight off a form, so: a number, and one that is really a
+        // category. Anything else re-renders untouched rather than erroring —
+        // a stale × from a page left open is not worth a failure page.
+        const id = Number(body.remove);
+        if (Number.isInteger(id) && getCategoryById(db, id)) deleteCategory(db, id);
+        return renderCatalogueStep(reply);
+      }
+
+      const parsed = catalogueSetupSchema.safeParse({ loan_days: body.loan_days });
+      if (!parsed.success) {
+        return renderCatalogueStep(reply, {
+          loanDays: typeof body.loan_days === 'string' ? body.loan_days : '',
+          loanError: parsed.error.issues[0]?.message ?? 'invalid',
+        });
+      }
+
+      saveSetting(db, SETTING_KEYS.defaultLoanDays, String(parsed.data.loan_days));
+      return reply.redirect('/setup/account', 302);
+    },
+  );
+
+  /**
+   * Put a few categories in place, once.
+   *
+   * Only when there are none at all, so a teacher who removes Ιστορία does
+   * not find it back on the next page load — which is exactly what a
+   * "create the defaults if missing" rule would have done.
+   */
+  function seedStarterCategories() {
+    if (listAllCategories(db).length > 0) return;
+    for (const name of STARTER_CATEGORIES) createCategory(db, { name });
+  }
+
+  function renderCatalogueStep(
+    reply,
+    {
+      categoryError = null,
+      categoryName = '',
+      loanDays = null,
+      loanError = null,
+      focusAdd = false,
+    } = {},
+  ) {
+    return reply.renderSetup('setup/step-catalogue', {
+      title: reply.locals.t('setup.catalogue.title'),
+      csrfToken: reply.generateCsrf(),
+      step: 2,
+      categories: listAllCategories(db),
+      categoryError,
+      categoryName,
+      loanDays: loanDays ?? String(defaultLoanDays(db, app.config)),
+      loanError,
+      focusAdd,
     });
   }
 

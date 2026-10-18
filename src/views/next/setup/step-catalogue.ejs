@@ -1,0 +1,87 @@
+<%#
+  Setup, step 2: the categories this library files books under, and how long
+  a loan runs.
+
+  The categories are a list, not a menu. Four are there to start with, each
+  removable, and the field underneath adds whatever this school actually
+  shelves — because a school library's subjects are its own, and a checklist
+  written here would only ever be a guess.
+
+  One form, three submit buttons: add, remove and continue. That is what makes
+  all three work with no scripting; app.js only spares the round trip.
+
+  There is no JavaScript behind any of it, on purpose. The only thing an
+  enhancement could buy here is skipping one round trip on a page a school
+  visits once — and the obvious shortcut, striking a chip out of the DOM
+  without telling the server, would leave the list on screen disagreeing with
+  the list in the database. After an add the cursor returns to the box, which
+  is the part that actually made this tedious.
+
+  Expects: step, categories, categoryName, categoryError, loanDays, loanError,
+  focusAdd, csrfToken.
+-%>
+<form class="panel setup" method="post" action="/setup/catalogue" data-setup-categories>
+  <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+
+  <%- include('../partials/setup-progress', { step: step, t: t }) %>
+
+  <div>
+    <h1><%= t('setup.catalogue.heading') %></h1>
+    <p class="muted mt-2"><%= t('setup.catalogue.lead') %></p>
+  </div>
+
+  <div>
+    <span class="field__label"><%= t('setup.catalogue.categoriesLabel') %></span>
+
+    <% if (categories.length > 0) { %>
+      <ul class="chips" role="list" data-chip-list>
+        <% categories.forEach(function (category) { %>
+          <li class="chip">
+            <span><%= category.name %></span>
+            <%#
+              A submit button, not a link: removing is a change, and a change
+              behind a GET is one a browser may make on its own.
+            -%>
+            <button class="chip__x" type="submit" name="remove" value="<%= category.id %>"
+                    aria-label="<%= t('setup.catalogue.remove', { name: category.name }) %>">
+              <%- include('../../partials/icon', { name: 'close', size: 14 }) %>
+            </button>
+          </li>
+        <% }); %>
+      </ul>
+    <% } else { %>
+      <p class="field__hint"><%= t('setup.catalogue.none') %></p>
+    <% } %>
+
+    <div class="chips__add">
+      <input type="text" name="category_name" maxlength="200"
+             aria-label="<%= t('setup.catalogue.addLabel') %>"
+             placeholder="<%= t('setup.catalogue.addPlaceholder') %>"
+             value="<%= categoryName %>"
+             <% if (focusAdd) { %>autofocus<% } %>
+             <% if (categoryError) { %>aria-invalid="true"<% } %>>
+      <button class="btn btn--ghost" type="submit" name="add" value="1">
+        <%= t('setup.catalogue.add') %>
+      </button>
+    </div>
+    <%- include('../partials/field-error', { code: categoryError, t: t, hasT: hasT }) %>
+  </div>
+
+  <hr class="setup__rule">
+
+  <div>
+    <label class="field__label" for="loan-days"><%= t('setup.catalogue.loanLabel') %></label>
+    <div class="centre-row">
+      <input type="number" id="loan-days" name="loan_days" min="1" max="365"
+             class="input--narrow" value="<%= loanDays %>"
+             <% if (loanError) { %>aria-invalid="true"<% } %>>
+      <span class="muted"><%= t('setup.catalogue.days') %></span>
+    </div>
+    <%- include('../partials/field-error', { code: loanError, t: t, hasT: hasT }) %>
+  </div>
+
+  <div class="btn-row setup__actions">
+    <a class="btn btn--quiet btn--small" href="/setup/library"><%= t('setup.back') %></a>
+    <button class="btn" type="submit" name="next" value="1"><%= t('setup.continue') %></button>
+  </div>
+</form>

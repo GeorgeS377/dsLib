@@ -1591,3 +1591,61 @@ tbody tr:last-child td {
   display: grid;
   justify-items: center;
 }
+
+/*
+  The category list during setup: one chip per subject, each with its own
+  remove control, and a field underneath that adds another.
+
+  Chips are square like every other container here — the pill shape belongs to
+  the status badges, and borrowing it would have said "status" about something
+  that is a list entry.
+*/
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-2);
+  list-style: none;
+  padding: 0;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-2);
+  background: var(--sunken);
+  border: 1px solid var(--line);
+  padding: 5px var(--s-1) 5px var(--s-3);
+  font-size: 0.9375rem;
+}
+
+.chip__x {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border: 0;
+  background: none;
+  color: var(--ink-faint);
+  cursor: pointer;
+  padding: 0;
+}
+
+.chip__x:hover {
+  background: var(--line);
+  color: var(--ink);
+}
+
+.chips__add {
+  display: flex;
+  gap: var(--s-2);
+  margin-top: var(--s-3);
+}
+
+.chips__add .btn {
+  flex: none;
+}
+
+/* A day count needs four characters, not a whole row. */
+.input--narrow {
+  width: 6rem;
+}
