@@ -25,6 +25,7 @@ import {
   translatorFor,
 } from './lib/i18n.js';
 import { SqliteSessionStore } from './lib/session-store.js';
+import { libraryName } from './lib/settings.js';
 import {
   UI_COOKIE,
   VIEW_COOKIE,
@@ -358,7 +359,9 @@ export async function buildApp({ config = defaultConfig, logger, db, onRoute } =
       uiUrl: (target) => withQueryParam(request.url, 'ui', target),
       stylesheet: stylesheetFor(request.uiFlavour),
       supportedLangs: SUPPORTED_LANGS,
-      libraryName: config.libraryName,
+      // The database's name when one has been saved in the browser, the
+      // environment's otherwise — see src/lib/settings.js for the rule.
+      libraryName: libraryName(app.db, config),
       currentPath: request.url,
       langUrl: (target) => withQueryParam(request.url, 'lang', target),
       themeUrl: (target) => withQueryParam(request.url, 'theme', target),

@@ -10,6 +10,7 @@
 //   /staff/*                requires a valid staff session
 //   /staff/users/*          additionally requires the admin role
 import { requireAdmin, requireStaff } from '../../lib/auth.js';
+import { defaultLoanDays } from '../../lib/settings.js';
 import { takeFlash } from '../../lib/flash.js';
 import { resolveTemplate } from '../../lib/ui-flavour.js';
 import authRoutes, { logoutRoutes } from './auth.js';
@@ -44,7 +45,7 @@ export default async function staffRoutes(app) {
         // Shown in the cover upload hint, so the limit the templates advertise
         // is always the limit the server actually enforces.
         maxUploadMb: Math.round(protectedScope.config.maxUploadBytes / (1024 * 1024)),
-        defaultLoanDays: protectedScope.config.defaultLoanDays,
+        defaultLoanDays: defaultLoanDays(protectedScope.db, protectedScope.config),
       };
     });
 

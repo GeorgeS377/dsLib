@@ -20,6 +20,7 @@ import {
   renewLoan,
 } from '../../db/queries/loans.js';
 import { safeRedirect } from '../../lib/auth.js';
+import { defaultLoanDays } from '../../lib/settings.js';
 import { addFlash } from '../../lib/flash.js';
 import { buildUrl, pageWindow, resultRange, withParams } from '../../lib/urls.js';
 import { checkinSchema, checkoutSchema, parseForm } from '../../lib/validation.js';
@@ -110,7 +111,7 @@ export default async function staffLoanRoutes(app) {
         borrower_id: '',
         new_borrower_name: '',
         new_borrower_class: '',
-        due_date: defaultDue(app.config.defaultLoanDays),
+        due_date: defaultDue(defaultLoanDays(db, app.config)),
       },
       errors: {},
     });
@@ -161,7 +162,7 @@ export default async function staffLoanRoutes(app) {
       const result = checkOut(db, {
         copyId: copy.id,
         borrowerId,
-        loanDays: app.config.defaultLoanDays,
+        loanDays: defaultLoanDays(db, app.config),
         dueAt: data.due_date,
         staffUserId: request.staffUser.id,
       });
@@ -289,7 +290,7 @@ export default async function staffLoanRoutes(app) {
   // ------------------------------------------------------------------ renew
   app.post('/staff/loans/:id/renew', csrf, async (request, reply) => {
     const id = Number(request.params.id);
-    const result = renewLoan(db, { loanId: id, loanDays: app.config.defaultLoanDays });
+    const result = renewLoan(db, { loanId: id, loanDays: defaultLoanDays(db, app.config) });
 
     if (!result.ok) {
       addFlash(request, 'error', `staff.loans.error.${result.reason}`);
@@ -337,7 +338,7 @@ export default async function staffLoanRoutes(app) {
         borrower_id: body?.borrower_id ?? '',
         new_borrower_name: body?.new_borrower_name ?? '',
         new_borrower_class: body?.new_borrower_class ?? '',
-        due_date: body?.due_date || defaultDue(app.config.defaultLoanDays),
+        due_date: body?.due_date || defaultDue(defaultLoanDays(db, app.config)),
       },
       errors,
     });
