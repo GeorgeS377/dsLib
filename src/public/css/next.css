@@ -1556,6 +1556,21 @@ tbody tr:last-child td {
   text-align: center;
 }
 
+/* On the settings page the icon is one field among several, so it lines up
+   with the labels either side of it. Centred, as it is in the wizard, it was
+   the only thing on the form not starting at the left margin. */
+.setup__icon--inline {
+  text-align: start;
+}
+
+.setup__icon--inline .setup__tile {
+  margin-inline: 0;
+}
+
+.setup__icon--inline .cropper__stage {
+  justify-items: start;
+}
+
 .setup__tile {
   width: 96px;
   height: 96px;

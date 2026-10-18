@@ -7,6 +7,17 @@
   </div>
 
   <div class="list">
+    <% if (staffUser.role === 'admin') { %>
+      <a class="list__item plain" href="/staff/settings/library">
+        <span class="initials" aria-hidden="true">
+          <%- include('../../partials/icon', { name: 'book', size: 17 }) %>
+        </span>
+        <span class="list__grow">
+          <span class="list__title"><%= t('staff.library.title') %></span>
+          <span class="list__meta"><%= t('staff.library.lead') %></span>
+        </span>
+      </a>
+    <% } %>
     <a class="list__item plain" href="/staff/categories" >
       <span class="initials" aria-hidden="true">
         <%- include('../../partials/icon', { name: 'tag', size: 17 }) %>

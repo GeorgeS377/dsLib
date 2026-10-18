@@ -1,0 +1,101 @@
+<%#
+  Ρυθμίσεις → Η βιβλιοθήκη.
+
+  The same fields the first-run wizard asked for, laid out as one ordinary
+  settings form. The icon keeps the square cropper from step 1, so framing a
+  new crest works the same way the first one did.
+
+  Expects: values, errors, maxUploadMb, csrfToken, brandIcon.
+-%>
+<div class="stack-lg">
+  <div>
+    <h1><%= t('staff.library.title') %></h1>
+    <p class="muted mt-2"><%= t('staff.library.lead') %></p>
+  </div>
+
+  <form class="panel" method="post" action="/staff/settings/library"
+        enctype="multipart/form-data">
+    <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+
+    <div>
+      <label class="field__label" for="library-name"><%= t('setup.library.nameLabel') %></label>
+      <span class="field__hint"><%= t('staff.library.nameHint') %></span>
+      <input type="text" id="library-name" name="library_name" required maxlength="120"
+             value="<%= values.name %>"
+             <% if (errors.library_name) { %>aria-invalid="true"<% } %>>
+      <%- include('../partials/field-error', { code: errors.library_name, t: t, hasT: hasT }) %>
+    </div>
+
+    <div class="setup__icon setup__icon--inline cropper" data-cropper
+         data-cropper-width="200" data-cropper-height="200">
+      <span class="field__label"><%= t('staff.library.iconLabel') %></span>
+
+      <div class="setup__tile<%- brandIcon ? ' setup__tile--image' : '' %>" data-cropper-current>
+        <% if (brandIcon) { %>
+          <img src="/brand/<%= brandIcon.replace(/\.png$/, '') %>-512.png" alt="">
+        <% } else { %>
+          <%- include('../../partials/icon', { name: 'book', size: 56 }) %>
+        <% } %>
+      </div>
+
+      <div>
+        <label class="btn btn--ghost btn--small setup__choose" for="library-icon">
+          <%= brandIcon ? t('staff.library.replaceImage') : t('setup.library.chooseImage') %>
+        </label>
+        <input class="visually-hidden" type="file" id="library-icon" name="icon"
+               accept="image/png,image/jpeg,image/webp" data-cropper-file>
+        <p class="field__hint setup__iconHint"><%= t('setup.library.imageHint') %></p>
+        <%- include('../partials/field-error', { code: errors.icon, t: t, hasT: hasT }) %>
+      </div>
+
+      <div class="cropper__stage" data-cropper-stage hidden>
+        <p class="field__hint"><%= t('staff.cover.dragHint') %></p>
+        <canvas class="cropper__canvas" data-cropper-canvas
+                aria-label="<%= t('setup.library.frame') %>"></canvas>
+        <div class="cropper__zoom">
+          <label class="field__label" for="library-icon-zoom"><%= t('staff.cover.zoom') %></label>
+          <input type="range" id="library-icon-zoom" min="1" max="4" step="0.01" value="1"
+                 data-cropper-zoom>
+        </div>
+      </div>
+
+      <input type="hidden" name="crop_x" data-cropper-x>
+      <input type="hidden" name="crop_y" data-cropper-y>
+      <input type="hidden" name="crop_w" data-cropper-w>
+      <input type="hidden" name="crop_h" data-cropper-h>
+    </div>
+
+    <div>
+      <label class="field__label" for="loan-days"><%= t('setup.catalogue.loanLabel') %></label>
+      <span class="field__hint"><%= t('staff.library.loanHint') %></span>
+      <div class="centre-row">
+        <input type="number" id="loan-days" name="loan_days" min="1" max="365"
+               class="input--narrow" value="<%= values.loanDays %>"
+               <% if (errors.loan_days) { %>aria-invalid="true"<% } %>>
+        <span class="muted"><%= t('setup.catalogue.days') %></span>
+      </div>
+      <%- include('../partials/field-error', { code: errors.loan_days, t: t, hasT: hasT }) %>
+    </div>
+
+    <div class="btn-row">
+      <button class="btn" type="submit"><%= t('common.save') %></button>
+    </div>
+  </form>
+
+  <%# Its own form, because removing the icon is not part of saving the rest
+      and should not need the name to be valid first. -%>
+  <% if (brandIcon) { %>
+    <form class="panel" method="post" action="/staff/settings/library/icon/remove">
+      <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+      <div class="panel__head">
+        <div>
+          <h2><%= t('staff.library.removeIcon') %></h2>
+          <p class="muted small mt-2"><%= t('staff.library.removeIconHint') %></p>
+        </div>
+        <button class="btn btn--danger btn--small" type="submit">
+          <%= t('staff.library.removeIcon') %>
+        </button>
+      </div>
+    </form>
+  <% } %>
+</div>

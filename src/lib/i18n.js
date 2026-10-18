@@ -244,6 +244,18 @@ const el = {
   'setup.account.passwordConfirm': 'Επιβεβαίωση κωδικού',
   'setup.done': 'Έτοιμο',
 
+  // --- Ρυθμίσεις → Η βιβλιοθήκη ---
+  'staff.library.title': 'Η βιβλιοθήκη',
+  'staff.library.lead': 'Όνομα, εικονίδιο και διάρκεια δανεισμού.',
+  'staff.library.nameHint': 'Φαίνεται στην μπάρα πάνω και στην καρτέλα του browser.',
+  'staff.library.iconLabel': 'Εικονίδιο',
+  'staff.library.replaceImage': 'Αλλαγή εικόνας…',
+  'staff.library.loanHint': 'Ισχύει για νέους δανεισμούς. Μπορείτε να την αλλάξετε σε κάθε δανεισμό ξεχωριστά.',
+  'staff.library.removeIcon': 'Αφαίρεση εικονιδίου',
+  'staff.library.removeIconHint': 'Επιστρέφει στο εικονίδιο που συνοδεύει την εφαρμογή.',
+  'staff.library.saved': 'Οι ρυθμίσεις αποθηκεύτηκαν.',
+  'staff.library.iconRemoved': 'Το εικονίδιο αφαιρέθηκε.',
+
   // --- Staff shell ---
   'staff.area': 'Διαχείριση βιβλιοθήκης',
   'staff.logout': 'Αποσύνδεση',
@@ -905,6 +917,18 @@ const en = {
   },
   'setup.account.passwordConfirm': 'Confirm password',
   'setup.done': 'Done',
+
+  // --- Settings → The library ---
+  'staff.library.title': 'The library',
+  'staff.library.lead': 'Name, icon and loan period.',
+  'staff.library.nameHint': 'Shown in the bar at the top and in the browser tab.',
+  'staff.library.iconLabel': 'Icon',
+  'staff.library.replaceImage': 'Change image…',
+  'staff.library.loanHint': 'Applies to new loans. You can still change it on any one loan.',
+  'staff.library.removeIcon': 'Remove the icon',
+  'staff.library.removeIconHint': 'Goes back to the icon that ships with the application.',
+  'staff.library.saved': 'Settings saved.',
+  'staff.library.iconRemoved': 'The icon was removed.',
 
   // --- Staff shell ---
   'staff.area': 'Library administration',

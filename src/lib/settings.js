@@ -19,7 +19,7 @@
 // or carry a row written by a version of this code that allowed something this
 // one does not. A row that fails validation is treated as absent, so the worst
 // a bad value can do is put the old default back — never take every page down.
-import { getSetting, setSetting } from '../db/queries/settings.js';
+import { deleteSetting, getSetting, setSetting } from '../db/queries/settings.js';
 
 export const SETTING_KEYS = Object.freeze({
   libraryName: 'library_name',
@@ -93,6 +93,18 @@ export function invalidateSettings(db) {
 export function saveSetting(db, key, value) {
   setSetting(db, key, value);
   cacheFor(db).set(key, String(value));
+}
+
+/**
+ * Forget a setting, so reads fall back to the environment again.
+ *
+ * The other half of saveSetting, and here for the same reason: deleting the
+ * row through the query module alone would leave the old value in the cache,
+ * so a removed icon would keep being served until the process restarted.
+ */
+export function forgetSetting(db, key) {
+  deleteSetting(db, key);
+  cacheFor(db).set(key, null);
 }
 
 /**

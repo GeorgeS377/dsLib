@@ -22,6 +22,7 @@ import dashboardRoutes from './dashboard.js';
 import staffLoanRoutes from './loans.js';
 import staffSearchRoutes from './search.js';
 import staffTaxonomyRoutes from './taxonomy.js';
+import staffLibraryRoutes from './library-settings.js';
 import staffUserRoutes from './users.js';
 
 export default async function staffRoutes(app) {
@@ -73,5 +74,6 @@ export default async function staffRoutes(app) {
     await protectedScope.register(staffAnnouncementRoutes);
     await protectedScope.register(staffBorrowerRoutes);
     await protectedScope.register(staffUserRoutes);
+    await protectedScope.register(staffLibraryRoutes);
   });
 }
