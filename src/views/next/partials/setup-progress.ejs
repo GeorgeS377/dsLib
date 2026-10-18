@@ -10,8 +10,11 @@
 <div>
   <span class="label"><%= t('setup.step', { current: step, total: 3 }) %></span>
   <div class="setup__progress">
+    <%# The unescaped output tag is deliberate: run through the escaping one,
+        a whole class attribute arrives as class=&quot;is-done&quot; and
+        styles nothing at all. -%>
     <% for (let n = 1; n <= 3; n += 1) { %>
-      <span<%= n <= step ? ' class="is-done"' : '' %>></span>
+      <span<%- n <= step ? ' class="is-done"' : '' %>></span>
     <% } %>
   </div>
 </div>

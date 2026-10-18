@@ -467,6 +467,13 @@ function enableCoverCropper() {
     const ratio = window.devicePixelRatio || 1;
     canvas.width = frameW * ratio;
     canvas.height = frameH * ratio;
+    // The backing store is scaled for the display; the element itself has to
+    // be told its size in CSS pixels, or the browser lays it out at the
+    // buffer's dimensions and the frame comes out twice as big on a retina
+    // screen. Setting it here rather than in the stylesheet is what lets the
+    // same control carry two shapes.
+    canvas.style.width = `${frameW}px`;
+    canvas.style.height = `${frameH}px`;
     context.scale(ratio, ratio);
 
     let image = null;
@@ -501,9 +508,15 @@ function enableCoverCropper() {
       publish();
     };
 
+    // What the icon looks like now. It is the preview until a file is
+    // chosen, at which point the frame below becomes the preview and leaving
+    // both on screen would show two versions of the same thing.
+    const current = root.querySelector('[data-cropper-current]');
+
     const clear = () => {
       image = null;
       stage.hidden = true;
+      if (current) current.hidden = false;
       canvas.removeAttribute('tabindex');
       for (const field of Object.values(fields)) field.value = '';
     };
@@ -529,6 +542,7 @@ function enableCoverCropper() {
           ox = (frameW - image.width * k) / 2;
           oy = (frameH - image.height * k) / 2;
           stage.hidden = false;
+          if (current) current.hidden = true;
           // Focusable only once there is something to frame.
           canvas.setAttribute('tabindex', '0');
           draw();

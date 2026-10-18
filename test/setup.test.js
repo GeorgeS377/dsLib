@@ -181,6 +181,40 @@ describe('the setup gate', () => {
     assert.match(page.body, /ΒΗΜΑ 1 ΑΠΟ 3/);
   });
 
+  it('marks the segments of the progress rule it has reached', async () => {
+    // `<%=` escapes, so emitting a whole class attribute through it ships
+    // class=&quot;is-done&quot; and the rule stays grey. This has now bitten
+    // twice in this interface, so it gets a test rather than a third chance.
+    const step2 = await get('/setup/catalogue');
+    const done = step2.body.match(/class="is-done"/g) ?? [];
+    assert.equal(done.length, 2, 'step 2 should mark two segments');
+    assert.ok(!step2.body.includes('&quot;is-done&quot;'), 'the class attribute was escaped');
+  });
+
+  it('never ships an escaped class attribute', async () => {
+    // The wider version of the bug above: any conditional class emitted
+    // through the escaping output tag arrives as class=&quot;…&quot; and
+    // styles nothing, on a page that otherwise looks fine. Two of these have
+    // now shipped in this interface, so the whole wizard is checked.
+    for (const url of ['/setup/library', '/setup/catalogue', '/setup/account']) {
+      const page = await get(url);
+      assert.ok(!page.body.includes('class=&quot;'), url);
+    }
+  });
+
+  it('links the new interface stylesheet, not the old one', async () => {
+    // Found in a browser, not by a test: renderSetup forced the new
+    // *templates* while the shared locals still carried the stylesheet for
+    // whichever flavour the cookie asked for. With no cookie — which is every
+    // fresh deployment — the page rendered new markup against old CSS and
+    // came out as unstyled text.
+    for (const cookie of ['ui=classic', 'ui=next', '']) {
+      const page = await get('/setup/library', cookie);
+      assert.match(page.body, /href="[^"]*next\.css"/, `cookie: ${cookie || 'none'}`);
+      assert.ok(!/href="[^"]*app\.css"/.test(page.body), `cookie: ${cookie || 'none'}`);
+    }
+  });
+
   it('keeps the public catalogue working while setup is open', async () => {
     for (const url of ['/', '/books', '/categories', '/authors']) {
       const page = await get(url);

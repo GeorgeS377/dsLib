@@ -478,7 +478,18 @@ export async function buildApp({ config = defaultConfig, logger, db, onRoute } =
     const resolve = (name) => resolveTemplate('next', name, { viewsRoot });
     return this.view(
       resolve(template),
-      { ...this.locals, setupStep: data.step ?? 1, ...data },
+      {
+        ...this.locals,
+        // The stylesheet has to be forced alongside the templates. Without
+        // this line the shared locals still carried the sheet for whichever
+        // flavour the cookie asked for — and a fresh deployment has no
+        // cookie, so the first page a teacher ever saw was new markup against
+        // the old interface's CSS, which renders as unstyled text. Found by
+        // opening it, not by a test.
+        stylesheet: stylesheetFor('next'),
+        setupStep: data.step ?? 1,
+        ...data,
+      },
       { layout: resolve('layouts/staff-plain.ejs') },
     );
   });

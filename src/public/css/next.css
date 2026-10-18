@@ -138,6 +138,23 @@ svg {
   max-width: 100%;
 }
 
+/*
+  `hidden` means hidden, whatever else this sheet says.
+
+  The user agent hides [hidden] with `display: none`, but that is an author-
+  weight-beatable rule: any selector here that sets `display` on an element
+  which is sometimes hidden silently wins, and the element stays on screen
+  with its attribute set. That caught the cropper stage and the icon tile
+  during setup — both had `display` rules, both were being hidden correctly
+  by app.js, and both were visible anyway.
+
+  !important is the point, not a shortcut: this rule has to beat whatever a
+  component rule says, including ones not written yet.
+*/
+[hidden] {
+  display: none !important;
+}
+
 html {
   -webkit-text-size-adjust: 100%;
 }
@@ -1267,9 +1284,10 @@ tbody tr:last-child td {
 
 .cropper__canvas {
   display: block;
-  /* 2:3, matching the stored display size and the frame the script draws. */
-  width: 240px;
-  height: 360px;
+  /* No width or height here. The frame's shape is declared in the markup
+     (data-cropper-width/-height) and app.js sets both the drawing buffer and
+     the CSS size from it, so a cover's 2:3 and the library icon's square come
+     from one place instead of two that can disagree. */
   max-width: 100%;
   border: 1px solid var(--line);
   border-radius: var(--r-control);
@@ -1584,9 +1602,9 @@ tbody tr:last-child td {
   justify-content: space-between;
 }
 
-/* The icon cropper's stage is square, and centred under the tile it will
-   replace. The cover cropper's own rules size by the canvas, so only the
-   centring differs. */
+/* The icon cropper's stage is centred under the tile it replaces. Safe to
+   set `display` here because of the global [hidden] rule near the top; before
+   that rule existed this frame sat open on a page with nothing uploaded. */
 .setup__icon .cropper__stage {
   display: grid;
   justify-items: center;
@@ -1645,7 +1663,12 @@ tbody tr:last-child td {
   flex: none;
 }
 
-/* A day count needs four characters, not a whole row. */
-.input--narrow {
+/* A day count needs four characters, not a whole row.
+
+   Written as `input.input--narrow` rather than `.input--narrow`: the rule
+   that gives every text-like field `width: 100%` is an attribute selector
+   (`input[type="number"]`), which out-specifies a bare class, so the plain
+   version lost and the box filled the panel with the unit wrapping below it. */
+input.input--narrow {
   width: 6rem;
 }
