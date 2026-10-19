@@ -1,4 +1,4 @@
-# dsLib — Σχολική Βιβλιοθήκη
+# <img src="src/public/default-icon.png" width="40" height="40" align="center" alt=""> dsLib — Σχολική Βιβλιοθήκη
 
 A small library-management website for a school: a public catalogue anyone can
 search without an account, and a password-protected staff area where
