@@ -24,11 +24,11 @@
   -%>
   <div class="setup__icon cropper" data-cropper
        data-cropper-width="200" data-cropper-height="200">
-    <div class="setup__tile<%- brandIcon ? ' setup__tile--image' : '' %>" data-cropper-current>
+    <div class="setup__tile setup__tile--image" data-cropper-current>
       <% if (brandIcon) { %>
         <img src="/brand/<%= brandIcon.replace(/\.png$/, '') %>-512.png" alt="">
       <% } else { %>
-        <%- include('../../partials/icon', { name: 'book', size: 56 }) %>
+        <img src="/assets/default-icon-512.png" alt="">
       <% } %>
     </div>
 

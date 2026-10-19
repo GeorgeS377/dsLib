@@ -306,10 +306,11 @@ describe('serving the icon', () => {
     assert.match(page.body, new RegExp(`<img[^>]*/brand/${base}-32\\.png`));
   });
 
-  it('keeps the shipped book mark when no icon is set', async () => {
+  it('shows the default icon as the mark in the bar when no icon is set', async () => {
     clearIcon();
     const page = await get('/');
-    assert.match(page.body, /class="bar__mark"/);
+    assert.match(page.body, /class="bar__mark bar__mark--image"/);
+    assert.match(page.body, /assets\/default-icon-32\.png/);
     assert.ok(!page.body.includes('/brand/'));
   });
 

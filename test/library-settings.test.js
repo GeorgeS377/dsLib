@@ -277,7 +277,7 @@ describe('changing the icon', () => {
     }
 
     const page = await get('/staff');
-    assert.match(page.body, /\/assets\/icon\.svg/);
+    assert.match(page.body, /\/assets\/default-icon-32\.png/);
   });
 
   it('offers no removal control when there is no icon to remove', async () => {

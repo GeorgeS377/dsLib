@@ -11,10 +11,10 @@
 
   Expects: brandIcon.
 -%>
-<span class="bar__mark<%= brandIcon ? ' bar__mark--image' : '' %>">
+<span class="bar__mark bar__mark--image">
   <% if (brandIcon) { %>
     <img src="/brand/<%= brandIcon.replace(/\.png$/, '') %>-32.png" alt="" width="24" height="24">
   <% } else { %>
-    <%- include('../../partials/icon', { name: 'book', size: 15 }) %>
+    <img src="/assets/default-icon-32.png" alt="" width="24" height="24">
   <% } %>
 </span>

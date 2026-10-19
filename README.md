@@ -375,4 +375,6 @@ See [docs/deploy.md](docs/deploy.md#troubleshooting).
 
 ## Licence and credits
 
+See [License](LICENSE)
+
 Built for my school's library :D
