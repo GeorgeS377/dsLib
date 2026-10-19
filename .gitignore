@@ -19,10 +19,14 @@ logs/
 .vscode/
 *.swp
 
+# Local AI tool settings (Claude, etc.)
+.claude/
+
 # Test and backup scratch
 coverage/
 *.bak
 backups/
 
-# Brainstorming mockups (superpowers visual companion)
+# Superpowers AI workflow files (brainstorm mockups and dev plans)
 .superpowers/
+docs/superpowers/

@@ -214,7 +214,7 @@ const el = {
   'setup.library.lead':
     'Το όνομα και το εικονίδιο φαίνονται στην μπάρα πάνω και στην καρτέλα του browser.',
   'setup.library.nameLabel': 'Όνομα βιβλιοθήκης',
-  'setup.library.namePlaceholder': '5ο Γυμνάσιο Ηρακλείου Αττικής',
+  'setup.library.namePlaceholder': 'Βιβλιοθήκη 5ου Γυμνασίου Ηρακλείου',
   'setup.library.chooseImage': 'Επιλογή εικόνας…',
   'setup.library.imageHint': 'PNG ή JPG. Θα κοπεί σε τετράγωνο.',
   'setup.library.frame': 'Προεπισκόπηση εικονιδίου',

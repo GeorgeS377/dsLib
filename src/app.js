@@ -302,8 +302,8 @@ export async function buildApp({ config = defaultConfig, logger, db, onRoute } =
       // visit to every page, and two round trips for an icon that has not
       // changed since the application was written is one too many.
       return reply
-        .type('image/svg+xml')
-        .send(fs.createReadStream(path.join(config.projectRoot, 'src', 'public', 'icon.svg')));
+        .type('image/png')
+        .send(fs.createReadStream(path.join(config.projectRoot, 'src', 'public', 'default-icon-32.png')));
     }
     return reply
       .type('image/png')
