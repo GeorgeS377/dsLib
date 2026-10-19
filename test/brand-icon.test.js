@@ -261,14 +261,14 @@ describe('serving the icon', () => {
     assert.match(file.headers['content-type'], /image\/png/);
   });
 
-  it('falls back to the shipped SVG when no icon is set', async () => {
+  it('falls back to the default PNG icon when no icon is set', async () => {
     clearIcon();
     const page = await get('/');
-    assert.match(page.body, /rel="icon"[^>]*\/assets\/icon\.svg/);
+    assert.match(page.body, /rel="icon"[^>]*\/assets\/default-icon-32\.png/);
 
     const file = await get('/favicon.ico');
     assert.equal(file.statusCode, 200);
-    assert.match(file.headers['content-type'], /image\/svg\+xml/);
+    assert.match(file.headers['content-type'], /image\/png/);
   });
 
   it('falls back when the row points at a file that is not there', async () => {
@@ -279,11 +279,11 @@ describe('serving the icon', () => {
 
     const page = await get('/');
     assert.equal(page.statusCode, 200);
-    assert.match(page.body, /rel="icon"[^>]*\/assets\/icon\.svg/);
+    assert.match(page.body, /rel="icon"[^>]*\/assets\/default-icon-32\.png/);
 
     const file = await get('/favicon.ico');
     assert.equal(file.statusCode, 200);
-    assert.match(file.headers['content-type'], /image\/svg\+xml/);
+    assert.match(file.headers['content-type'], /image\/png/);
   });
 
   it('ignores a row whose value is not a name this module writes', async () => {
@@ -292,7 +292,7 @@ describe('serving the icon', () => {
 
     const page = await get('/');
     assert.equal(page.statusCode, 200);
-    assert.match(page.body, /rel="icon"[^>]*\/assets\/icon\.svg/);
+    assert.match(page.body, /rel="icon"[^>]*\/assets\/default-icon-32\.png/);
     assert.ok(!page.body.includes('etc/passwd'));
   });
 
