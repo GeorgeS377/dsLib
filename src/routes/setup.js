@@ -36,6 +36,7 @@ import {
   listAllCategories,
 } from '../db/queries/categories.js';
 import { logAction } from '../db/queries/audit.js';
+import { createAnnouncement } from '../db/queries/announcements.js';
 import { getSetting } from '../db/queries/settings.js';
 import { claimFirstAdmin, countStaff } from '../db/queries/staff.js';
 import { now } from '../db/index.js';
@@ -315,6 +316,14 @@ export default async function setupRoutes(app) {
       });
 
       saveSetting(db, SETTING_KEYS.setupCompletedAt, now());
+
+      // A ready-made notice so the public page is not blank on day one.
+      // The librarian can edit the text or delete it from Ρυθμίσεις → Ανακοινώσεις.
+      createAnnouncement(db, {
+        title: 'Καλωσήρθατε στην βιβλιοθήκη σας!',
+        body: 'Μπορείτε να επεξεργαστείτε αυτήν την ανακοίνωση στις ρυθμίσεις.',
+        isPublished: true,
+      });
 
       // Straight in. Sending a teacher who has just chosen a password to a
       // login form to type it again would be asking them to prove they were

@@ -30,3 +30,5 @@ backups/
 # Superpowers AI workflow files (brainstorm mockups and dev plans)
 .superpowers/
 docs/superpowers/
+
+simple-school-library-spec.md

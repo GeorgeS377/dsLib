@@ -1,6 +1,6 @@
-# <img src="src/public/default-icon.png" width="40" height="40" align="center" alt=""> dsLib — Σχολική Βιβλιοθήκη
+# <img src="src/public/default-icon.png" width="80" height="80" align="center" alt=""> dsLib — Σχολική Βιβλιοθήκη
 
-A small library-management website for a school: a public catalogue anyone can
+A small library-management website for schools: a public catalogue anyone can
 search without an account, and a password-protected staff area where
 librarians manage titles, physical copies and lending.
 
@@ -32,9 +32,9 @@ stored in whatever language it was catalogued in.
 
 **Public catalogue** — search by title, author, ISBN, publisher, subject or
 keyword; filter by category, author, year, language and availability; sort and
-paginate. Greek search is case- and accent-insensitive, matches partial words,
+paginate. Greek search is case and accent-insensitive, matches partial words,
 and treats final sigma (`ς`) and medial sigma (`σ`) as the same letter, so
-`ΟΔΥΣΣΕΙΑ`, `οδύσσεια` and `οδυσσεια` all find the same book.
+`ΟΔΥΣΣΕΙΆ`, `οδύσσεια` and `οδυσσεια` all find the same book.
 
 Browsing happens on one page: the search box lives in the header and the
 filters sit under the heading, always visible. Category, author and year take
@@ -58,10 +58,6 @@ and, for administrators, manage staff accounts.
 Lending works by searching for the book by title or author and picking a copy.
 A barcode field sits beside it for a scanner, but barcodes are optional on a
 copy, so search is the path that always works.
-
-**Not built** (spec §12): student accounts or logins, public reservations,
-fines or payments, barcode-scanner hardware integration, email or SMS
-notifications, multiple branches, external identity providers.
 
 ---
 
@@ -195,16 +191,7 @@ in `.gitignore`.
 Putting dsLib on a real server, keeping it updated, backups, rollbacks,
 migrations and troubleshooting all live in one place:
 
-**→ [docs/deploy.md](docs/deploy.md)**
-
-The short version: an admin installs it, configures `.env`, runs
-`npm run migrate`, puts it behind Nginx with a certificate — and then sends
-the teacher who runs the library a link. That teacher names the library, gives
-it an icon, picks its categories and creates the first account in a browser,
-without needing a terminal or an account from anyone.
-
-`npm run create-admin` still exists for the cases where the browser is not an
-option; the guide says which those are.
+See **[docs/deploy.md](docs/deploy.md)**.
 
 ---
 
@@ -383,9 +370,9 @@ loaded as an external file because the CSP allows no inline script.
 
 See [docs/deploy.md](docs/deploy.md#troubleshooting).
 
+
 ---
 
 ## Licence and credits
 
-Built for a school library, to the specification in
-`simple-school-library-spec.md`.
+Built for my school's library :D

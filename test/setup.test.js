@@ -245,7 +245,7 @@ describe('the setup gate', () => {
 describe('step 1', () => {
   it('shows the example as a placeholder, not as a filled-in value', async () => {
     const page = await get('/setup/library');
-    assert.match(page.body, /placeholder="5ο Γυμνάσιο Ηρακλείου Αττικής"/);
+    assert.match(page.body, /placeholder="Βιβλιοθήκη 5ου Γυμνασίου Ηρακλείου"/);
     assert.ok(
       !page.body.includes('value="Σχολική Βιβλιοθήκη"'),
       'the default name was prefilled into the box',
