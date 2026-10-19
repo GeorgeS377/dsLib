@@ -1,6 +1,12 @@
 // Catalogue management — acceptance criteria 5 (a librarian can create and
 // edit a title and manage its copies) and 7 (validation prevents malformed
 // input and duplicate identifiers).
+//
+// Pinned to ?ui=classic. Several assertions check markup specific to the first
+// interface: the error-summary class on validation failures, the archive-as-
+// secondary-action button on the delete page, and the merge collision UI on the
+// author editor. The second interface covers catalogue management in
+// test/next-staff-flow.test.js.
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -31,7 +37,7 @@ before(async () => {
   await makeStaffUser(db);
   app = await buildApp({ config: setup.config, logger: false, db });
   await app.ready();
-  session = await login(app);
+  session = await login(app, { ui: 'classic' });
 });
 
 after(async () => {

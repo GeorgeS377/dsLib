@@ -1,5 +1,10 @@
 // Circulation through the staff interface — acceptance criterion 6 end to
 // end, plus the borrower privacy controls the library asked for.
+//
+// Pinned to ?ui=classic. The assertions that check the dashboard layout (loan
+// status badges, privacy note, overdue heading) describe the first interface's
+// template. The second interface's staff home is a search-first design with no
+// stat cards; its circulation behaviour is covered by test/next-staff-flow.test.js.
 import assert from 'node:assert/strict';
 import { after, before, describe, it } from 'node:test';
 import { buildApp } from '../src/app.js';
@@ -23,7 +28,7 @@ before(async () => {
   await makeStaffUser(db);
   app = await buildApp({ config: setup.config, logger: false, db });
   await app.ready();
-  session = await login(app);
+  session = await login(app, { ui: 'classic' });
 });
 
 after(async () => {

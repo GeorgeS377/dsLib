@@ -2,6 +2,10 @@
 //
 // Each test names the break it catches, and each was written before the fix
 // and watched failing — so it has proven it can catch the thing it describes.
+//
+// Pinned to ?ui=classic. The regression for the error-summary test checks the
+// first interface's markup class. The second interface uses flash--error instead
+// and is covered by test/next-staff-flow.test.js.
 import assert from 'node:assert/strict';
 import { after, before, describe, it } from 'node:test';
 import { buildApp } from '../src/app.js';
@@ -26,7 +30,7 @@ before(async () => {
   await makeStaffUser(db);
   app = await buildApp({ config: setup.config, logger: false, db });
   await app.ready();
-  session = await login(app);
+  session = await login(app, { ui: 'classic' });
 });
 
 after(async () => {
