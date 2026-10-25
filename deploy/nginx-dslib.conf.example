@@ -40,9 +40,8 @@ server {
 }
 
 server {
-    listen 443 ssl;
-    listen [::]:443 ssl;
-    http2 on;
+    listen 443 ssl http2;
+    listen [::]:443 ssl http2;
     server_name library.example.gr;        # <-- change this
 
     # certbot fills these in. Do not point them at the example paths.

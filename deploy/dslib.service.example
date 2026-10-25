@@ -17,6 +17,7 @@ Wants=network-online.target
 
 [Service]
 Type=simple
+MemoryDenyWriteExecute=false
 
 # A dedicated unprivileged account. Create it with:
 #   sudo useradd --system --home /opt/dslib --shell /usr/sbin/nologin dslib
@@ -55,7 +56,6 @@ RestrictNamespaces=true
 RestrictRealtime=true
 RestrictSUIDSGID=true
 LockPersonality=true
-MemoryDenyWriteExecute=true
 RemoveIPC=true
 
 # Only the address families an HTTP server needs. AF_UNIX stays because the
