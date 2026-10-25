@@ -214,9 +214,13 @@ export async function buildApp({ config = defaultConfig, logger, db, onRoute } =
   */
   if (countStaff(app.db) === 0) {
     app.log.warn(
-      'This library has no staff accounts yet, so browser setup at /setup is open ' +
-        'to anyone who can reach it. Send the link to the person who should own ' +
-        'the library, and check the audit log afterwards if you are unsure who used it.',
+      `This library has no staff accounts yet. Send this link to the person who ` +
+        `should own it:\n    ${config.publicUrl}/setup\n` +
+        'Until they finish, that page is open to anyone who can reach it. If you ' +
+        'are unsure who used it, the audit log records the claim.' +
+        (config.publicUrlDerived
+          ? '\nPUBLIC_URL is not set in .env, so that link is a guess from HOST and PORT.'
+          : ''),
     );
   } else {
     const completed = setupCompletedAt(app.db);

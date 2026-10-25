@@ -1,5 +1,7 @@
-# Example Nginx site for dsLib. DOCUMENTATION ONLY — this file does nothing
-# where it sits, and installing it is a decision for whoever runs the server.
+# Nginx site for dsLib — TEMPLATE. Do not install this file; install the one
+# `npm run deploy:config` writes beside it, which has your own domain and port
+# filled in from .env. Editing the generated file by hand puts you back where
+# this started: two places that disagree about the port.
 #
 # IMPORTANT, if Nginx already serves another site on this machine:
 #   * Back up the existing configuration first:
@@ -11,13 +13,13 @@
 #       sudo nginx -t && sudo systemctl reload nginx
 #
 # Installing:
-#   sudo cp deploy/nginx-dslib.conf.example /etc/nginx/sites-available/dslib
-#   sudo nano /etc/nginx/sites-available/dslib      # set server_name
+#   npm run deploy:config
+#   sudo cp deploy/out/nginx-dslib.conf /etc/nginx/sites-available/dslib
 #   sudo ln -s /etc/nginx/sites-available/dslib /etc/nginx/sites-enabled/dslib
 #   sudo nginx -t && sudo systemctl reload nginx
 #
 # Then obtain a certificate (certbot rewrites the TLS lines below for you):
-#   sudo certbot --nginx -d library.example.gr
+#   sudo certbot --nginx -d {{publicHost}}
 
 # Rate-limit zone for the login endpoint, as a second line of defence behind
 # the application's own limiter. Must live at http{} level; if your nginx.conf
@@ -27,7 +29,7 @@ limit_req_zone $binary_remote_addr zone=dslib_login:10m rate=20r/m;
 server {
     listen 80;
     listen [::]:80;
-    server_name library.example.gr;        # <-- change this
+    server_name {{publicHost}};
 
     # Everything except the ACME challenge goes to HTTPS.
     location /.well-known/acme-challenge/ {
@@ -42,11 +44,11 @@ server {
 server {
     listen 443 ssl http2;
     listen [::]:443 ssl http2;
-    server_name library.example.gr;        # <-- change this
+    server_name {{publicHost}};
 
     # certbot fills these in. Do not point them at the example paths.
-    ssl_certificate     /etc/letsencrypt/live/library.example.gr/fullchain.pem;
-    ssl_certificate_key /etc/letsencrypt/live/library.example.gr/privkey.pem;
+    ssl_certificate     /etc/letsencrypt/live/{{publicHost}}/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/{{publicHost}}/privkey.pem;
     ssl_protocols       TLSv1.2 TLSv1.3;
     ssl_prefer_server_ciphers off;
     ssl_session_cache   shared:SSL:10m;
@@ -77,7 +79,7 @@ server {
         limit_req zone=dslib_login burst=10 nodelay;
         limit_req_status 429;
 
-        proxy_pass http://127.0.0.1:3000;
+        proxy_pass http://127.0.0.1:{{port}};
         include /etc/nginx/proxy_params;        # Debian/Ubuntu ships this
         proxy_set_header X-Forwarded-Proto $scheme;
     }
@@ -87,7 +89,7 @@ server {
     # one place, but cached hard: the filenames are content-addressed UUIDs
     # and a given file never changes.
     location /covers/ {
-        proxy_pass http://127.0.0.1:3000;
+        proxy_pass http://127.0.0.1:{{port}};
         include /etc/nginx/proxy_params;
         proxy_set_header X-Forwarded-Proto $scheme;
 
@@ -97,7 +99,7 @@ server {
 
     # --- Static assets ----------------------------------------------------
     location /assets/ {
-        proxy_pass http://127.0.0.1:3000;
+        proxy_pass http://127.0.0.1:{{port}};
         include /etc/nginx/proxy_params;
         proxy_set_header X-Forwarded-Proto $scheme;
         add_header Cache-Control "public, max-age=604800";
@@ -105,7 +107,7 @@ server {
 
     # --- Everything else --------------------------------------------------
     location / {
-        proxy_pass http://127.0.0.1:3000;
+        proxy_pass http://127.0.0.1:{{port}};
         include /etc/nginx/proxy_params;
 
         # X-Forwarded-Proto is load-bearing, not decoration. With
@@ -123,7 +125,7 @@ server {
     # location = /healthz {
     #     allow 127.0.0.1;
     #     deny all;
-    #     proxy_pass http://127.0.0.1:3000;
+    #     proxy_pass http://127.0.0.1:{{port}};
     #     include /etc/nginx/proxy_params;
     # }
 }

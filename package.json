@@ -1,7 +1,7 @@
 {
   "name": "dslib",
   "version": "0.1.0",
-  "description": "Simple school library management website — public catalogue and staff area",
+  "description": "Simple school library management website \u2014 public catalogue and staff area",
   "private": true,
   "type": "module",
   "engines": {
@@ -16,7 +16,8 @@
     "prune-covers": "node scripts/prune-covers.js",
     "reindex": "node scripts/reindex-search.js",
     "test": "node --test \"test/**/*.test.js\"",
-    "test:watch": "node --test --watch \"test/**/*.test.js\""
+    "test:watch": "node --test --watch \"test/**/*.test.js\"",
+    "deploy:config": "node scripts/render-deploy.js"
   },
   "dependencies": {
     "@fastify/cookie": "^11.0.2",

@@ -59,7 +59,15 @@ sudo chmod 600 .env              # the session secret lives here
 ```
 
 Set at minimum: `NODE_ENV=production`, a real `SESSION_SECRET`,
-`HOST=127.0.0.1`, `TRUST_PROXY=true`, and `LIBRARY_NAME`.
+`HOST=127.0.0.1`, `TRUST_PROXY=true`, `LIBRARY_NAME`, and **`PUBLIC_URL`**.
+
+`PUBLIC_URL` is the address the library answers on — `https://library.example.gr`,
+scheme and host, nothing after it. It is the one place the domain is written
+down, and `PORT` is the one place the port is: the Nginx site and the systemd
+unit are generated from both in the next step, so changing either here changes
+it everywhere. The application refuses to start if `PUBLIC_URL` has a path on
+the end or a scheme that is not http(s), rather than handing somebody a link
+that does not work.
 
 ### 3. Create the database
 
@@ -73,12 +81,13 @@ library does that themselves in a browser, in step 7.
 ### 4. Run it as a service
 
 ```bash
-sudo cp deploy/dslib.service.example /etc/systemd/system/dslib.service
-sudo nano /etc/systemd/system/dslib.service      # check every path
+sudo -u dslib npm run deploy:config               # if you have not already
+sudo cp deploy/out/dslib.service /etc/systemd/system/dslib.service
+sudo nano /etc/systemd/system/dslib.service       # read it before enabling it
 sudo systemctl daemon-reload
 sudo systemctl enable --now dslib
 systemctl status dslib
-curl -s localhost:3000/healthz
+curl -s "localhost:$(grep -oP '^PORT=\K.*' .env || echo 3000)/healthz"
 ```
 
 The example unit runs as an unprivileged account with `ProtectSystem=strict`,
@@ -89,18 +98,29 @@ machine even if a firewall rule is wrong.
 ### 5. Put Nginx in front
 
 ```bash
+sudo -u dslib npm run deploy:config          # writes deploy/out/ from .env
+
 sudo tar czf ~/nginx-backup-$(date +%F).tar.gz /etc/nginx    # first!
-sudo cp deploy/nginx-dslib.conf.example /etc/nginx/sites-available/dslib
-sudo nano /etc/nginx/sites-available/dslib                   # set server_name
+sudo cp deploy/out/nginx-dslib.conf /etc/nginx/sites-available/dslib
 sudo ln -s /etc/nginx/sites-available/dslib /etc/nginx/sites-enabled/dslib
 sudo nginx -t                                                # before reloading
 sudo systemctl reload nginx
 ```
 
+`npm run deploy:config` reads `.env` and writes `deploy/out/nginx-dslib.conf`
+and `deploy/out/dslib.service` with your domain, your port and your install
+directory already in them. **Read them before installing them** — nothing in
+this repository touches your server. `npm run deploy:config -- --print` shows
+them without writing anything.
+
+Do not edit the generated files. Edit `.env` and run it again: a hand-edited
+copy is exactly how the port comes to mean one thing in `.env` and another in
+Nginx, which shows up as a 502 with nothing in any log to explain it.
+
 ### 6. Get a certificate
 
 ```bash
-sudo certbot --nginx -d library.example.gr
+sudo certbot --nginx -d "$(grep -oP '^PUBLIC_URL=https?://\K[^/:]+' .env)"
 ```
 
 ### 7. Schedule backups
@@ -131,10 +151,13 @@ host or to object storage all work; the backup directory is self-contained.
 
 ### 8. Hand it to the teacher
 
-Send them the address of the site — nothing else, no account, no password:
+Send them the address of the site — nothing else, no account, no password.
+The server prints the exact link at every start until somebody uses it:
 
 ```
-https://library.example.gr/
+WARN: This library has no staff accounts yet. Send this link to the person who
+should own it:
+    https://library.example.gr/setup
 ```
 
 They will find a **Προσωπικό** link in the corner, which takes them to setup
@@ -145,11 +168,6 @@ is deliberate: a library with no catalogue, no readers and no names is worth
 nothing to a stranger, and the alternative — a code the teacher has to be sent
 separately — is friction on the one day everything else is already new. The
 server says so at every start until someone claims it:
-
-```
-WARN: This library has no staff accounts yet, so browser setup at /setup is
-open to anyone who can reach it.
-```
 
 If you want to know who used it, the audit log records the claim with its
 address:
@@ -210,6 +228,11 @@ up:
 | `LIBRARY_NAME` | **Ρυθμίσεις → Η βιβλιοθήκη**, "Όνομα βιβλιοθήκης" |
 | `DEFAULT_LOAN_DAYS` | **Ρυθμίσεις → Η βιβλιοθήκη**, "Προεπιλεγμένη διάρκεια δανεισμού" |
 
+`PUBLIC_URL` and `PORT` are **not** among them. Where the library lives is the
+admin's business, not the librarian's, and no browser page can change it —
+they stay in `.env`, and `npm run deploy:config` carries them into Nginx and
+systemd.
+
 **Once either has been saved in the browser, the matching `.env` variable no
 longer has any effect.** Editing `.env` afterwards changes nothing, and that
 is the intended behaviour rather than a bug — but it is worth knowing before
@@ -256,7 +279,7 @@ sudo -u dslib git pull
 sudo -u dslib npm ci --omit=dev
 sudo systemctl restart dslib               # migrations run on boot
 systemctl status dslib
-curl -s localhost:3000/healthz
+curl -s "localhost:$(grep -oP '^PORT=\K.*' .env || echo 3000)/healthz"
 ```
 
 Migrations are applied automatically at startup, so the application can never

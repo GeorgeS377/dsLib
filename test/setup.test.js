@@ -695,14 +695,22 @@ describe('the boot log', () => {
     return written.join('');
   }
 
-  it('says setup is still open on a library with no accounts', async () => {
-    // So an admin can tell at a glance whether the teacher got there first.
+  it('prints the link to send, on a library with no accounts', async () => {
+    // The admin's next action is to send somebody a URL, so the line is the
+    // URL — not a path they have to assemble against a domain and a port they
+    // set in another file.
     const output = await bootWith(false);
-    assert.match(output, /\/setup is open/);
+    assert.match(output, /no staff accounts yet/);
+    assert.match(output, /http:\/\/127\.0\.0\.1:3000\\n?\/setup|127\.0\.0\.1:3000\/setup/);
+  });
+
+  it('says the link is a guess while PUBLIC_URL is unset', async () => {
+    const output = await bootWith(false);
+    assert.match(output, /PUBLIC_URL is not set/);
   });
 
   it('says nothing about an open setup once the library has an account', async () => {
     const output = await bootWith(true);
-    assert.ok(!/\/setup is open/.test(output), output);
+    assert.ok(!/no staff accounts yet/.test(output), output);
   });
 });

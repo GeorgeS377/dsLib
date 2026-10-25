@@ -130,6 +130,7 @@ way an account comes into existence, and it always prompts.
 | `npm run seed:demo` | Add demo catalogue data (safe to re-run) |
 | `npm run create-admin` | Create a staff account |
 | `npm run reindex` | Rebuild the search index for every title |
+| `npm run deploy:config` | Write the Nginx site and systemd unit from `.env` |
 
 ---
 
@@ -328,7 +329,7 @@ src/
   public/              CSS, one progressive-enhancement script, favicon
 scripts/               create-admin, seed, reindex, backup, restore
 test/                  the suite
-deploy/                systemd and Nginx examples (documentation only)
+deploy/                systemd and Nginx templates; npm run deploy:config fills them in
 data/                  the database and uploads (gitignored, never committed)
 ```
 

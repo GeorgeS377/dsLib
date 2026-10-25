@@ -40,7 +40,59 @@ const schema = z.object({
   DEFAULT_LOAN_DAYS: z.coerce.number().int().min(1).max(365).default(14),
   DEFAULT_LANG: z.enum(['el', 'en']).default('el'),
   LIBRARY_NAME: z.string().min(1).default('Σχολική Βιβλιοθήκη'),
+
+  // Where the library answers from the outside: scheme and host, nothing
+  // more. Left empty it is derived from HOST and PORT, which is right for
+  // development and wrong for anything behind Nginx.
+  PUBLIC_URL: z.string().default(''),
 });
+
+/**
+ * Parse PUBLIC_URL into the two forms the rest of the project needs: a base to
+ * join paths onto, and a bare hostname for Nginx's server_name and certbot.
+ *
+ * Strict about what it accepts because of what it is used for. A value with a
+ * path on the end would silently produce links to the wrong place, and a
+ * scheme that is not http(s) has no meaning for a web server — so both are
+ * refused at startup, where the operator is watching, rather than turning up
+ * later in a link somebody cannot open.
+ */
+function parsePublicUrl(raw, { host, port }) {
+  if (!raw.trim()) {
+    // Derived. `localhost` rather than HOST, because HOST is the interface to
+    // bind to — 0.0.0.0 is a perfectly good bind address and a useless link.
+    const bind = host === '0.0.0.0' || host === '::' ? 'localhost' : host;
+    const origin = port === 80 ? `http://${bind}` : `http://${bind}:${port}`;
+    return { url: origin, host: bind, insecure: true, derived: true };
+  }
+
+  let parsed;
+  try {
+    parsed = new URL(raw.trim());
+  } catch {
+    throw new Error(
+      `PUBLIC_URL is not a valid address: ${raw}\n` +
+        'Give the scheme and the host, e.g. https://library.example.gr',
+    );
+  }
+
+  if (parsed.protocol !== 'https:' && parsed.protocol !== 'http:') {
+    throw new Error(`PUBLIC_URL must start with https:// or http:// — got ${raw}`);
+  }
+  if (parsed.pathname !== '/' || parsed.search || parsed.hash) {
+    throw new Error(
+      `PUBLIC_URL must be a scheme and a host with nothing after it — got ${raw}\n` +
+        'It is joined with paths like /setup, so anything here would end up in the middle.',
+    );
+  }
+
+  return {
+    url: parsed.origin,
+    host: parsed.hostname,
+    insecure: parsed.protocol === 'http:',
+    derived: false,
+  };
+}
 
 function load(env) {
   const parsed = schema.safeParse(env);
@@ -78,6 +130,8 @@ function load(env) {
 
   const resolve = (p) => (path.isAbsolute(p) ? p : path.resolve(projectRoot, p));
 
+  const publicUrl = parsePublicUrl(c.PUBLIC_URL, { host: c.HOST, port: c.PORT });
+
   return {
     env: c.NODE_ENV,
     isProduction,
@@ -95,6 +149,15 @@ function load(env) {
     databasePath: resolve(c.DATABASE_PATH),
     uploadDir: resolve(c.UPLOAD_DIR),
     maxUploadBytes: c.MAX_UPLOAD_BYTES,
+
+    // The address the library answers on from outside. One place, so that
+    // changing the port or the domain changes it for the Nginx site, the
+    // systemd unit and the link an admin sends the teacher — see
+    // scripts/render-deploy.js.
+    publicUrl: publicUrl.url,
+    publicHost: publicUrl.host,
+    publicUrlInsecure: publicUrl.insecure,
+    publicUrlDerived: publicUrl.derived,
 
     defaultLoanDays: c.DEFAULT_LOAN_DAYS,
     defaultLang: c.DEFAULT_LANG,
